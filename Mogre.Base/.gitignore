@@ -1,0 +1,6 @@
+Example/
+bin/
+obj/
+Mogre.dll
+OgreMain.dll
+*.user
