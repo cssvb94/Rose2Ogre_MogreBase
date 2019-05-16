@@ -114,7 +114,7 @@ namespace Mogre
 		{
 			get
 			{
-				return W * W + X * X + Y * Y + Z * Z;
+				return (W * W) + (X * X) + (Y * Y) + (Z * Z);
 			}
 		}
 
@@ -291,9 +291,14 @@ namespace Mogre
 		{
 			FromAngleAxis(angle, axis);
 		}
+        
+        public Quaternion(Degree angle, Vector3 axis) : this()
+        {
+            FromAngleAxis(angle.ValueRadians, axis);
+        }
 
-		/// <summary>Construct a quaternion from a rotation matrix. </summary>
-		public Quaternion(Matrix3 rot) : this()
+        /// <summary>Construct a quaternion from a rotation matrix. </summary>
+        public Quaternion(Matrix3 rot) : this()
 		{
 			FromRotationMatrix(rot);
 		}
@@ -457,7 +462,7 @@ namespace Mogre
 
 		public Quaternion Inverse()
 		{
-			float fNorm = w * w + x * x + y * y + z * z;
+			float fNorm = (w * w) + (x * x) + (y * y) + (z * z);
 			if (fNorm > 0.0f)
 			{
 				float fInvNorm = 1.0f / fNorm;
@@ -482,7 +487,7 @@ namespace Mogre
 			// exp(q) = cos(A)+sin(A)*(x*i+y*j+z*k).  If sin(A) is near zero,
 			// use exp(q) = cos(A)+A*(x*i+y*j+z*k) since A/sin(A) has limit 1.
 
-			Radian fAngle = (float)System.Math.Sqrt(x * x + y * y + z * z);
+			Radian fAngle = (float)System.Math.Sqrt((x * x) + (y * y) + (z * z));
 			float fSin = Math.Sin(fAngle);
 
 			Quaternion result = new Quaternion();
@@ -560,7 +565,7 @@ namespace Mogre
 
 		public static Quaternion operator *(Quaternion lkQ, Quaternion rkQ)
 		{
-			return new Quaternion((float)(lkQ.w *rkQ.w - lkQ.x * rkQ.x - lkQ.y * rkQ.y - lkQ.z * rkQ.z), (float)(lkQ.w * rkQ.x + lkQ.x * rkQ.w + lkQ.y * rkQ.z - lkQ.z * rkQ.y), (float)(lkQ.w * rkQ.y + lkQ.y * rkQ.w + lkQ.z * rkQ.x - lkQ.x * rkQ.z), (float)(lkQ.w * rkQ.z + lkQ.z * rkQ.w + lkQ.x * rkQ.y - lkQ.y * rkQ.x));
+			return new Quaternion((float)((lkQ.w *rkQ.w) - (lkQ.x * rkQ.x) - (lkQ.y * rkQ.y) - (lkQ.z * rkQ.z)), (float)((lkQ.w * rkQ.x) + (lkQ.x * rkQ.w) + (lkQ.y * rkQ.z) - (lkQ.z * rkQ.y)), (float)((lkQ.w * rkQ.y) + (lkQ.y * rkQ.w) + (lkQ.z * rkQ.x) - (lkQ.x * rkQ.z)), (float)((lkQ.w * rkQ.z) + (lkQ.z * rkQ.w) + (lkQ.x * rkQ.y) - (lkQ.y * rkQ.x)));
 		}
 
 		public void FromAxes(Vector3 xAxis, Vector3 yAxis, Vector3 zAxis)
@@ -640,7 +645,7 @@ namespace Mogre
 		public void ToAngleAxis(out Radian rfAngle, out Vector3 rkAxis)
 		{
 			rkAxis = Vector3.ZERO;
-			float fValue = (float)(this.x * this.x + this.y * this.y + this.z * this.z);
+			float fValue = (float)((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
 			if (fValue > 0.0)
 			{
 				Radian radian = (Radian)((float)(2.0 * System.Math.Acos(this.w)));
@@ -699,7 +704,7 @@ namespace Mogre
 
 		public float Dot(Quaternion quaternion)
 		{
-			return w * quaternion.w + x * quaternion.x + y * quaternion.y + z * quaternion.z;
+			return (w * quaternion.w) + (x * quaternion.x) + (y * quaternion.y) + (z * quaternion.z);
 		}
 	}
 }

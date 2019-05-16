@@ -302,27 +302,47 @@ namespace Mogre
 		public static Matrix3 operator *(Matrix3 left, Matrix3 right)
 		{
 			Matrix3 result = new Matrix3();
-			result.m00 = left.m00 * right.m00 + left.m01 * right.m10 + left.m02 * right.m20;
-			result.m01 = left.m00 * right.m01 + left.m01 * right.m11 + left.m02 * right.m21;
-			result.m02 = left.m00 * right.m02 + left.m01 * right.m12 + left.m02 * right.m22;
+			result.m00 = (left.m00 * right.m00) + (left.m01 * right.m10) + (left.m02 * right.m20);
+			result.m01 = (left.m00 * right.m01) + (left.m01 * right.m11) + (left.m02 * right.m21);
+			result.m02 = (left.m00 * right.m02) + (left.m01 * right.m12) + (left.m02 * right.m22);
 
-			result.m10 = left.m10 * right.m00 + left.m11 * right.m10 + left.m12 * right.m20;
-			result.m11 = left.m10 * right.m01 + left.m11 * right.m11 + left.m12 * right.m21;
-			result.m12 = left.m10 * right.m02 + left.m11 * right.m12 + left.m12 * right.m22;
+			result.m10 = (left.m10 * right.m00) + (left.m11 * right.m10) + (left.m12 * right.m20);
+			result.m11 = (left.m10 * right.m01) + (left.m11 * right.m11) + (left.m12 * right.m21);
+			result.m12 = (left.m10 * right.m02) + (left.m11 * right.m12) + (left.m12 * right.m22);
 
-			result.m20 = left.m20 * right.m00 + left.m21 * right.m10 + left.m22 * right.m20;
-			result.m21 = left.m20 * right.m01 + left.m21 * right.m11 + left.m22 * right.m21;
-			result.m22 = left.m20 * right.m02 + left.m21 * right.m12 + left.m22 * right.m22;
+			result.m20 = (left.m20 * right.m00) + (left.m21 * right.m10) + (left.m22 * right.m20);
+			result.m21 = (left.m20 * right.m01) + (left.m21 * right.m11) + (left.m22 * right.m21);
+			result.m22 = (left.m20 * right.m02) + (left.m21 * right.m12) + (left.m22 * right.m22);
 			return result;
 		}
 
-		/// <summary>
-		/// Divides two matricies.
-		/// </summary>
-		/// <param name="left">The first Matrix3 to divide.</param>
-		/// <param name="right">The second Matrix4x4 to divide.</param>
-		/// <returns>The quotient of the two matricies.</returns>
-		public static Matrix3 operator /(Matrix3 left, Matrix3 right)
+        public static Vector3 operator *(Vector3 rkVector, Matrix3 rkMatrix)
+        {
+            return new Vector3()
+            {
+                x = (rkVector.x * rkMatrix.m00) + (rkVector.y * rkMatrix.m10) + (rkVector.z * rkMatrix.m20),
+                y = (rkVector.x * rkMatrix.m01) + (rkVector.y * rkMatrix.m11) + (rkVector.z * rkMatrix.m21),
+                z = (rkVector.x * rkMatrix.m02) + (rkVector.y * rkMatrix.m12) + (rkVector.z * rkMatrix.m22)
+            };
+        }
+
+        public static Vector3 operator *(Matrix3 lmat, Vector3 rkVector)
+        {
+            return new Vector3()
+            {
+                x = (lmat.m00 * rkVector.x) + (lmat.m01 * rkVector.y) + (lmat.m02 * rkVector.z),
+                y = (lmat.m10 * rkVector.x) + (lmat.m11 * rkVector.y) + (lmat.m12 * rkVector.z),
+                z = (lmat.m20 * rkVector.x) + (lmat.m21 * rkVector.y) + (lmat.m22 * rkVector.z)
+            };
+        }
+
+        /// <summary>
+        /// Divides two matricies.
+        /// </summary>
+        /// <param name="left">The first Matrix3 to divide.</param>
+        /// <param name="right">The second Matrix4x4 to divide.</param>
+        /// <returns>The quotient of the two matricies.</returns>
+        public static Matrix3 operator /(Matrix3 left, Matrix3 right)
 		{
 			Matrix3 result = new Matrix3();
 			result.m00 = left.m00 / right.m00;

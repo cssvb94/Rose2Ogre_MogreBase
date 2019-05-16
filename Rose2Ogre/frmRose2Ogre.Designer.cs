@@ -59,6 +59,7 @@
             this.txtZMD.ReadOnly = true;
             this.txtZMD.Size = new System.Drawing.Size(279, 20);
             this.txtZMD.TabIndex = 99;
+            this.txtZMD.TextChanged += new System.EventHandler(this.txtZMD_TextChanged);
             // 
             // label1
             // 
@@ -149,19 +150,19 @@
             this.removeAllZMO});
             this.menuZMO.Name = "menuZMO";
             this.menuZMO.ShowImageMargin = false;
-            this.menuZMO.Size = new System.Drawing.Size(139, 48);
+            this.menuZMO.Size = new System.Drawing.Size(156, 70);
             // 
             // removeSelectedZMO
             // 
             this.removeSelectedZMO.Name = "removeSelectedZMO";
-            this.removeSelectedZMO.Size = new System.Drawing.Size(138, 22);
+            this.removeSelectedZMO.Size = new System.Drawing.Size(155, 22);
             this.removeSelectedZMO.Text = "Remove selected";
             this.removeSelectedZMO.Click += new System.EventHandler(this.removeSelectedZMO_Click);
             // 
             // removeAllZMO
             // 
             this.removeAllZMO.Name = "removeAllZMO";
-            this.removeAllZMO.Size = new System.Drawing.Size(138, 22);
+            this.removeAllZMO.Size = new System.Drawing.Size(155, 22);
             this.removeAllZMO.Text = "Remove ALL";
             this.removeAllZMO.Click += new System.EventHandler(this.removeAllZMO_Click);
             // 

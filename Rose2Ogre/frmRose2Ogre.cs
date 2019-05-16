@@ -14,19 +14,21 @@ namespace Rose2Ogre
         private string ZMDFile;
         private List<string> ZMSFiles = new List<string>();
         private List<string> ZMOFiles = new List<string>();
-        private ZMD zmd = new ZMD();
-        private List<ZMS> zms = new List<ZMS>();
-        private List<ZMO> zmo = new List<ZMO>();
+        private readonly ZMD zmd = new ZMD();
+        private readonly List<ZMS> zms = new List<ZMS>();
+        private readonly List<ZMO> zmo = new List<ZMO>();
 
-        private string[] args;
+        private readonly string[] args;
         private List<string> ARGFiles = new List<string>();
-        private bool bConvert = false;
+        private bool bConvert;
        
         public frmRose2Ogre()
         {
             args = Environment.GetCommandLineArgs();
 
             InitializeComponent();
+
+            btnConvert.Enabled = IsEnabledConvert();
 
             #region
             //model = COLLADA.Load("plane.dae");
@@ -104,6 +106,7 @@ namespace Rose2Ogre
                 ZMSFiles.AddRange(dlgOpenFile.FileNames.ToList());
                 lstZMS.Items.AddRange(dlgOpenFile.SafeFileNames);
             }
+            btnConvert.Enabled = IsEnabledConvert();
         }
 
         private void btnZMO_Click(object sender, EventArgs e)
@@ -115,6 +118,7 @@ namespace Rose2Ogre
                 ZMOFiles.AddRange(dlgOpenFile.FileNames.ToList());
                 lstZMO.Items.AddRange(dlgOpenFile.SafeFileNames);
             }
+            btnConvert.Enabled = IsEnabledConvert();
         }
 
         private void removeSelectedZMS_Click(object sender, EventArgs e)
@@ -124,12 +128,14 @@ namespace Rose2Ogre
                 ZMSFiles.RemoveAt(lstZMS.SelectedIndex);
                 lstZMS.Items.RemoveAt(lstZMS.SelectedIndex);
             }
+            btnConvert.Enabled = IsEnabledConvert();
         }
 
         private void removeAllZMS_Click(object sender, EventArgs e)
         {
             lstZMS.Items.Clear();
             ZMSFiles.Clear();
+            btnConvert.Enabled = IsEnabledConvert();
         }
 
         private void removeSelectedZMO_Click(object sender, EventArgs e)
@@ -139,14 +145,21 @@ namespace Rose2Ogre
                 ZMOFiles.RemoveAt(lstZMO.SelectedIndex);
                 lstZMO.Items.RemoveAt(lstZMO.SelectedIndex);
             }
+            btnConvert.Enabled = IsEnabledConvert();
         }
 
         private void removeAllZMO_Click(object sender, EventArgs e)
         {
             lstZMO.Items.Clear();
             ZMOFiles.Clear();
+            btnConvert.Enabled = IsEnabledConvert();
         }
         #endregion
+
+        private bool IsEnabledConvert()
+        {
+            return lstZMS.Items.Count != 0 || txtZMD.Text.Trim().Length != 0;
+        }
 
         private void Convert()
         {
@@ -207,9 +220,9 @@ namespace Rose2Ogre
             // Get only files that exist
             var existing = from f in FileNameList where File.Exists(f) select f;
             // Separate by types
-            var zmss = from f in existing where Path.GetExtension(f).ToUpper().Contains("ZMS") select f;
-            var zmos = from f in existing where Path.GetExtension(f).ToUpper().Contains("ZMO") select f;
-            var zmds = from f in existing where Path.GetExtension(f).ToUpper().Contains("ZMD") select f;
+            var zmss = from f in existing where Path.GetExtension(f).IndexOf("ZMS", StringComparison.OrdinalIgnoreCase) >= 0 select f;
+            var zmos = from f in existing where Path.GetExtension(f).IndexOf("ZMO", StringComparison.OrdinalIgnoreCase) >= 0 select f;
+            var zmds = from f in existing where Path.GetExtension(f).IndexOf("ZMD", StringComparison.OrdinalIgnoreCase) >= 0 select f;
             
             // Fill in the listboxes and lists
 
@@ -247,14 +260,14 @@ namespace Rose2Ogre
 
         private void frmRose2Ogre_Load(object sender, EventArgs e)
         {
-            if (args.Count() > 1)
+            if (args.Length > 1)
             {
                 if (!string.IsNullOrEmpty(args[1]))
                 {
                     ARGFiles = args.ToList();
                     foreach (string arg in ARGFiles)
                     {
-                        bConvert |= arg.ToUpper().Equals("/CONVERT");
+                        bConvert |= arg.Equals("/CONVERT", StringComparison.OrdinalIgnoreCase);
                     }
 
                     ProcessFileList(ARGFiles);
@@ -302,5 +315,9 @@ namespace Rose2Ogre
             }
         }
 
+        private void txtZMD_TextChanged(object sender, EventArgs e)
+        {
+            btnConvert.Enabled = IsEnabledConvert();
+        }
     } // class
 }
