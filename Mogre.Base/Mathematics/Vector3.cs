@@ -691,7 +691,7 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public override string ToString()
 		{
-			return string.Format(CultureInfo.CurrentCulture, "X:{0} Y:{1} Z:{2}", X, Y, Z);
+			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})", X, Y, Z);
 		}
 
 		/// <summary>
@@ -704,10 +704,8 @@ namespace Mogre
 			if (format == null)
 				return ToString();
 
-			return string.Format(CultureInfo.CurrentCulture, "X:{0} Y:{1} Z:{2}",
-				X.ToString(format, CultureInfo.CurrentCulture),
-				Y.ToString(format, CultureInfo.CurrentCulture),
-				Z.ToString(format, CultureInfo.CurrentCulture));
+			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})",
+				X,Y,Z);
 		}
 
 		/// <summary>
@@ -719,7 +717,7 @@ namespace Mogre
 		/// </returns>
 		public string ToString(IFormatProvider formatProvider)
 		{
-			return string.Format(formatProvider, "X:{0} Y:{1} Z:{2}", X, Y, Z);
+			return string.Format(formatProvider, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})", X, Y, Z);
 		}
 
 		/// <summary>
@@ -735,11 +733,9 @@ namespace Mogre
 			if (format == null)
 				ToString(formatProvider);
 
-			return string.Format(formatProvider, "X:{0} Y:{1} Z:{2}",
-				X.ToString(format, formatProvider),
-				Y.ToString(format, formatProvider),
-				Z.ToString(format, formatProvider));
-		}
+			return string.Format(formatProvider, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})",
+                X, Y, Z);
+        }
 
 		/// <summary>
 		/// Returns a hash code for this instance.

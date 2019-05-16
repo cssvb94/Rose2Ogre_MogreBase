@@ -388,5 +388,18 @@ namespace Mogre
 			SetColumn(1, yAxis);
 			SetColumn(2, zAxis);
 		}
-	}
+
+        public override string ToString()
+        {
+            string str1 = "Matrix3(\n";
+            for (int index1 = 0; index1 < 3U; ++index1)
+            {
+                string str2 = str1 + " (";
+                for (int index2 = 0; index2 < 3U; ++index2)
+                    str2 += string.Format("{0:0.0000} ", this[index1, index2]);
+                str1 = str2 + ")\n";
+            }
+            return str1 + ")";
+        }
+    }
 }

@@ -192,17 +192,17 @@ namespace Mogre
         }
 
         [SpecialName]
-        public void op_Assign(Matrix3 mat3)
+        public void AssignMatrix3(Matrix3 mat3)
         {
-            this.m00 = mat3.m00;
-            this.m01 = mat3.m01;
-            this.m02 = mat3.m02;
-            this.m10 = mat3.m10;
-            this.m11 = mat3.m11;
-            this.m12 = mat3.m12;
-            this.m20 = mat3.m20;
-            this.m21 = mat3.m21;
-            this.m22 = mat3.m22;
+            m00 = mat3.m00;
+            m01 = mat3.m01;
+            m02 = mat3.m02;
+            m10 = mat3.m10;
+            m11 = mat3.m11;
+            m12 = mat3.m12;
+            m20 = mat3.m20;
+            m21 = mat3.m21;
+            m22 = mat3.m22;
         }
 
         public Matrix4(Quaternion rot)
@@ -210,7 +210,7 @@ namespace Mogre
             Matrix4 m = IDENTITY;
 
             Matrix3 rotationMatrix = rot.ToRotationMatrix();
-            m.op_Assign(rotationMatrix);
+            m.AssignMatrix3(rotationMatrix);
 
             this = m;
         }
@@ -218,7 +218,7 @@ namespace Mogre
         public Matrix4(Matrix3 m3)
         {
             Matrix4 m = IDENTITY;
-            m.op_Assign(m3);
+            m.AssignMatrix3(m3);
             this = m;
         }
 
@@ -231,27 +231,27 @@ namespace Mogre
 
         public Vector3 GetTrans()
         {
-            return new Vector3(this.m03, this.m13, this.m23);
+            return new Vector3(m03, m13, m23);
         }
 
         public Quaternion ExtractQuaternion()
         {
-            return new Quaternion(this.Extract3x3Matrix());
+            return new Quaternion(Extract3x3Matrix());
         }
 
         public Matrix3 Extract3x3Matrix()
         {
             return new Matrix3()
             {
-                m00 = this.m00,
-                m01 = this.m01,
-                m02 = this.m02,
-                m10 = this.m10,
-                m11 = this.m11,
-                m12 = this.m12,
-                m20 = this.m20,
-                m21 = this.m21,
-                m22 = this.m22
+                m00 = m00,
+                m01 = m01,
+                m02 = m02,
+                m10 = m10,
+                m11 = m11,
+                m12 = m12,
+                m20 = m20,
+                m21 = m21,
+                m22 = m22
             };
         }
 
@@ -262,52 +262,52 @@ namespace Mogre
             zero.m00 = scale.x;
             zero.m11 = scale.y;
             zero.m22 = scale.z;
-            this.op_Assign(rotationMatrix * zero);
-            this.SetTrans(position);
-            this.m30 = 0.0f;
-            this.m31 = 0.0f;
-            this.m32 = 0.0f;
-            this.m33 = 1f;
+            AssignMatrix3(rotationMatrix * zero);
+            SetTrans(position);
+            m30 = 0.0f;
+            m31 = 0.0f;
+            m32 = 0.0f;
+            m33 = 1f;
         }
 
         public void MakeTrans(float tx, float ty, float tz)
         {
-            this.m00 = 1f;
-            this.m01 = 0.0f;
-            this.m02 = 0.0f;
-            this.m03 = tx;
-            this.m10 = 0.0f;
-            this.m11 = 1f;
-            this.m12 = 0.0f;
-            this.m13 = ty;
-            this.m20 = 0.0f;
-            this.m21 = 0.0f;
-            this.m22 = 1f;
-            this.m23 = tz;
-            this.m30 = 0.0f;
-            this.m31 = 0.0f;
-            this.m32 = 0.0f;
-            this.m33 = 1f;
+            m00 = 1f;
+            m01 = 0.0f;
+            m02 = 0.0f;
+            m03 = tx;
+            m10 = 0.0f;
+            m11 = 1f;
+            m12 = 0.0f;
+            m13 = ty;
+            m20 = 0.0f;
+            m21 = 0.0f;
+            m22 = 1f;
+            m23 = tz;
+            m30 = 0.0f;
+            m31 = 0.0f;
+            m32 = 0.0f;
+            m33 = 1f;
         }
 
         public void MakeTrans(Vector3 v)
         {
-            this.m00 = 1f;
-            this.m01 = 0.0f;
-            this.m02 = 0.0f;
-            this.m03 = v.x;
-            this.m10 = 0.0f;
-            this.m11 = 1f;
-            this.m12 = 0.0f;
-            this.m13 = v.y;
-            this.m20 = 0.0f;
-            this.m21 = 0.0f;
-            this.m22 = 1f;
-            this.m23 = v.z;
-            this.m30 = 0.0f;
-            this.m31 = 0.0f;
-            this.m32 = 0.0f;
-            this.m33 = 1f;
+            m00 = 1f;
+            m01 = 0.0f;
+            m02 = 0.0f;
+            m03 = v.x;
+            m10 = 0.0f;
+            m11 = 1f;
+            m12 = 0.0f;
+            m13 = v.y;
+            m20 = 0.0f;
+            m21 = 0.0f;
+            m22 = 1f;
+            m23 = v.z;
+            m30 = 0.0f;
+            m31 = 0.0f;
+            m32 = 0.0f;
+            m33 = 1f;
         }
 
         public static Matrix4 GetScale(float s_x, float s_y, float s_z)
@@ -358,32 +358,32 @@ namespace Mogre
 
         public void SetScale(Vector3 v)
         {
-            this.m00 = v.x;
-            this.m11 = v.y;
-            this.m22 = v.z;
+            m00 = v.x;
+            m11 = v.y;
+            m22 = v.z;
         }
 
         public Matrix4(float fm00, float fm01, float fm02, float fm03, float fm10, float fm11, float fm12, float fm13, float fm20, float fm21, float fm22, float fm23, float fm30, float fm31, float fm32, float fm33)
         {
-            this.m00 = fm00;
-            this.m01 = fm01;
-            this.m02 = fm02;
-            this.m03 = fm03;
-            this.m10 = fm10;
-            this.m11 = fm11;
-            this.m12 = fm12;
-            this.m13 = fm13;
-            this.m20 = fm20;
-            this.m21 = fm21;
-            this.m22 = fm22;
-            this.m23 = fm23;
-            this.m30 = fm30;
-            this.m31 = fm31;
-            this.m32 = fm32;
-            this.m33 = fm33;
+            m00 = fm00;
+            m01 = fm01;
+            m02 = fm02;
+            m03 = fm03;
+            m10 = fm10;
+            m11 = fm11;
+            m12 = fm12;
+            m13 = fm13;
+            m20 = fm20;
+            m21 = fm21;
+            m22 = fm22;
+            m23 = fm23;
+            m30 = fm30;
+            m31 = fm31;
+            m32 = fm32;
+            m33 = fm33;
         }
 
-        public Matrix4 Inverse_Working()
+        private Matrix4 Inverse_Working()
         {
             Matrix4 m = new Matrix4();
 
@@ -428,6 +428,27 @@ namespace Mogre
             return m;
         }
 
+        /// <summary>Building an inverse Matrix4 from orientation / scale / position. As makeTransform except it build the inverse given the same data as makeTransform, so performing -translation, -rotate, 1/scale in that order. </summary>
+        public void MakeInverseTransform(Vector3 position, Vector3 scale, Quaternion orientation)
+        {
+            Vector3 negposition = -position;
+            Vector3 negscale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
+            Quaternion quaternion = orientation.Inverse();
+            Vector3 vector3_3 = negposition * negscale;
+            Vector3 v = quaternion * vector3_3;
+            Matrix3 rotationMatrix = quaternion.ToRotationMatrix();
+            Matrix3 zero = Matrix3.ZERO;
+            zero.m00 = negscale.x;
+            zero.m11 = negscale.y;
+            zero.m22 = negscale.z;
+            AssignMatrix3(zero * rotationMatrix);
+            SetTrans(v);
+            m30 = 0.0f;
+            m31 = 0.0f;
+            m32 = 0.0f;
+            m33 = 1f;
+        }
+
         public float Determinant()
         {
             return
@@ -467,6 +488,10 @@ namespace Mogre
             Matrix4 adjointMatrix = matrixClone.Adjoint();
 
             float detOne = matrixClone.Determinant();
+
+            // No div by zero
+            if (detOne == 0)
+                detOne = 0.00000008f;
 
             return new Matrix4(adjointMatrix.m00 / detOne, adjointMatrix.m01 / detOne, adjointMatrix.m02 / detOne, adjointMatrix.m03 / detOne,
                                 adjointMatrix.m10 / detOne, adjointMatrix.m11 / detOne, adjointMatrix.m12 / detOne, adjointMatrix.m13 / detOne,
@@ -959,6 +984,24 @@ namespace Mogre
                 m10.GetHashCode() + m11.GetHashCode() + m12.GetHashCode() + m13.GetHashCode() +
                 m20.GetHashCode() + m21.GetHashCode() + m22.GetHashCode() + m23.GetHashCode() +
                 m30.GetHashCode() + m31.GetHashCode() + m32.GetHashCode() + m33.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            string str1 = "Matrix4(\n";
+            for (int index1 = 0; index1 < 4U; ++index1)
+            {
+                string str2 = str1 + " (";
+                for (int index2 = 0; index2 < 4U; ++index2)
+                    str2 += string.Format("{0:0.0000} ", this[index1, index2]);
+                str1 = str2 + ")\n";
+            }
+            return str1 + ")";
+        }
+
+        public Matrix4 Clone()
+        {
+            return new Matrix4(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
         }
     }
 }

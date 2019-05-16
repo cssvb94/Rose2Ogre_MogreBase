@@ -568,7 +568,32 @@ namespace Mogre
 			return new Quaternion((float)((lkQ.w *rkQ.w) - (lkQ.x * rkQ.x) - (lkQ.y * rkQ.y) - (lkQ.z * rkQ.z)), (float)((lkQ.w * rkQ.x) + (lkQ.x * rkQ.w) + (lkQ.y * rkQ.z) - (lkQ.z * rkQ.y)), (float)((lkQ.w * rkQ.y) + (lkQ.y * rkQ.w) + (lkQ.z * rkQ.x) - (lkQ.x * rkQ.z)), (float)((lkQ.w * rkQ.z) + (lkQ.z * rkQ.w) + (lkQ.x * rkQ.y) - (lkQ.y * rkQ.x)));
 		}
 
-		public void FromAxes(Vector3 xAxis, Vector3 yAxis, Vector3 zAxis)
+        public static Quaternion operator +(Quaternion lkQ, Quaternion rkQ)
+        {
+            return new Quaternion(lkQ.w + rkQ.w, lkQ.x + rkQ.x, lkQ.y + rkQ.y, lkQ.z + rkQ.z);
+        }
+
+        public static Quaternion operator -(Quaternion rkQ)
+        {
+            return new Quaternion(-rkQ.w, -rkQ.x, -rkQ.y, -rkQ.z);
+        }
+
+        public static Quaternion operator -(Quaternion lkQ, Quaternion rkQ)
+        {
+            return new Quaternion(lkQ.w - rkQ.w, lkQ.x - rkQ.x, lkQ.y - rkQ.y, lkQ.z - rkQ.z);
+        }
+
+        public static Quaternion operator *(float fScalar, Quaternion rkQ)
+        {
+            return new Quaternion(fScalar * rkQ.w, fScalar * rkQ.x, fScalar * rkQ.y, fScalar * rkQ.z);
+        }
+
+        public static Quaternion operator *(Quaternion lkQ, float fScalar)
+        {
+            return new Quaternion(fScalar * lkQ.w, fScalar * lkQ.x, fScalar * lkQ.y, fScalar * lkQ.z);
+        }
+        
+        public void FromAxes(Vector3 xAxis, Vector3 yAxis, Vector3 zAxis)
 		{
 			FromRotationMatrix(new Matrix3
 			{
