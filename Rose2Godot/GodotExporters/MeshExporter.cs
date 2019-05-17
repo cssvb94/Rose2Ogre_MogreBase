@@ -47,10 +47,10 @@ namespace Rose2Godot.GodotExporters
             LastResourceIndex += i;
         }
 
-        private void BuildMeshData(string name, ZMS zms, int idx)
+        private void BuildMeshData(string mesh_data_name, ZMS zms, int idx)
         {
             smesh.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", idx);
-            smesh.AppendFormat("resource_name = \"{0}_mesh_data\"\n", name);
+            smesh.AppendFormat("resource_name = \"{0}_mesh_data\"\n", mesh_data_name);
             smesh.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
             // vertices
@@ -173,7 +173,7 @@ namespace Rose2Godot.GodotExporters
                 smesh.AppendLine("\t\tnull, ; no bone weights");
             }
 
-            
+
 
             // face indices
             smesh.AppendFormat("\t\t; triangle faces: {0}\n", zms.Face.Count);
@@ -185,25 +185,21 @@ namespace Rose2Godot.GodotExporters
 
             if (!rootNodeAdded)
             {
-                nodes.AppendLine("[node type=\"Spatial\" name=\"Scene\"]");
+                nodes.AppendFormat("\n[node type=\"Spatial\" name=\"{0}\"]\n", name);
+                nodes.AppendLine("transform = Transform(1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0)");
                 rootNodeAdded = true;
             }
 
-            if (zms.HasBoneIndex() && zms.HasBoneWeight())
-            {
-                // armature as parent
-                //nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\"Armature\"]\n", name);
-                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", name);
-            }
-            else
-            {
-                // root object as parent - for static objects
-                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", name);
-            }
+            nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", mesh_data_name);
 
             nodes.AppendFormat("mesh = SubResource({0})\n", idx);
 
             nodes.AppendLine("visible = true");
+
+            if (zms.HasBoneIndex() && zms.HasBoneWeight())
+            {
+                nodes.AppendLine("skeleton = NodePath(\"../Armature\")");
+            }
 
             nodes.AppendFormat("transform = Transform(1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000)\n");
         }

@@ -74,12 +74,12 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\avatar.escn");
 
             //larva
-            ProcessFileList(new List<string>() {
-                "Example\\LARVA1_BONE.ZMD",
-                "Example\\LARVA1.ZMS",
-            });
-            sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn");
+            //ProcessFileList(new List<string>() {
+            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\LARVA1_BONE.ZMD",
+            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\LARVA1.ZMS",
+            //});
+            //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\larva_exported.escn");
 
             // exported
             //ProcessFileList(new List<string>() {
@@ -88,6 +88,15 @@ namespace Rose2Godot
             //});
             //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn");
+
+            // akines
+            ProcessFileList(new List<string>() {
+                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BODY01.ZMS",
+                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_HEAD01.ZMS",
+                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BONE.ZMD",
+            });
+            sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\akines.escn");
 
 #else
              ProcessFileList(args.ToList());

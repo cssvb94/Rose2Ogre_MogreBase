@@ -15,7 +15,8 @@ namespace Rose2Godot.GodotExporters
         public BoneExporter(string mesh_name, int resource_index, ZMD zmd)
         {
             sbone = new StringBuilder();
-            sbone.AppendFormat("[node name=\"Armature\" type=\"Skeleton\" parent=\"{0}\"]\n\n", mesh_name);
+            //sbone.AppendFormat("[node name=\"Armature\" type=\"Skeleton\" parent=\"{0}\"]\n\n", mesh_name);
+            sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".\"]");
             sbone.AppendLine("bones_in_world_transform = true");
             sbone.AppendLine("transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)");
 
