@@ -9,18 +9,18 @@ namespace Rose2Godot.GodotExporters
     public class MeshExporter
     {
         private readonly StringBuilder smesh;
+        private StringBuilder nodes;
         private readonly string name;
         public int LastResourceIndex { get; }
         private bool rootNodeAdded = false;
         public string MeshName { get; set; }
-        private StringBuilder nodes = new StringBuilder();
 
         private Matrix3 rotatePositive90;
 
         public MeshExporter(string mesh_name, int resource_index, List<ZMS> zms)
         {
             rotatePositive90 = new Quaternion(new Degree(90f), new Vector3(1f, 0f, 0f)).ToRotationMatrix();
-
+            nodes = new StringBuilder();
             smesh = new StringBuilder();
             name = mesh_name;
             LastResourceIndex = resource_index;
@@ -56,7 +56,6 @@ namespace Rose2Godot.GodotExporters
             // vertices
 
             smesh.AppendFormat("\t\t; vertices: {0}\n", zms.Vertex.Count);
-            //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, rotatePositive90, null));
             smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, null, null));
 
             // normals
@@ -64,7 +63,6 @@ namespace Rose2Godot.GodotExporters
             if (zms.HasNormal())
             {
                 smesh.AppendFormat("\t\t; normals: {0}\n", zms.Normal.Count);
-                //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, rotatePositive90, null));
                 smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, null, null));
             }
             else
@@ -77,7 +75,6 @@ namespace Rose2Godot.GodotExporters
             if (zms.HasTangents())
             {
                 smesh.AppendFormat("\t\t; tangents: {0}\n", zms.Tangent.Count);
-                //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, rotatePositive90, null));
                 smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, null, null));
             }
             else
@@ -158,7 +155,7 @@ namespace Rose2Godot.GodotExporters
                     foreach (BoneWeight bw in vgroup)
                     {
                         bindices.Add(bw.BoneID);
-                        // make sure total weight doesnt exceed 1f
+                        // make sure combined weight applied to vertex doesnt exceed 1f
                         bweights.Add(string.Format("{0:0.0000}", bw.Weight / total_weight));
                     }
                 }
