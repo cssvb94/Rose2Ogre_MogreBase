@@ -60,11 +60,42 @@ namespace Rose2Godot
         [STAThread]
         private static void Main(string[] args)
         {
-            ProcessFileList(args.ToList());
+#if DEBUG
+            // avatar
+            //ProcessFileList(new List<string>() {
+            //    "Example\\MALE.ZMD",
+            //    "Example\\BODY1_00110.ZMS",
+            //    "Example\\ARM1_00100.ZMS",
+            //    "Example\\FACE1_00100.ZMS",
+            //    "Example\\HAIR01_00500.ZMS",
+            //    "Example\\FOOT1_00200.ZMS",
+            //});
+            //sceneExporter = new SceneExporter("Avatar", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\avatar.escn");
+
+            //larva
+            ProcessFileList(new List<string>() {
+                "Example\\LARVA1_BONE.ZMD",
+                "Example\\LARVA1.ZMS",
+            });
             sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn");
+
+            // exported
+            //ProcessFileList(new List<string>() {
+            //    "Example\\EXPORTED_BONE.ZMD",
+            //    "Example\\EXPORTED.ZMS",
+            //});
+            //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn");
+
+#else
+             ProcessFileList(args.ToList());
+#endif
+
             // The [.escn] file format is identical to the TSCN file format, but is used to indicate to Godot that the file has been exported from another program 
             // and should not be edited by the user from within Godot.            
-            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_larva.escn");
+
         }
     }
 }

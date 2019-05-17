@@ -9,7 +9,7 @@ namespace Rose2Godot.GodotExporters
     public class SceneExporter
     {
         public readonly StringBuilder scene;
-        public readonly uint num_resources;
+        public readonly int num_resources;
         public readonly List<ZMS> zms;
         public readonly ZMD zmd;
         public readonly List<ZMO> zmo;
@@ -28,8 +28,8 @@ namespace Rose2Godot.GodotExporters
             objName = objectName;
 
             //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
-            num_resources = 1;
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n\n", num_resources);
+            num_resources = zms.Count;
+            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
         }
 
         public bool ExportScene(string fileName)
@@ -39,7 +39,7 @@ namespace Rose2Godot.GodotExporters
             {
                 StreamWriter fileStream = new StreamWriter(fileName);
 
-                MeshExporter meshExporter = new MeshExporter(objName,idx, zms);
+                MeshExporter meshExporter = new MeshExporter(objName, idx, zms);
 
                 idx = meshExporter.LastResourceIndex;
 
@@ -47,11 +47,11 @@ namespace Rose2Godot.GodotExporters
 
                 if (zmd.BonesCount > 0)
                 {
-                    BoneExporter boneExporter = new BoneExporter(objName, idx, zmd);
+                    BoneExporter boneExporter = new BoneExporter(meshExporter.MeshName, idx, zmd);
                     scene.AppendLine(boneExporter.ToString());
                     idx = meshExporter.LastResourceIndex;
                 }
-                
+
                 fileStream.WriteLine(scene.ToString());
 
                 fileStream.Close();

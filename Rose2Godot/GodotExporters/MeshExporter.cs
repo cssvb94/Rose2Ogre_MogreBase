@@ -1,6 +1,7 @@
 ﻿using Mogre;
 using RoseFormats;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Rose2Godot.GodotExporters
@@ -11,6 +12,8 @@ namespace Rose2Godot.GodotExporters
         private readonly string name;
         public int LastResourceIndex { get; }
         private bool rootNodeAdded = false;
+        public string MeshName { get; set; }
+        private StringBuilder nodes = new StringBuilder();
 
         private Matrix3 rotatePositive90;
 
@@ -22,11 +25,23 @@ namespace Rose2Godot.GodotExporters
             name = mesh_name;
             LastResourceIndex = resource_index;
 
-            int i = 0;
+            if (zms.Count == 1)
+            {
+                MeshName = mesh_name;
+                LastResourceIndex = resource_index++;
+                BuildMeshData(name, zms[0], 0);
+                return;
+            }
+
+            int i = 1;
             foreach (ZMS mesh in zms)
             {
-                //BuildMeshData(string.Format("{0}_{1}", name, i++), mesh, i);
-                BuildMeshData(string.Format("{0}", name), mesh, i);
+                string name = string.Format("{0}_{1}", mesh_name.Trim(), i);
+                BuildMeshData(name, mesh, i);
+                if (mesh == zms[0]) // set 1st mesh name as MeshName
+                {
+                    MeshName = name;
+                }
                 i++;
             }
             LastResourceIndex += i;
@@ -34,19 +49,23 @@ namespace Rose2Godot.GodotExporters
 
         private void BuildMeshData(string name, ZMS zms, int idx)
         {
-            smesh.AppendFormat("[sub_resource id={0} type=\"ArrayMesh\"]\n\n", idx);
-            smesh.AppendFormat("resource_name = \"{0}\"\n", name);
+            smesh.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", idx);
+            smesh.AppendFormat("resource_name = \"{0}_mesh_data\"\n", name);
             smesh.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
             // vertices
 
-            smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, rotatePositive90, null));
+            smesh.AppendFormat("\t\t; vertices: {0}\n", zms.Vertex.Count);
+            //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, rotatePositive90, null));
+            smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, null, null));
 
             // normals
 
             if (zms.HasNormal())
             {
-                smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, rotatePositive90, null));
+                smesh.AppendFormat("\t\t; normals: {0}\n", zms.Normal.Count);
+                //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, rotatePositive90, null));
+                smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, null, null));
             }
             else
             {
@@ -57,7 +76,9 @@ namespace Rose2Godot.GodotExporters
             // FloatArray()
             if (zms.HasTangents())
             {
-                smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, rotatePositive90, null));
+                smesh.AppendFormat("\t\t; tangents: {0}\n", zms.Tangent.Count);
+                //smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, rotatePositive90, null));
+                smesh.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, null, null));
             }
             else
             {
@@ -74,6 +95,7 @@ namespace Rose2Godot.GodotExporters
 
             if (zms.HasUV0())
             {
+                smesh.AppendFormat("\t\t; UV1: {0}\n", zms.UV[0].Count);
                 smesh.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[0]));
             }
             else
@@ -85,6 +107,7 @@ namespace Rose2Godot.GodotExporters
 
             if (zms.HasUV1())
             {
+                smesh.AppendFormat("\t\t; UV2: {0}\n", zms.UV[1].Count);
                 smesh.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[1]));
             }
             else
@@ -92,36 +115,110 @@ namespace Rose2Godot.GodotExporters
                 smesh.AppendLine("\t\tnull, ; no UV2");
             }
 
-            // Bone indices
-            smesh.AppendLine("\t\tnull, ; no bone indices");
+            // Bone indices & Bone weights per vertex
 
-            // Bone weights
-            // FloatArray()
+            if (zms.HasBoneIndex() && zms.HasBoneWeight())
+            {
+                List<int> bindices = new List<int>();
+                List<string> bweights = new List<string>();
 
-            smesh.AppendLine("\t\tnull, ; no bone weights");
+                var vgroups = zms.BoneWeights.OrderBy(bw => bw.VertexID)
+                    .GroupBy(bw => bw.VertexID)
+                    .Select(g => new List<BoneWeight>(g.ToList()))
+                    .ToList();
+
+                if (vgroups.Count < zms.VertexCount)
+                {
+                    int groups_to_add = zms.VertexCount - vgroups.Count();
+                    for (int i = 0; i < groups_to_add; i++)
+                    {
+                        vgroups.Add(new List<BoneWeight>());
+                    }
+                }
+
+                foreach (var vgroup in vgroups)
+                {
+                    if (vgroup.Count < 4)
+                    {
+                        // add up to 4 bone per vertex
+                        int missing_num = 4 - vgroup.Count;
+                        int vertexId = vgroup.FirstOrDefault()?.VertexID ?? 0;
+
+                        for (int m = 0; m < missing_num; m++)
+                        {
+                            vgroup.Add(new BoneWeight(vertexId, 0, 0f));
+                        }
+                    }
+                }
+
+                foreach (var vgroup in vgroups.ToList())
+                {
+                    float total_weight = vgroup.Sum(bw => bw.Weight);
+
+                    foreach (BoneWeight bw in vgroup)
+                    {
+                        bindices.Add(bw.BoneID);
+                        // make sure total weight doesnt exceed 1f
+                        bweights.Add(string.Format("{0:0.0000}", bw.Weight / total_weight));
+                    }
+                }
+
+                string bone_indices = string.Format("\t\tIntArray({0}),", string.Join(", ", bindices.ToArray()));
+                string bone_weights = string.Format("\t\tFloatArray({0}),", string.Join(", ", bweights.ToArray()));
+
+                smesh.AppendFormat("\t\t; bone weights: {0}, after proccessing: {1} \n", zms.BoneWeights.Count, vgroups.Count * 4);
+                smesh.AppendLine(bone_indices);
+                smesh.AppendLine(bone_weights);
+            }
+            else
+            {
+                smesh.AppendLine("\t\tnull, ; no bone indices");
+                smesh.AppendLine("\t\tnull, ; no bone weights");
+            }
+
+            
 
             // face indices
-
+            smesh.AppendFormat("\t\t; triangle faces: {0}\n", zms.Face.Count);
             smesh.AppendFormat("\t\t{0}\n", Vector3wToArray(zms.Face));
 
             smesh.AppendLine("\t],"); // end of mesh arrays
             smesh.AppendLine("\t\"morph_arrays\":[]");
-            smesh.AppendLine("}\n"); // end of surface/0
+            smesh.AppendLine("}"); // end of surface/0
 
             if (!rootNodeAdded)
             {
-                smesh.AppendLine("[node type=\"Spatial\" name=\"Scene\"]\n");
+                nodes.AppendLine("[node type=\"Spatial\" name=\"Scene\"]");
                 rootNodeAdded = true;
             }
 
-            smesh.AppendFormat("[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", name);
+            if (zms.HasBoneIndex() && zms.HasBoneWeight())
+            {
+                // armature as parent
+                //nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\"Armature\"]\n", name);
+                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", name);
+            }
+            else
+            {
+                // root object as parent - for static objects
+                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", name);
+            }
 
-            smesh.AppendFormat("mesh = SubResource({0})\n", idx);
+            nodes.AppendFormat("mesh = SubResource({0})\n", idx);
 
-            smesh.AppendLine("visible = true");
+            nodes.AppendLine("visible = true");
 
-            smesh.AppendLine("transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)");
-            //smesh.AppendLine("transform = Transform( 1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0 )");
+            nodes.AppendFormat("transform = Transform(1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000)\n");
+        }
+
+        private string BoneIndicesToArray(List<ushort> indices)
+        {
+            List<string> vs = new List<string>();
+            foreach (ushort idx in indices)
+            {
+                vs.Add(idx.ToString());
+            }
+            return string.Format("IntArray({0})", string.Join(", ", vs.ToArray()));
         }
 
         private string Vector3fToArray(List<Vector3> vlist, Matrix3? transform, float? scale)
@@ -140,7 +237,7 @@ namespace Rose2Godot.GodotExporters
                     v *= transform.Value;
                 }
 
-                vs.Add(string.Format("{0:0.0000}, {1:0.0000}, {2:0.0000}", v.x, v.y, v.z));
+                vs.Add(string.Format("{0:0.00000}, {1:0.00000}, {2:0.00000}", v.x, v.y, v.z));
             }
 
             return string.Format("Vector3Array({0})", string.Join(", ", vs.ToArray()));
@@ -152,7 +249,7 @@ namespace Rose2Godot.GodotExporters
             List<string> vs = new List<string>();
             foreach (Vector2 v in vlist)
             {
-                vs.Add(string.Format("{0:0.0000}, {1:0.0000}", v.x, v.y));
+                vs.Add(string.Format("{0:0.00000}, {1:0.00000}", v.x, v.y));
             }
 
             return string.Format("Vector2Array({0})", string.Join(", ", vs.ToArray()));
@@ -171,7 +268,7 @@ namespace Rose2Godot.GodotExporters
 
         public override string ToString()
         {
-            return smesh.ToString();
+            return string.Format("{0}{1}", smesh, nodes);
         }
     }
 }

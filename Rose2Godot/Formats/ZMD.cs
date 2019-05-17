@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Mogre;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Mogre;
 
 namespace RoseFormats
 {
@@ -63,13 +63,6 @@ namespace RoseFormats
                             RoseBone bone = new RoseBone(br.ReadInt32(), bh.ReadZString(), bh.ReadVector3f() /** scaleFactor*/, bh.ReadQuaternion());
                             bone.ID = i;
                             bone.Position /= 100f;
-                            bone.TransformMatrix = Matrix4.Identity;
-                            bone.TransformMatrix.MakeTransform(bone.Position, Vector3.One, bone.Rotation);
-                            bone.InverseMatrix = bone.TransformMatrix.Inverse();
-
-                            Console.WriteLine(bone);
-                            Console.WriteLine(bone.Rotation.ToRotationMatrix());
-                            Console.WriteLine(bone.TransformMatrix);
 
                             if (i != 0)
                             {
@@ -100,17 +93,6 @@ namespace RoseFormats
                             } // if 
                             dummy.ID = (int)BonesCount + i;
                             dummy.Position /= 100f;
-                            dummy.TransformMatrix = Matrix4.Identity;
-                            dummy.TransformMatrix.MakeTransform(dummy.Position, Vector3.One, dummy.Rotation);
-                            dummy.InverseMatrix = dummy.TransformMatrix.Inverse();
-
-                            //if (dummy.ParentID < BonesCount)
-                            //{
-                            //    Bone[dummy.ParentID].ChildID.Add(dummy.ID);
-                            //} else
-                            //{
-                            //    Dummy[dummy.ParentID - (int)BonesCount].ChildID.Add(dummy.ID);
-                            //}
 
                             Dummy.Add(dummy);
                         } // for
@@ -127,41 +109,7 @@ namespace RoseFormats
                 return false;
             } // catch open file
 
-            //TransformChildren(0);
-
-            TransformBones(Bone[0]);
-
             return true;
         } // Load
-
-        private void TransformBones(RoseBone bone)
-        {
-            bone.TransformMatrix.MakeTransform(bone.Position, Vector3.One, bone.Rotation);
-
-            if (bone.ID != 0)
-            {
-                RoseBone parent = Bone[bone.ParentID];
-                Matrix4 parentInvTransformMatrix = Matrix4.Identity;
-                parentInvTransformMatrix.MakeInverseTransform(parent.Position, Vector3.One, parent.Rotation);
-                bone.TransformMatrix = parentInvTransformMatrix * bone.TransformMatrix;
-            }
-
-            foreach (int childID in bone.ChildID)
-            {
-                TransformBones(Bone[childID]);
-            }
-        }
-
-        //private void TransformChildren(int ParentID)
-        //{
-        //    for (int i = 0; i < Bone.Count; i++)
-        //    {
-        //        if (i == ParentID) continue;
-        //        if (Bone[i].ParentID != ParentID) continue;
-        //        Bone[i].TransformMatrix *= Bone[Bone[i].ParentID].TransformMatrix;
-        //        // TODO: Dummies?
-        //        TransformChildren(i);
-        //    }
-        //}
     } // Class
 }
