@@ -15,6 +15,9 @@ namespace Rose2Godot.GodotExporters
         public readonly List<ZMO> zmo;
         public readonly string objName;
 
+        public readonly List<string> nodes;
+        public readonly List<string> resources;
+
         public SceneExporter(
             string objectName,
             List<ZMS> mesh,
@@ -27,6 +30,10 @@ namespace Rose2Godot.GodotExporters
             zmo = animation;
             objName = objectName;
 
+            nodes = new List<string>();
+            resources = new List<string>();
+
+            // should include num of external objects
             //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
             num_resources = zms.Count;
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
@@ -43,7 +50,10 @@ namespace Rose2Godot.GodotExporters
 
                 idx = meshExporter.LastResourceIndex;
 
-                scene.AppendLine(meshExporter.ToString());
+                scene.AppendLine(meshExporter.Resources);
+
+                scene.AppendFormat("\n[node type=\"Spatial\" name=\"{0}\"]\n", objName);
+                scene.AppendLine("transform = Transform(1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0)\n\n");
 
                 if (zmd.BonesCount > 0)
                 {
@@ -52,7 +62,9 @@ namespace Rose2Godot.GodotExporters
                     idx = meshExporter.LastResourceIndex;
                 }
 
-                fileStream.WriteLine(scene.ToString());
+                scene.AppendLine(meshExporter.Nodes);
+
+                fileStream.WriteLine(scene);
 
                 fileStream.Close();
 

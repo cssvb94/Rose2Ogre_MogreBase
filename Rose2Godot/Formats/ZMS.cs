@@ -47,7 +47,7 @@ namespace RoseFormats
 
         private BinaryHelper bh;
         //private float scaleFactor = 10.0f;
-       
+
         public ZMS(string FileName)
         {
             MaterialName = Path.GetFileNameWithoutExtension(FileName);
@@ -92,21 +92,21 @@ namespace RoseFormats
                 FileStream fileStream = File.OpenRead(FileName);
                 BinaryReader br = new BinaryReader(fileStream, koreanEncoding);
                 bh = new BinaryHelper(br);
-                
+
                 try
                 {
                     FormatString = koreanEncoding.GetString(br.ReadBytes(8));
-                    
+
                     ZMSFileType = byte.Parse(FormatString[6].ToString());
 
                     VertexFormat = br.ReadUInt32();
-                    
+
                     MinBounds = bh.ReadVector3f();
-                    
+
                     MaxBounds = bh.ReadVector3f();
 
                     BonesCount = br.ReadUInt16();
-                    
+
                     for (int i = 0; i < BonesCount; i++)
                     {
                         BoneIndices.Add(br.ReadUInt16());
@@ -114,7 +114,7 @@ namespace RoseFormats
 
                     if (ZMSFileType >= 7)
                     {
-                        
+
                         LoadMeshType8(br);
                     }
                     else
@@ -123,7 +123,7 @@ namespace RoseFormats
                     }
 
                     StripCount = br.ReadUInt16();
-                    
+
                     for (int sindx = 0; sindx < StripCount; sindx++)
                     {
                         Strip.Add(br.ReadUInt16());
@@ -148,7 +148,7 @@ namespace RoseFormats
         private void LoadMeshType8(BinaryReader br)
         {
             VertexCount = br.ReadUInt16();
-            
+
             if (HasPosition())
             {
                 for (int i = 0; i < VertexCount; i++)
@@ -175,20 +175,21 @@ namespace RoseFormats
 
             if (HasSkin() && HasPosition())
             {
-                
+
                 for (int i = 0; i < VertexCount; i++)
                 {
                     Vector4 weights = bh.ReadVector4f();
                     Vector4w ids = bh.ReadVector4w();
-                    
+
                     for (int wi = 0; wi < 4; wi++)
                     {
-                        if (weights[wi] != 0.0f)
-                        {
-                            BoneWeights.Add(new BoneWeight(i, BoneIndices[ids[wi]], weights[wi]));
-                        } 
+                        // do not optimize - add all 4 bone weights per vertex
+                        //if (weights[wi] != 0.0f)
+                        //{
+                        BoneWeights.Add(new BoneWeight(i, BoneIndices[ids[wi]], weights[wi]));
+                        //}
                     }
-                    
+
                 }
             }
 
@@ -212,7 +213,7 @@ namespace RoseFormats
             }
 
             FaceCount = br.ReadUInt16();
-            
+
             for (int findex = 0; findex < FaceCount; findex++)
             {
                 Face.Add(bh.ReadVector3w());
@@ -223,7 +224,7 @@ namespace RoseFormats
         {
             UInt16 vidx;
             VertexCount = br.ReadUInt16();
-            
+
 
             if (HasPosition())
             {
@@ -253,13 +254,13 @@ namespace RoseFormats
 
             if (HasSkin())
             {
-                
+
                 for (int i = 0; i < VertexCount; i++)
                 {
                     vidx = br.ReadUInt16();
                     Vector4 weights = bh.ReadVector4f();
                     Vector4w ids = bh.ReadVector4w();
-                    
+
                     for (int wi = 0; wi < 4; wi++)
                     {
                         if (weights[wi] != 0.0f)
@@ -267,7 +268,7 @@ namespace RoseFormats
                             BoneWeights.Add(new BoneWeight(i, BoneIndices[ids[wi]], weights[wi]));
                         }
                     }
-                    
+
                 }
             }
 
@@ -294,7 +295,7 @@ namespace RoseFormats
             }
 
             FaceCount = br.ReadUInt16();
-            
+
             for (int findex = 0; findex < FaceCount; findex++)
             {
                 vidx = br.ReadUInt16();

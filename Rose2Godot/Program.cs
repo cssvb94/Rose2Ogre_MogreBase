@@ -32,7 +32,8 @@ namespace Rose2Godot
 
             if (zmds.Any())
             {
-                ZMDFile = zmds.ToList()[0];
+                ZMDFile = zmds.ToArray()[0];
+                Console.WriteLine("Loading ZMD: {0}", ZMDFile);
                 zmd.Load(ZMDFile);
             }
 
@@ -42,16 +43,18 @@ namespace Rose2Godot
                 ZMSFiles = ZMSFiles.Distinct().ToList();
                 foreach (string zms_filename in ZMSFiles)
                 {
+                    Console.WriteLine("Loading ZMS: {0}", zms_filename);
                     zms.Add(new ZMS(zms_filename));
                 }
             }
-            
+
             if (zmos.Any() && zmds.Any())
             {
                 ZMOFiles.AddRange(zmos.ToList());
                 ZMOFiles = ZMOFiles.Distinct().ToList();
                 foreach (string zmo_filename in ZMOFiles)
                 {
+                    Console.WriteLine("Loading ZMO: {0}", zmo_filename);
                     zmo.Add(new ZMO(zmo_filename, zmd));
                 }
             }
@@ -90,16 +93,28 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn");
 
             // akines
-            ProcessFileList(new List<string>() {
-                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BODY01.ZMS",
-                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_HEAD01.ZMS",
-                @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BONE.ZMD",
+            //ProcessFileList(new List<string>() {
+            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BODY01.ZMS",
+            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_HEAD01.ZMS",
+            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BONE.ZMD",
+            //});
+            //sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\akines.escn");
+
+            ProcessFileList(new List<string>()
+            {
+                @"/home/user/Projects/Rose/3DDATA/Cowboy/BODY01.ZMS",
+                @"/home/user/Projects/Rose/3DDATA/Cowboy/HEAD01.ZMS",
+                @"/home/user/Projects/Rose/3DDATA/Cowboy/COWBOY_BONE.ZMD",
+
             });
-            sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\akines.escn");
+            sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/cowboy.escn");
 
 #else
-             ProcessFileList(args.ToList());
+            ProcessFileList(args.ToList());
+            sceneExporter = new SceneExporter("Mesh", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"export.escn");
 #endif
 
             // The [.escn] file format is identical to the TSCN file format, but is used to indicate to Godot that the file has been exported from another program 
