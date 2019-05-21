@@ -39,7 +39,7 @@ namespace Rose2Godot.GodotExporters
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
         }
 
-        public bool ExportScene(string fileName)
+        public bool ExportScene(string fileName, List<string> animationName)
         {
             int idx = 1;
             try
@@ -48,21 +48,42 @@ namespace Rose2Godot.GodotExporters
 
                 MeshExporter meshExporter = new MeshExporter(objName, idx, zms);
 
+                AnimationExporter animExporter = new AnimationExporter(idx, zmo, animationName, zmd);
+
+                // meshes & bone weights
+
                 idx = meshExporter.LastResourceIndex;
 
                 scene.AppendLine(meshExporter.Resources);
 
+                scene.Append("; root of the scene");
                 scene.AppendFormat("\n[node type=\"Spatial\" name=\"{0}\"]\n", objName);
-                scene.AppendLine("transform = Transform(1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0)\n\n");
+                scene.AppendLine("transform = Transform(1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0)\n");
+
+                // animations
+                // normalize the rotation quats!
+                if (zmo.Count > 0)
+                {
+                    scene.AppendLine(animExporter.Resources);
+
+                    idx = animExporter.LastResourceIndex;
+                }
+
+                // skeleton
 
                 if (zmd.BonesCount > 0)
                 {
-                    BoneExporter boneExporter = new BoneExporter(meshExporter.MeshName, idx, zmd);
+                    BoneExporter boneExporter = new BoneExporter(idx, zmd);
                     scene.AppendLine(boneExporter.ToString());
                     idx = meshExporter.LastResourceIndex;
                 }
 
                 scene.AppendLine(meshExporter.Nodes);
+
+                if (zmo.Count > 0)
+                {
+                    scene.AppendLine(animExporter.Nodes);
+                }
 
                 fileStream.WriteLine(scene);
 

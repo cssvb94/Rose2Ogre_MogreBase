@@ -77,39 +77,42 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\avatar.escn");
 
             //larva
-            //ProcessFileList(new List<string>() {
-            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\LARVA1_BONE.ZMD",
-            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\LARVA1.ZMS",
-            //});
-            //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
-            //sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\larva_exported.escn");
+            ProcessFileList(new List<string>() {
+                @"D:\Projects\3D\ROSE\LARVA1_BONE.ZMD",
+                @"D:\Projects\3D\ROSE\LARVA1.ZMS",
+                @"D:\Projects\3D\ROSE\LARVA_ATTACK.ZMO",
+                @"D:\Projects\3D\ROSE\LARVA_WALK.ZMO",
+                @"D:\Projects\3D\ROSE\LARVA_WARNING.ZMO",
+            });
+            sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMOFiles);
 
             // exported
             //ProcessFileList(new List<string>() {
-            //    "Example\\EXPORTED_BONE.ZMD",
-            //    "Example\\EXPORTED.ZMS",
+            //    @"D:\Projects\3D\EXPORTED_BONE.ZMD",
+            //    @"D:\Projects\3D\EXPORTED.ZMS",
             //});
             //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn");
 
             // akines
             //ProcessFileList(new List<string>() {
-            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BODY01.ZMS",
-            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_HEAD01.ZMS",
-            //    @"C:\Projects\Rose2Ogre_MogreBase\Rose2Ogre\Example\AKINES_BONE.ZMD",
+            //    @"D:\Projects\3D\AKINES_BODY01.ZMS",
+            //    @"D:\Projects\3D\AKINES_HEAD01.ZMS",
+            //    @"D:\Projects\3D\AKINES_BONE.ZMD",
             //});
             //sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
             //sceneExporter.ExportScene(@"C:\Users\Irix\Downloads\Godot\Projects\RoseImport\scenes\akines.escn");
 
-            ProcessFileList(new List<string>()
-            {
-                @"/home/user/Projects/Rose/3DDATA/Cowboy/BODY01.ZMS",
-                @"/home/user/Projects/Rose/3DDATA/Cowboy/HEAD01.ZMS",
-                @"/home/user/Projects/Rose/3DDATA/Cowboy/COWBOY_BONE.ZMD",
+            //ProcessFileList(new List<string>()
+            //{
+            //    @"/home/user/Projects/Rose/3DDATA/Cowboy/BODY01.ZMS",
+            //    @"/home/user/Projects/Rose/3DDATA/Cowboy/HEAD01.ZMS",
+            //    @"/home/user/Projects/Rose/3DDATA/Cowboy/COWBOY_BONE.ZMD",
 
-            });
-            sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/cowboy.escn");
+            //});
+            //sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/cowboy.escn");
 
 #else
             ProcessFileList(args.ToList());

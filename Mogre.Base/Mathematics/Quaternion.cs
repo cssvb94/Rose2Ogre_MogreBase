@@ -360,8 +360,9 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public override string ToString()
 		{
-			return ToString("G", CultureInfo.CurrentCulture);
-		}
+			//return ToString("G", CultureInfo.CurrentCulture);
+            return string.Format(CultureInfo.CurrentCulture, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+        }
 
 		/// <summary>
 		/// Returns a String representing this Quaternion instance, using the specified format to format individual elements.
@@ -370,29 +371,42 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public string ToString(string format)
 		{
-			return ToString(format, CultureInfo.CurrentCulture);
-		}
+            if (format == null)
+                return ToString();
+            //return ToString(format, CultureInfo.CurrentCulture);
+            return string.Format(CultureInfo.CurrentCulture, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+        }
 
-		/// <summary>
-		/// Returns a String representing this Quaternion instance, using the specified format to format individual elements 
-		/// and the given IFormatProvider.
-		/// </summary>
-		/// <param name="format">The format of individual elements.</param>
-		/// <param name="formatProvider">The format provider to use when formatting elements.</param>
-		/// <returns>The string representation.</returns>
-		public string ToString(string format, IFormatProvider formatProvider)
+        public string ToString(IFormatProvider formatProvider)
+        {
+            return string.Format(formatProvider, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+        }
+
+        /// <summary>
+        /// Returns a String representing this Quaternion instance, using the specified format to format individual elements 
+        /// and the given IFormatProvider.
+        /// </summary>
+        /// <param name="format">The format of individual elements.</param>
+        /// <param name="formatProvider">The format provider to use when formatting elements.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider formatProvider)
 		{
-			var sb = new StringBuilder();
-			string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator + " ";
-			sb.Append(W.ToString(format, formatProvider));
-			sb.Append(separator);
-			sb.Append(X.ToString(format, formatProvider));
-			sb.Append(separator);
-			sb.Append(Y.ToString(format, formatProvider));
-			sb.Append(separator);
-			sb.Append(Z.ToString(format, formatProvider));
-			return sb.ToString();
-		}
+            //var sb = new StringBuilder();
+            //string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator + " ";
+            //sb.Append(W.ToString(format, formatProvider));
+            //sb.Append(separator);
+            //sb.Append(X.ToString(format, formatProvider));
+            //sb.Append(separator);
+            //sb.Append(Y.ToString(format, formatProvider));
+            //sb.Append(separator);
+            //sb.Append(Z.ToString(format, formatProvider));
+            //return sb.ToString();
+
+            if (format == null)
+                ToString(formatProvider);
+
+            return string.Format(formatProvider, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+        }
 
 		/// <summary>
 		/// Returns the hash code for this instance.

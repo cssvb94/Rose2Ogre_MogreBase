@@ -12,10 +12,10 @@ namespace Rose2Godot.GodotExporters
 
         public int LastResourceIndex { get; }
 
-        public BoneExporter(string mesh_name, int resource_index, ZMD zmd)
+        public BoneExporter(int resource_index, ZMD zmd)
         {
             sbone = new StringBuilder();
-            //sbone.AppendFormat("[node name=\"Armature\" type=\"Skeleton\" parent=\"{0}\"]\n\n", mesh_name);
+            sbone.Append("; skelton node - mesh nodes parent\n");
             sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".\"]");
             sbone.AppendLine("bones_in_world_transform = true");
             sbone.AppendLine("transform = Transform(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)");
@@ -27,9 +27,11 @@ namespace Rose2Godot.GodotExporters
             foreach (RoseBone bone in zmd.Bone)
             {
                 GodotTransform transform = new GodotTransform(translator.ToQuat(bone.Rotation), translator.ToVector3(bone.Position));
+                bone.Rotation.ToAngleAxis(out Radian radian, out Vector3 axis);
 
                 sbone.AppendFormat("bones/{0}/name = \"{1}\"\n", idx, bone.Name);
                 sbone.AppendFormat("bones/{0}/parent = {1}\n", idx, idx == 0 ? -1 : bone.ParentID);
+                sbone.AppendFormat("; Position: {0}\n; Rotation: {1}\n; Angle(rad): {2:0.00000} Angle(deg): {3:0.00000} Axis: {4}\n", bone.Position, bone.Rotation, radian.ValueRadians, radian.ValueDegrees, axis);
                 sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
                 sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, translator.Transform2String(IdentityTranform));
                 sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
@@ -45,6 +47,7 @@ namespace Rose2Godot.GodotExporters
 
                     sbone.AppendFormat("bones/{0}/name = \"{1}\"\n", idx, dummy.Name);
                     sbone.AppendFormat("bones/{0}/parent = {1}\n", idx, idx == 0 ? -1 : dummy.ParentID);
+                    sbone.AppendFormat("; Position: {0}\n; Rotation: {1}\n", dummy.Position, dummy.Rotation);
                     sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
                     sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, translator.Transform2String(IdentityTranform));
                     sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
@@ -54,11 +57,6 @@ namespace Rose2Godot.GodotExporters
             }
 
             LastResourceIndex += resource_index;
-        }
-
-        public override string ToString()
-        {
-            return sbone.ToString();
         }
     }
 }

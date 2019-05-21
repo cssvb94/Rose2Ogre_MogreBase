@@ -9,10 +9,9 @@ namespace Rose2Godot.GodotExporters
     public class MeshExporter
     {
         private readonly StringBuilder resource;
-        private StringBuilder nodes;
+        private readonly StringBuilder nodes;
         private readonly string name;
         public int LastResourceIndex { get; }
-        //private bool rootNodeAdded = false;
         public string MeshName { get; set; }
 
         public string Resources
@@ -205,7 +204,7 @@ namespace Rose2Godot.GodotExporters
 
             if (zms.HasBoneIndex() && zms.HasBoneWeight())
             {
-                nodes.AppendLine("skeleton = NodePath(\"Armature\")");
+                nodes.AppendLine("skeleton = NodePath(\"..:Armature\")");
             }
 
             nodes.AppendFormat("transform = Transform(1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000, 1.0000, 0.0000, 0.0000, 0.0000)\n");
