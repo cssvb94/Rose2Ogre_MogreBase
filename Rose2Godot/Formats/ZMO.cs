@@ -33,6 +33,8 @@ namespace RoseFormats
             }
         }
 
+        public string AnimationName { get; set; }
+
         public ZMO(string FileName, ZMD zmd)
         {
             Load(FileName, zmd);
@@ -56,6 +58,8 @@ namespace RoseFormats
 
                 try
                 {
+                    AnimationName = Path.GetFileNameWithoutExtension(FileName);
+
                     FormatString = koreanEncoding.GetString(br.ReadBytes(7));
                     br.ReadByte();
 
@@ -77,10 +81,10 @@ namespace RoseFormats
                     }
 
                     // set frames number for each bone
-                    foreach (RoseBone bone in zmd.Bone)
-                    {
-                        bone.InitFrames(Frames);
-                    }
+                    //foreach (RoseBone bone in zmd.Bone)
+                    //{
+                    //    bone.InitFrames(Frames);
+                    //}
 
                     // Read tracks data
                     for (int frameIDX = 0; frameIDX < Frames; frameIDX++)
@@ -88,7 +92,7 @@ namespace RoseFormats
                         for (int channelIDX = 0; channelIDX < Channels; channelIDX++)
                         {
                             int BoneID = Channel[channelIDX].BoneID;
-
+                            
                             ZMOTrack track = new ZMOTrack(Channel[channelIDX].Type, Channel[channelIDX].BoneID, frameIDX);
 
                             if (Channel[channelIDX].Type == ZMOTrack.TrackType.POSITION || Channel[channelIDX].Type == ZMOTrack.TrackType.NORMAL)
@@ -97,19 +101,19 @@ namespace RoseFormats
                                 track.Position = bh.ReadVector3f();
                                 if (zmd != null)
                                 {
-                                    zmd.Bone[BoneID].Frame[frameIDX].Position = track.Position;
-
+                                    //zmd.Bone[BoneID].Frame[frameIDX].Position = track.Position;
+                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Position = track.Position }, ZMOTrack.TrackType.POSITION);
                                 }
                             } // position
 
                             if (Channel[channelIDX].Type == ZMOTrack.TrackType.ROTATION)
                             {
                                 //read quat
-                                Quaternion q = bh.ReadQuaternion();
-                                track.Rotation = q;
+                                track.Rotation = bh.ReadQuaternion();
                                 if (zmd != null)
                                 {
-                                    zmd.Bone[BoneID].Frame[frameIDX].Rotation = track.Rotation;
+                                    //zmd.Bone[BoneID].Frame[frameIDX].Rotation = track.Rotation;
+                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Rotation = track.Rotation }, ZMOTrack.TrackType.POSITION);
                                 }
                             } // rotation
 
@@ -124,7 +128,8 @@ namespace RoseFormats
                                 track.Value = br.ReadSingle();
                                 if (zmd != null)
                                 {
-                                    zmd.Bone[BoneID].Frame[frameIDX].Scale = new Vector3(track.Value, track.Value, track.Value);
+                                    //zmd.Bone[BoneID].Frame[frameIDX].Scale = new Vector3(track.Value, track.Value, track.Value);
+                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Scale = Vector3.One * track.Value }, ZMOTrack.TrackType.SCALE);
                                 }
                             }
 

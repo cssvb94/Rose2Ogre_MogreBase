@@ -1,9 +1,10 @@
 ﻿using Mogre;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RoseFormats
 {
-    public class BoneAnimation
+    public class BoneFrame
     {
         private float angle;
 
@@ -48,11 +49,25 @@ namespace RoseFormats
 
         public Vector3 Scale;
 
-        public BoneAnimation()
+        public int Frame { get; set; }
+
+        public BoneFrame()
         {
             Rotation = Quaternion.IDENTITY;
             Position = Vector3.ZERO;
             Scale = Vector3.UNIT_SCALE;
+        }
+    }
+
+    public class BoneAnimation
+    {
+        public string Name { get; set; }
+        public List<BoneFrame> Frames { get; set; }
+
+        public BoneAnimation(string name)
+        {
+            Name = name;
+            Frames = new List<BoneFrame>();
         }
     }
 
@@ -112,7 +127,9 @@ namespace RoseFormats
 
         // from ZMO
         // the bone animation transformation for each frame
-        public BoneAnimation[] Frame;
+        // public BoneAnimation[] Frame;
+
+        public List<BoneAnimation> BoneAnimations { get; set; }
 
         public RoseBone()
         {
@@ -124,6 +141,7 @@ namespace RoseFormats
             isDummy = false;
             InverseMatrix = new Matrix4();
             TransformMatrix = new Matrix4();
+            BoneAnimations = new List<BoneAnimation>();
         }
 
         // Normal bone read sequence
@@ -134,6 +152,7 @@ namespace RoseFormats
             this.Rotation = Rotation;
             isDummy = false;
             this.ParentID = ParentID;
+            BoneAnimations = new List<BoneAnimation>();
         }
 
         // Dummy read sequence ZMD0003
@@ -144,6 +163,7 @@ namespace RoseFormats
             this.Rotation = Rotation;
             this.ParentID = ParentID;
             isDummy = true;
+            BoneAnimations = new List<BoneAnimation>();
         }
 
         // Dummy read sequence ZMD0002
@@ -154,17 +174,52 @@ namespace RoseFormats
             this.Rotation = new Quaternion();
             this.ParentID = ParentID;
             isDummy = true;
+            BoneAnimations = new List<BoneAnimation>();
         }
 
-        public void InitFrames(int FramesCount)
+        public void AddAnimationAt(int frame_number, string animation_name, BoneFrame frame, ZMOTrack.TrackType trackType)
         {
-            Frame = new BoneAnimation[FramesCount];
-
-            for (int i = 0; i < FramesCount; i++)
+            BoneAnimation banim = BoneAnimations.Find(ba => ba.Name.Equals(animation_name));
+            if (banim == null)
             {
-                Frame[i] = new BoneAnimation();
+                banim = new BoneAnimation(animation_name);
+                BoneAnimations.Add(banim);
+            }
+
+            BoneFrame bframe = banim.Frames.Find(a => a.Frame == frame_number);
+            if (bframe == null)
+            {
+                bframe = new BoneFrame()
+                {
+                    Frame = frame_number
+                };
+
+                banim.Frames.Add(bframe);               
+            }
+
+            switch (trackType)
+            {
+                case ZMOTrack.TrackType.POSITION:
+                    bframe.Position = frame.Position;
+                    break;
+                case ZMOTrack.TrackType.ROTATION:
+                    bframe.Rotation = frame.Rotation;
+                    break;
+                case ZMOTrack.TrackType.SCALE:
+                    bframe.Scale = frame.Scale;
+                    break;
             }
         }
+
+        //public void InitFrames(int FramesCount)
+        //{
+        //    Frame = new BoneAnimation[FramesCount];
+
+        //    for (int i = 0; i < FramesCount; i++)
+        //    {
+        //        Frame[i] = new BoneAnimation();
+        //    }
+        //}
 
         public override string ToString()
         {

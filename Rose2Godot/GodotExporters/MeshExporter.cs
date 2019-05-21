@@ -32,17 +32,17 @@ namespace Rose2Godot.GodotExporters
 
         private Matrix3 rotatePositive90;
 
-        public MeshExporter(string mesh_name, int resource_index, List<ZMS> zms)
+        public MeshExporter(int resource_index, List<ZMS> zms, List<string> mesh_names)
         {
             rotatePositive90 = new Quaternion(new Degree(90f), new Vector3(1f, 0f, 0f)).ToRotationMatrix();
             nodes = new StringBuilder();
             resource = new StringBuilder();
-            name = mesh_name;
+            name = mesh_names.First();
             LastResourceIndex = resource_index;
 
             if (zms.Count == 1)
             {
-                MeshName = mesh_name;
+                MeshName = mesh_names.First();
                 LastResourceIndex = resource_index++;
                 BuildMeshData(name, zms[0], 0);
                 return;
@@ -51,7 +51,7 @@ namespace Rose2Godot.GodotExporters
             int i = 1;
             foreach (ZMS mesh in zms)
             {
-                string name = string.Format("{0}_{1}", mesh_name.Trim(), i);
+                string name = string.Format("{0}", mesh_names[i-1]);
                 BuildMeshData(name, mesh, i);
                 if (mesh == zms[0]) // set 1st mesh name as MeshName
                 {
@@ -65,7 +65,7 @@ namespace Rose2Godot.GodotExporters
         private void BuildMeshData(string mesh_data_name, ZMS zms, int idx)
         {
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", idx);
-            resource.AppendFormat("resource_name = \"{0}_mesh_data\"\n", mesh_data_name);
+            resource.AppendFormat("resource_name = \"{0}\"\n", mesh_data_name);
             resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
             // vertices

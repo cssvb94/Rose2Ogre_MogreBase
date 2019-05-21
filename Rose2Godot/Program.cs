@@ -85,7 +85,7 @@ namespace Rose2Godot
                 @"D:\Projects\3D\ROSE\LARVA_WARNING.ZMO",
             });
             sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMOFiles);
+            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMOFiles, ZMSFiles);
 
             // exported
             //ProcessFileList(new List<string>() {

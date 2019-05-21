@@ -58,5 +58,10 @@ namespace Rose2Godot.GodotExporters
 
             LastResourceIndex += resource_index;
         }
+
+        public override string ToString()
+        {
+            return sbone.ToString();
+        }
     }
 }
