@@ -314,22 +314,22 @@ namespace Godot
 
         public GodotBasis(GodotQuat quat)
         {
-            float num1 = 2f / quat.LengthSquared();
-            float num2 = quat.x * num1;
-            float num3 = quat.y * num1;
-            float num4 = quat.z * num1;
-            float num5 = quat.w * num2;
-            float num6 = quat.w * num3;
-            float num7 = quat.w * num4;
-            float num8 = quat.x * num2;
-            float num9 = quat.x * num3;
-            float num10 = quat.x * num4;
-            float num11 = quat.y * num3;
-            float num12 = quat.y * num4;
-            float num13 = quat.z * num4;
-            x = new GodotVector3((float)(1.0 - (num11 + num13)), num9 - num7, num10 + num6);
-            y = new GodotVector3(num9 + num7, (float)(1.0 - (num8 + num13)), num12 - num5);
-            z = new GodotVector3(num10 - num6, num12 + num5, (float)(1.0 - (num8 + num11)));
+            float qdot = 2f / quat.LengthSquared();
+            float qx = quat.x * qdot;
+            float qy = quat.y * qdot;
+            float qz = quat.z * qdot;
+            float qwx = quat.w * qx;
+            float qwy = quat.w * qy;
+            float qwz = quat.w * qz;
+            float qxx = quat.x * qx;
+            float qxy = quat.x * qy;
+            float qxz = quat.x * qz;
+            float qyy = quat.y * qy;
+            float qyz = quat.y * qz;
+            float qzz = quat.z * qz;
+            x = new GodotVector3(1.0f - (qyy + qzz), qxy - qwz, qxz + qwy);
+            y = new GodotVector3(qxy + qwz, 1.0f - (qxx + qzz), qyz - qwx);
+            z = new GodotVector3(qxz - qwy, qyz + qwx, 1.0f - (qxx + qyy));
         }
 
         public GodotBasis(GodotVector3 axis, float phi)

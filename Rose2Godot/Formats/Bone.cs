@@ -1,6 +1,5 @@
 ﻿using Mogre;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RoseFormats
 {
@@ -126,8 +125,7 @@ namespace RoseFormats
         public bool isDummy;
 
         // from ZMO
-        // the bone animation transformation for each frame
-        // public BoneAnimation[] Frame;
+        // the bone animations & transformation for each frame
 
         public List<BoneAnimation> BoneAnimations { get; set; }
 
@@ -171,7 +169,7 @@ namespace RoseFormats
         {
             this.Name = Name;
             this.Position = Position;
-            this.Rotation = new Quaternion();
+            Rotation = new Quaternion();
             this.ParentID = ParentID;
             isDummy = true;
             BoneAnimations = new List<BoneAnimation>();
@@ -180,6 +178,8 @@ namespace RoseFormats
         public void AddAnimationAt(int frame_number, string animation_name, BoneFrame frame, ZMOTrack.TrackType trackType)
         {
             BoneAnimation banim = BoneAnimations.Find(ba => ba.Name.Equals(animation_name));
+
+            // if new animation - create
             if (banim == null)
             {
                 banim = new BoneAnimation(animation_name);
@@ -187,6 +187,7 @@ namespace RoseFormats
             }
 
             BoneFrame bframe = banim.Frames.Find(a => a.Frame == frame_number);
+            // if new frame - create
             if (bframe == null)
             {
                 bframe = new BoneFrame()
@@ -194,32 +195,23 @@ namespace RoseFormats
                     Frame = frame_number
                 };
 
-                banim.Frames.Add(bframe);               
+                banim.Frames.Add(bframe);
             }
 
+            // add/update frame transform
             switch (trackType)
             {
                 case ZMOTrack.TrackType.POSITION:
                     bframe.Position = frame.Position;
                     break;
                 case ZMOTrack.TrackType.ROTATION:
-                    bframe.Rotation = frame.Rotation;
+                    bframe.Rotation = frame.Rotation.Normalized();
                     break;
                 case ZMOTrack.TrackType.SCALE:
                     bframe.Scale = frame.Scale;
                     break;
             }
         }
-
-        //public void InitFrames(int FramesCount)
-        //{
-        //    Frame = new BoneAnimation[FramesCount];
-
-        //    for (int i = 0; i < FramesCount; i++)
-        //    {
-        //        Frame[i] = new BoneAnimation();
-        //    }
-        //}
 
         public override string ToString()
         {

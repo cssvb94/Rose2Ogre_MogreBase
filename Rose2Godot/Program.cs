@@ -80,9 +80,9 @@ namespace Rose2Godot
             ProcessFileList(new List<string>() {
                 @"D:\Projects\3D\ROSE\LARVA1_BONE.ZMD",
                 @"D:\Projects\3D\ROSE\LARVA1.ZMS",
-                @"D:\Projects\3D\ROSE\LARVA_ATTACK.ZMO",
+                //@"D:\Projects\3D\ROSE\LARVA_ATTACK.ZMO",
                 @"D:\Projects\3D\ROSE\LARVA_WALK.ZMO",
-                @"D:\Projects\3D\ROSE\LARVA_WARNING.ZMO",
+                //@"D:\Projects\3D\ROSE\LARVA_WARNING.ZMO",
             });
             sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
             sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMOFiles, ZMSFiles);
