@@ -20,9 +20,17 @@ namespace Rose2Godot.GodotExporters
             return new GodotVector2(v.x, v.y);
         }
 
+        public float Round(float val)
+        {
+            return (float)System.Math.Round(val, 4, System.MidpointRounding.AwayFromZero);
+        }
+
         public string Vector32String(GodotVector3 v)
         {
-            return string.Format("{0:0.00000}, {1:0.00000}, {2:0.00000}", v.x, v.y, v.z);
+            return string.Format("{0:G4}, {1:G4}, {2:G4}",
+                Round(v.x),
+                Round(v.y),
+                Round(v.z));
         }
 
         public string Transform2String(GodotTransform t)

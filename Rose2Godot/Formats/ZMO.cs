@@ -105,7 +105,7 @@ namespace RoseFormats
                                 track.Rotation = bh.ReadQuaternion();
                                 if (zmd != null)
                                 {
-                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Rotation = track.Rotation }, ZMOTrack.TrackType.POSITION);
+                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Rotation = track.Rotation }, ZMOTrack.TrackType.ROTATION);
                                 }
                             } // rotation
 

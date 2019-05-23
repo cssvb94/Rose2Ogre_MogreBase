@@ -691,7 +691,7 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public override string ToString()
 		{
-			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})", X, Y, Z);
+			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:G4}, {1:G4}, {2:G4})", X, Y, Z);
 		}
 
 		/// <summary>
@@ -704,9 +704,8 @@ namespace Mogre
 			if (format == null)
 				return ToString();
 
-			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})",
-				X,Y,Z);
-		}
+			return string.Format(CultureInfo.CurrentCulture, "Vector3({0:G4}, {1:G4}, {2:G4})", X, Y, Z);
+        }
 
 		/// <summary>
 		/// Returns a <see cref="System.String"/> that represents this instance.
@@ -717,8 +716,8 @@ namespace Mogre
 		/// </returns>
 		public string ToString(IFormatProvider formatProvider)
 		{
-			return string.Format(formatProvider, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})", X, Y, Z);
-		}
+			return string.Format(formatProvider, "Vector3({0:G4}, {1:G4}, {2:G4})", X, Y, Z);
+        }
 
 		/// <summary>
 		/// Returns a <see cref="System.String"/> that represents this instance.
@@ -733,8 +732,7 @@ namespace Mogre
 			if (format == null)
 				ToString(formatProvider);
 
-			return string.Format(formatProvider, "Vector3({0:0.0000}, {1:0.0000}, {2:0.0000})",
-                X, Y, Z);
+			return string.Format(formatProvider, "Vector3({0:G4}, {1:G4}, {2:G4})", X, Y, Z);
         }
 
 		/// <summary>

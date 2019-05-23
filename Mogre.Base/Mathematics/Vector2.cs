@@ -214,7 +214,7 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public override string ToString()
 		{
-			return ToString("G", CultureInfo.CurrentCulture);
+			return ToString("G5", CultureInfo.CurrentCulture);
 		}
 
 		/// <summary>
@@ -266,8 +266,7 @@ namespace Mogre
 		public bool Equals(ref Vector2 other)
 		{
 			return
-				X == other.X &&
-				Y == other.Y;
+				X == other.X && Y == other.Y;
 		}
 
 		/// <summary>

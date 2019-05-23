@@ -177,13 +177,15 @@ namespace RoseFormats
 
         public void AddAnimationAt(int frame_number, string animation_name, BoneFrame frame, ZMOTrack.TrackType trackType)
         {
-            BoneAnimation banim = BoneAnimations.Find(ba => ba.Name.Equals(animation_name));
+            bool createdAnim = false;
+            bool createdFare = false;
+            BoneAnimation banim = BoneAnimations.Find(ba => ba.Name.Equals(animation_name, System.StringComparison.InvariantCultureIgnoreCase));
 
             // if new animation - create
             if (banim == null)
             {
                 banim = new BoneAnimation(animation_name);
-                BoneAnimations.Add(banim);
+                createdAnim = true;
             }
 
             BoneFrame bframe = banim.Frames.Find(a => a.Frame == frame_number);
@@ -195,7 +197,7 @@ namespace RoseFormats
                     Frame = frame_number
                 };
 
-                banim.Frames.Add(bframe);
+                createdFare = true;
             }
 
             // add/update frame transform
@@ -210,6 +212,16 @@ namespace RoseFormats
                 case ZMOTrack.TrackType.SCALE:
                     bframe.Scale = frame.Scale;
                     break;
+            }
+
+            if (createdFare)
+            {
+                banim.Frames.Add(bframe);
+            }
+
+            if (createdAnim)
+            {
+                BoneAnimations.Add(banim);
             }
         }
 

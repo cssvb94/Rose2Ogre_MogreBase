@@ -46,14 +46,12 @@ namespace Rose2Godot.GodotExporters
             {
                 StreamWriter fileStream = new StreamWriter(fileName);
 
-                
+                //List<string> animationNames = new List<string>();
 
-                List<string> animationNames = new List<string>();
-
-                foreach (string fname in zmoFileNames)
-                {
-                    animationNames.Add(Path.GetFileNameWithoutExtension(fname));
-                }
+                //foreach (string fname in zmoFileNames)
+                //{
+                //    animationNames.Add(Path.GetFileNameWithoutExtension(fname));
+                //}
 
                 List<string> meshNames = new List<string>();
 
@@ -62,20 +60,18 @@ namespace Rose2Godot.GodotExporters
                     meshNames.Add(Path.GetFileNameWithoutExtension(fname));
                 }
 
-                MeshExporter meshExporter = new MeshExporter(idx, zms, meshNames);
-
-                AnimationExporter animExporter = new AnimationExporter(idx, zmo, animationNames, zmd);
-
-                // meshes & bone weights
+                MeshExporter meshExporter = new MeshExporter(idx, zms, meshNames, zmd.BonesCount > 0);
 
                 idx = meshExporter.LastResourceIndex;
 
+                AnimationExporter animExporter = new AnimationExporter(idx, zmo, zmd);
+
+                // meshes & bone weights
+
+                idx = animExporter.LastResourceIndex;
+
                 scene.AppendLine(meshExporter.Resources);
-
-                scene.Append("; root of the scene");
-                scene.AppendFormat("\n[node type=\"Spatial\" name=\"{0}\"]\n", objName);
-                scene.AppendLine("transform = Transform(1, 0, 0, 0, -4.37114e-008, 1, 0, -1, -4.37114e-008, 0, 0, 0)\n");
-
+                
                 // animations
                 // normalize the rotation quats!
 
@@ -85,6 +81,10 @@ namespace Rose2Godot.GodotExporters
 
                     idx = animExporter.LastResourceIndex;
                 }
+
+                //scene.AppendLine("; root of the scene");
+                scene.AppendFormat("[node type=\"Spatial\" name=\"{0}\"]\n", objName);
+                scene.AppendLine("transform = Transform(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)\n");
 
                 // skeleton
 

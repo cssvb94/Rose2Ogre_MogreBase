@@ -18,6 +18,8 @@ namespace Rose2Godot.GodotExporters
         public string BoneName { get; set; }
         public int BoneId { get; set; }
 
+        private static readonly Translator translator = new Translator();
+
         public AnimationTrack(float timeStamp, float transition, Vector3 translation, Quaternion rotation, Vector3 scale, int boneId, string boneName)
         {
             TimeStamp = timeStamp; // secs
@@ -31,11 +33,23 @@ namespace Rose2Godot.GodotExporters
 
         public override string ToString()
         {
-            string v3t = string.Format("{0:0.000}, {1:0.000}, {2:0.000}", Translation.x, Translation.y, Translation.z);
-            string qr = string.Format("{0:0.000}, {1:0.000}, {2:0.000}, {3:0.000}", Rotation.x, Rotation.y, Rotation.z, Rotation.w);
-            string v3s = string.Format("{0:0.000}, {1:0.000}, {2:0.000}", Scale.x, Scale.y, Scale.z);
+            string v3t = string.Format("{0:G4}, {1:G4}, {2:G4}",
+                 translator.Round(Translation.x),
+                 translator.Round(Translation.y),
+                 translator.Round(Translation.z));
+            string qr = string.Format("{0:G4}, {1:G4}, {2:G4}, {3:G4}",
+                translator.Round(Rotation.x),
+                translator.Round(Rotation.y),
+                translator.Round(Rotation.z),
+                translator.Round(Rotation.w));
+            string v3s = string.Format("{0:G4}, {1:G4}, {2:G4}",
+                translator.Round(Scale.x),
+                translator.Round(Scale.y),
+                translator.Round(Scale.z));
 
-            return string.Format("{0:0.00000}, {1:G}, {2}, {3}, {4}", TimeStamp, Transition, v3t, qr, v3s);
+            return string.Format("{0:G4}, {1:G}, {2}, {3}, {4}",
+                translator.Round(TimeStamp),
+                translator.Round(Transition), v3t, qr, v3s);
         }
     }
 
@@ -65,7 +79,6 @@ namespace Rose2Godot.GodotExporters
         public int LastResourceIndex { get; }
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
-        private readonly Translator translator = new Translator();
 
         public string Resources
         {
@@ -86,10 +99,11 @@ namespace Rose2Godot.GodotExporters
         public AnimationExporter(
             int resource_index,
             List<ZMO> zmo,
-            List<string> animationNames,
             ZMD zmd)
         {
             int animation_resource_idx = resource_index;
+
+            System.Console.WriteLine("[Animation export] Start from idx: {0}", animation_resource_idx);
 
             nodes = new StringBuilder();
             resource = new StringBuilder();
@@ -110,7 +124,25 @@ namespace Rose2Godot.GodotExporters
                 animation.Add(new Animation(mo.AnimationName, mo.Frames, mo.FPS));
             }
 
+            // bones
             foreach (RoseBone bone in zmd.Bone)
+            {
+                foreach (BoneAnimation boneAnimation in bone.BoneAnimations)
+                {
+                    Animation anim = animation.Find(a => a.Name.Equals(boneAnimation.Name));
+                    if (anim != null)
+                    {
+                        int fidx = 0;
+                        foreach (BoneFrame frame in boneAnimation.Frames)
+                        {
+                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, frame.Position, frame.Rotation, frame.Scale, bone.ID, bone.Name));
+                        }
+                    }
+                }
+            }
+
+            //dummies
+            foreach (RoseBone bone in zmd.Dummy)
             {
                 foreach (BoneAnimation boneAnimation in bone.BoneAnimations)
                 {
@@ -134,10 +166,10 @@ namespace Rose2Godot.GodotExporters
 
                 // info
 
-                resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, (float)anim.FramesCount / anim.FPS);
+                //resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, (float)anim.FramesCount / anim.FPS);
 
                 resource.AppendFormat("resource_name = \"{0}\"\n", anim.Name);
-                resource.AppendFormat("length = {0:0.00000}\n", (float)(anim.FramesCount-1) / anim.FPS);
+                resource.AppendFormat("length = {0:G4}\n", (float)(anim.FramesCount - 1) / anim.FPS);
                 //resource.AppendFormat("step = {0:0.0000}\n", (float)anim.FPS / anim.FramesCount);
                 //resource.AppendLine("loop = true");
 
@@ -145,18 +177,19 @@ namespace Rose2Godot.GodotExporters
                 for (int bone_id = 0; bone_id < zmd.BonesCount; bone_id++)
                 {
                     resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/path = NodePath=(\".:{1}\")\n", bone_id, zmd.Bone[bone_id].Name);
-                    resource.AppendFormat("tracks/{0}/interp = 2\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/imported = false\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, zmd.Bone[bone_id].Name);
+                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
+                    //resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
+                    //resource.AppendFormat("tracks/{0}/imported = false\n", bone_id);
+                    //resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
 
                     List<string> transforms = new List<string>();
                     foreach (AnimationTrack track in anim.GetTracksForBoneId(bone_id))
                     {
                         transforms.Add(track.ToString());
                     }
-                    resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
+                    //resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
+                    resource.AppendFormat("tracks/{0}/keys = [{1}]\n", bone_id, string.Join(", ", transforms.ToArray()));
                 }
                 animation_resource_idx++;
                 resource.AppendLine();

@@ -373,12 +373,12 @@ namespace Mogre
             if (format == null)
                 return ToString();
             //return ToString(format, CultureInfo.CurrentCulture);
-            return string.Format(CultureInfo.CurrentCulture, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+            return string.Format(CultureInfo.CurrentCulture, "Quaternion({0:G4}, {1:G4}, {2:G4}, {3:G4})", X, Y, Z, W);
         }
 
         public string ToString(IFormatProvider formatProvider)
         {
-            return string.Format(formatProvider, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+            return string.Format(formatProvider, "Quaternion({0:G4}, {1:G4}, {2:G4}, {3:G4})", X, Y, Z, W);
         }
 
         /// <summary>
@@ -404,7 +404,7 @@ namespace Mogre
             if (format == null)
                 ToString(formatProvider);
 
-            return string.Format(formatProvider, "Quaternion({0:0.0000}, {1:0.0000}, {2:0.0000}, {3:0.0000})", X, Y, Z, W);
+            return string.Format(formatProvider, "Quaternion({0:G4}, {1:G4}, {2:G4}, {3:G4})", X, Y, Z, W);
         }
 
         /// <summary>

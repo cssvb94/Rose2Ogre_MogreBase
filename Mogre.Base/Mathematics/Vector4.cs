@@ -259,7 +259,7 @@ namespace Mogre
 		/// <returns>The string representation.</returns>
 		public override string ToString()
 		{
-			return ToString("G", CultureInfo.CurrentCulture);
+			return ToString("G5", CultureInfo.CurrentCulture);
 		}
 
 		/// <summary>
