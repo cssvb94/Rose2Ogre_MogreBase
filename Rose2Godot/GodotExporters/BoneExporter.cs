@@ -16,7 +16,7 @@ namespace Rose2Godot.GodotExporters
         {
             sbone = new StringBuilder();
             //sbone.Append("; skelton node - mesh nodes parent\n");
-            sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".\"]");
+            sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".:\"]");
             sbone.AppendLine("bones_in_world_transform = true");
             sbone.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
@@ -35,12 +35,13 @@ namespace Rose2Godot.GodotExporters
                 sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
                 //sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, "Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
                 sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
-                sbone.AppendFormat("bones/{0}/bound_children = []\n", idx);
+                sbone.AppendFormat("bones/{0}/bound_children = [ ]\n", idx);
                 idx++;
             }
 
             if (zmd.DummiesCount > 0)
             {
+                sbone.Append("; dummy bones\n");
                 foreach (RoseBone dummy in zmd.Dummy)
                 {
                     GodotTransform transform = new GodotTransform(translator.ToQuat(dummy.Rotation), translator.ToVector3(dummy.Position));

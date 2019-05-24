@@ -5,6 +5,7 @@ namespace Godot
     public struct GodotTransform : IEquatable<GodotTransform>
     {
         public GodotBasis basis;
+
         public GodotVector3 origin;
 
         public GodotTransform AffineInverse()

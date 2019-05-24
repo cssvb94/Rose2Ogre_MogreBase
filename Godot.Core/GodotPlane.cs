@@ -172,8 +172,8 @@ namespace Godot
         {
             return string.Format("({0}, {1})", new object[2]
             {
-         normal.ToString(),
-         d.ToString()
+                 normal.ToString(),
+                 d.ToString()
             });
         }
 
@@ -181,8 +181,8 @@ namespace Godot
         {
             return string.Format("({0}, {1})", new object[2]
             {
-         normal.ToString(format),
-         d.ToString(format)
+                 normal.ToString(format),
+                 d.ToString(format)
             });
         }
     }

@@ -25,22 +25,22 @@ namespace Mogre
 		/// <summary>
 		/// A value specifying the approximation of π which is 180 degrees.
 		/// </summary>
-		public const float Pi = (float)PI;
+		public const float Pi = PI;
 
 		/// <summary>
 		/// A value specifying the approximation of 2π which is 360 degrees.
 		/// </summary>
-		public const float TwoPi = (float)(2 * PI);
+		public const float TwoPi = 2 * PI;
 
 		/// <summary>
 		/// A value specifying the approximation of π/2 which is 90 degrees.
 		/// </summary>
-		public const float PiOverTwo = (float)(PI / 2);
+		public const float PiOverTwo = PI / 2;
 
 		/// <summary>
 		/// A value specifying the approximation of π/4 which is 45 degrees.
 		/// </summary>
-		public const float PiOverFour = (float)(PI / 4);
+		public const float PiOverFour = PI / 4;
 
 		public static readonly float RadiansPerDegree = Pi / 180.0f;
 
@@ -61,11 +61,12 @@ namespace Mogre
 		public const float fRad2Deg = 57.2957764f;
 
 		public static AngleUnit CurrentAngleUnit = AngleUnit.Degree;
-		static readonly Random _randomizer = new Random();
+
+		private static readonly Random _randomizer = new Random();
 
 		public static int IAbs(int iValue)
 		{
-			return (iValue >= 0 ? iValue : -iValue);
+			return iValue >= 0 ? iValue : -iValue;
 		}
 
 		public static int ICeil(float value)
@@ -80,7 +81,7 @@ namespace Mogre
 
 		public static int ISign(int iValue)
 		{
-			return (iValue > 0 ? +1 : (iValue < 0 ? -1 : 0));
+			return iValue > 0 ? +1 : (iValue < 0 ? -1 : 0);
 		}
 
 		public static float Abs(float fValue)
@@ -105,7 +106,7 @@ namespace Mogre
 
 		public static float InvSqrt(float fValue)
 		{
-			return (float)(1.0 / System.Math.Sqrt((double)fValue));
+			return (float)(1.0f / System.Math.Sqrt(fValue));
 		}
 
 		/// <summary>Sine function. </summary>
@@ -209,7 +210,7 @@ namespace Mogre
 
 		public static float RangeRandom(float fLow, float fHigh)
 		{
-			return (fHigh - fLow) * UnitRandom() + fLow;
+			return ((fHigh - fLow) * UnitRandom()) + fLow;
 		}
 
 		/// <summary>Calculate a face normal, no w-information. </summary>
@@ -256,12 +257,12 @@ namespace Mogre
 			//Now we use a formula to calculate the tangent. 
 			float deltaV0 = v1 - v2;
 			float deltaV1 = v3 - v1;
-			Vector3 tangent = deltaV1 * side0 - deltaV0 * side1;
+			Vector3 tangent = (deltaV1 * side0) - (deltaV0 * side1);
 			tangent.Normalise();
 			//Calculate binormal
 			float deltaU0 = u1 - u2;
 			float deltaU1 = u3 - u1;
-			Vector3 binormal = deltaU1 * side0 - deltaU0 * side1;
+			Vector3 binormal = (deltaU1 * side0) - (deltaU0 * side1);
 			binormal.Normalise();
 			//Now, we take the cross product of the tangents to get a vector which 
 			//should point in the same direction as our normal calculated above. 
@@ -385,35 +386,29 @@ namespace Mogre
 			Vector3 max = box.Maximum;
 
 			// just test facing planes, early fail if sphere is totally outside
-			if (center.x < min.x &&
-				min.x - center.x > radius)
+			if (center.x < min.x && min.x - center.x > radius)
 			{
 				return false;
 			}
-			if (center.x > max.x &&
-				center.x - max.x > radius)
-			{
-				return false;
-			}
-
-			if (center.y < min.y &&
-				min.y - center.y > radius)
-			{
-				return false;
-			}
-			if (center.y > max.y &&
-				center.y - max.y > radius)
+			if (center.x > max.x && center.x - max.x > radius)
 			{
 				return false;
 			}
 
-			if (center.z < min.z &&
-				min.z - center.z > radius)
+			if (center.y < min.y && min.y - center.y > radius)
 			{
 				return false;
 			}
-			if (center.z > max.z &&
-				center.z - max.z > radius)
+			if (center.y > max.y && center.y - max.y > radius)
+			{
+				return false;
+			}
+
+			if (center.z < min.z && min.z - center.z > radius)
+			{
+				return false;
+			}
+			if (center.z > max.z && center.z - max.z > radius)
 			{
 				return false;
 			}
@@ -507,12 +502,12 @@ namespace Mogre
 				float v1 = b[i1] - a[i1];
 				float u2 = c[i0] - a[i0];
 				float v2 = c[i1] - a[i1];
-				float u0 = t * ray.Direction[i0] + ray.Origin[i0] - a[i0];
-				float v0 = t * ray.Direction[i1] + ray.Origin[i1] - a[i1];
+				float u0 = (t * ray.Direction[i0]) + ray.Origin[i0] - a[i0];
+				float v0 = (t * ray.Direction[i1]) + ray.Origin[i1] - a[i1];
 
-				float alpha = u0 * v2 - u2 * v0;
-				float beta = u1 * v0 - u0 * v1;
-				float area = u1 * v2 - u2 * v1;
+				float alpha = (u0 * v2) - (u2 * v0);
+				float beta = (u1 * v0) - (u0 * v1);
+				float area = (u1 * v2) - (u2 * v1);
 
 				// epsilon to avoid float precision error
 				const float EPSILON = 1e-3f;
@@ -558,7 +553,7 @@ namespace Mogre
 			// ie t = (-b +/- sqrt(b*b + 4ac)) / 2a
 			float a = raydir.DotProduct(raydir);
 			float b = 2 * rayorig.DotProduct(raydir);
-			float c = rayorig.DotProduct(rayorig) - radius * radius;
+			float c = rayorig.DotProduct(rayorig) - (radius * radius);
 
 			// Calc determinant
 			float d = (b * b) - (4 * a * c);
@@ -606,9 +601,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.y >= min.y && hitpoint.y <= max.y &&
-						hitpoint.z >= min.z && hitpoint.z <= max.z &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.y >= min.y && hitpoint.y <= max.y
+                        && hitpoint.z >= min.z && hitpoint.z <= max.z &&
 						(!hit || t < lowt))
 					{
 						hit = true;
@@ -623,9 +618,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.y >= min.y && hitpoint.y <= max.y &&
-						hitpoint.z >= min.z && hitpoint.z <= max.z &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.y >= min.y && hitpoint.y <= max.y
+                        && hitpoint.z >= min.z && hitpoint.z <= max.z &&
 						(!hit || t < lowt))
 					{
 						hit = true;
@@ -640,9 +635,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.x >= min.x && hitpoint.x <= max.x &&
-						hitpoint.z >= min.z && hitpoint.z <= max.z &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.x >= min.x && hitpoint.x <= max.x
+                        && hitpoint.z >= min.z && hitpoint.z <= max.z &&
 						(!hit || t < lowt))
 					{
 						hit = true;
@@ -657,9 +652,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.x >= min.x && hitpoint.x <= max.x &&
-						hitpoint.z >= min.z && hitpoint.z <= max.z &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.x >= min.x && hitpoint.x <= max.x
+                        && hitpoint.z >= min.z && hitpoint.z <= max.z &&
 						(!hit || t < lowt))
 					{
 						hit = true;
@@ -674,9 +669,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.x >= min.x && hitpoint.x <= max.x &&
-						hitpoint.y >= min.y && hitpoint.y <= max.y &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.x >= min.x && hitpoint.x <= max.x
+                        && hitpoint.y >= min.y && hitpoint.y <= max.y &&
 						(!hit || t < lowt))
 					{
 						hit = true;
@@ -691,9 +686,9 @@ namespace Mogre
 				if (t > 0)
 				{
 					// Substitute t back into ray and check bounds and dist
-					hitpoint = rayorig + raydir * t;
-					if (hitpoint.x >= min.x && hitpoint.x <= max.x &&
-						hitpoint.y >= min.y && hitpoint.y <= max.y &&
+					hitpoint = rayorig + (raydir * t);
+					if (hitpoint.x >= min.x && hitpoint.x <= max.x
+                        && hitpoint.y >= min.y && hitpoint.y <= max.y &&
 						(!hit || t < lowt))
 					{
 						hit = true;

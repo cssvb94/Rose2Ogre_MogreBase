@@ -64,17 +64,21 @@ namespace Rose2Godot
         private static void Main(string[] args)
         {
 #if DEBUG
-            // avatar
-            //ProcessFileList(new List<string>() {
-            //    "Example\\MALE.ZMD",
-            //    "Example\\BODY1_00110.ZMS",
-            //    "Example\\ARM1_00100.ZMS",
-            //    "Example\\FACE1_00100.ZMS",
-            //    "Example\\HAIR01_00500.ZMS",
-            //    "Example\\FOOT1_00200.ZMS",
-            //});
-            //sceneExporter = new SceneExporter("Avatar", zms, zmd, zmo);
-            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\avatar.escn");
+
+            //larva
+            ProcessFileList(new List<string>() {
+              @"D:\Projects\3D\ROSE\PENGUIN07_BONE.ZMD",
+              @"D:\Projects\3D\ROSE\BODY07.ZMS",
+              //@"D:\Projects\3D\ROSE\HEAD07.ZMS",
+              @"D:\Projects\3D\ROSE\PENGUIN07_WALK.ZMO",
+              //@"D:\Projects\3D\ROSE\PENGUIN07_RUN.ZMO",
+              //@"D:\Projects\3D\ROSE\PENGUIN07_WARNING.ZMO",
+              //@"D:\Projects\3D\ROSE\PENGUIN07_STATUS_SKILL01.ZMO",
+              //@"D:\Projects\3D\ROSE\PENGUIN07_HIT.ZMO",
+              //@"D:\Projects\3D\ROSE\PENGUIN07_DIE.ZMO",
+            });
+            sceneExporter = new SceneExporter("PENGUIN", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\PENGUIN.escn", ZMSFiles);
 
             //larva
             //ProcessFileList(new List<string>() {
@@ -85,7 +89,7 @@ namespace Rose2Godot
             //@"D:\Projects\3D\ROSE\LARVA_WARNING.ZMO",
             //});
             //sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
-            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMOFiles, ZMSFiles);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMSFiles);
 
             // exported
             //ProcessFileList(new List<string>() {
@@ -93,17 +97,17 @@ namespace Rose2Godot
             //    @"D:\Projects\3D\ROSE\EXPORTED.ZMS",
             //});
             //sceneExporter = new SceneExporter("Exported", zms, zmd, zmo);
-            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn", ZMOFiles, ZMSFiles);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn", ZMSFiles);
 
             // akines
-            ProcessFileList(new List<string>() {
-                @"D:\Projects\3D\ROSE\AKINES_BODY01.ZMS",
-                @"D:\Projects\3D\ROSE\AKINES_HEAD01.ZMS",
-                @"D:\Projects\3D\ROSE\AKINES_BONE.ZMD",
-                @"D:\Projects\3D\ROSE\AKINES_STOP1.ZMO",
-            });
-            sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\akines.escn", ZMOFiles, ZMSFiles);
+            //ProcessFileList(new List<string>() {
+            //    @"D:\Projects\3D\ROSE\AKINES_BODY01.ZMS",
+            //    @"D:\Projects\3D\ROSE\AKINES_HEAD01.ZMS",
+            //    @"D:\Projects\3D\ROSE\AKINES_BONE.ZMD",
+            //    @"D:\Projects\3D\ROSE\AKINES_STOP1.ZMO",
+            //});
+            //sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\akines.escn", ZMSFiles);
 
             //ProcessFileList(new List<string>()
             //{
@@ -117,7 +121,7 @@ namespace Rose2Godot
 
 #else
             ProcessFileList(args.ToList());
-            sceneExporter = new SceneExporter("Mesh", zms, zmd, zmo);
+            sceneExporter = new SceneExporter("Mesh", zms, zmd, zmo, ZMSFiles);
             sceneExporter.ExportScene(@"export.escn");
 #endif
 

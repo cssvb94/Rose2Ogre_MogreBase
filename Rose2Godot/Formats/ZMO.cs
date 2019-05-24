@@ -55,6 +55,7 @@ namespace RoseFormats
                 FileStream fileStream = File.OpenRead(FileName);
                 BinaryReader br = new BinaryReader(fileStream, koreanEncoding);
                 bh = new BinaryHelper(br);
+                Quaternion rotYneg90 = new Quaternion(new Degree(-90f), Vector3.UnitY);
 
                 try
                 {
@@ -92,7 +93,7 @@ namespace RoseFormats
                             if (Channel[channelIDX].Type == ZMOTrack.TrackType.POSITION || Channel[channelIDX].Type == ZMOTrack.TrackType.NORMAL)
                             {
                                 //read vector
-                                track.Position = bh.ReadVector3f();
+                                track.Position = bh.ReadVector3f() / 100f;
                                 if (zmd != null)
                                 {
                                     zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Position = track.Position }, ZMOTrack.TrackType.POSITION);
@@ -105,7 +106,7 @@ namespace RoseFormats
                                 track.Rotation = bh.ReadQuaternion();
                                 if (zmd != null)
                                 {
-                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Rotation = track.Rotation }, ZMOTrack.TrackType.ROTATION);
+                                    zmd.Bone[BoneID].AddAnimationAt(frameIDX, AnimationName, new BoneFrame() { Rotation = zmd.Bone[BoneID].Rotation * track.Rotation.Inverse() }, ZMOTrack.TrackType.ROTATION);
                                 }
                             } // rotation
 

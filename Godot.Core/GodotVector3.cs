@@ -106,7 +106,7 @@ namespace Godot
 
         public float Dot(GodotVector3 b)
         {
-            return ((x * b.x) + (y * b.y) + (z * b.z));
+            return (x * b.x) + (y * b.y) + (z * b.z);
         }
 
         public GodotVector3 Floor()

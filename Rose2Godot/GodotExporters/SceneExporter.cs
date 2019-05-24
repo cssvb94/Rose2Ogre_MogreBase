@@ -39,7 +39,7 @@ namespace Rose2Godot.GodotExporters
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
         }
 
-        public bool ExportScene(string fileName, List<string> zmoFileNames, List<string> zmsFileNames)
+        public bool ExportScene(string fileName, List<string> zmsFileNames)
         {
             int idx = 1;
             try
@@ -64,14 +64,15 @@ namespace Rose2Godot.GodotExporters
 
                 idx = meshExporter.LastResourceIndex;
 
+                scene.AppendLine(meshExporter.Resources);
+
                 AnimationExporter animExporter = new AnimationExporter(idx, zmo, zmd);
 
                 // meshes & bone weights
 
                 idx = animExporter.LastResourceIndex;
 
-                scene.AppendLine(meshExporter.Resources);
-                
+
                 // animations
                 // normalize the rotation quats!
 
@@ -92,7 +93,7 @@ namespace Rose2Godot.GodotExporters
                 {
                     BoneExporter boneExporter = new BoneExporter(idx, zmd);
                     scene.AppendLine(boneExporter.ToString());
-                    idx = meshExporter.LastResourceIndex;
+                    idx = animExporter.LastResourceIndex;
                 }
 
                 scene.AppendLine(meshExporter.Nodes);

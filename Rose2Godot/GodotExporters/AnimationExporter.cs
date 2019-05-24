@@ -33,21 +33,23 @@ namespace Rose2Godot.GodotExporters
 
         public override string ToString()
         {
-            string v3t = string.Format("{0:G4}, {1:G4}, {2:G4}",
+            GodotQuat gq = translator.ToQuat(Rotation);
+            string v3t = string.Format("{0:G5}, {1:G5}, {2:G5}",
                  translator.Round(Translation.x),
                  translator.Round(Translation.y),
                  translator.Round(Translation.z));
-            string qr = string.Format("{0:G4}, {1:G4}, {2:G4}, {3:G4}",
-                translator.Round(Rotation.x),
-                translator.Round(Rotation.y),
-                translator.Round(Rotation.z),
-                translator.Round(Rotation.w));
-            string v3s = string.Format("{0:G4}, {1:G4}, {2:G4}",
+            string qr = string.Format("{0:G5}, {1:G5}, {2:G5}, {3:G5}",
+                translator.Round(gq.x),
+                translator.Round(gq.y),
+                translator.Round(gq.z),
+                translator.Round(gq.w)
+                );
+            string v3s = string.Format("{0:G5}, {1:G5}, {2:G5}",
                 translator.Round(Scale.x),
                 translator.Round(Scale.y),
                 translator.Round(Scale.z));
 
-            return string.Format("{0:G4}, {1:G}, {2}, {3}, {4}",
+            return string.Format("{0:G5}, {1:G}, {2}, {3}, {4}",
                 translator.Round(TimeStamp),
                 translator.Round(Transition), v3t, qr, v3s);
         }
@@ -110,12 +112,12 @@ namespace Rose2Godot.GodotExporters
             LastResourceIndex = resource_index;
 
             nodes.AppendLine("[node name=\"AnimationPlayer\" type=\"AnimationPlayer\" parent=\"Armature\"]");
-            //nodes.AppendLine("root_node = NodePath(\"..:Armature\")");
-            //nodes.AppendLine("autoplay = \"\"");
-            //nodes.AppendLine("playback_process_mode = 1");
-            //nodes.AppendLine("playback_default_blend_time = 0.0");
-            //nodes.AppendLine("playback_speed = 1.0");
-            //nodes.AppendLine("blend_times = [  ]");
+            //nodes.AppendLine("root_node = NodePath(\"Armature\")");
+            nodes.AppendLine("autoplay = \"\"");
+            nodes.AppendLine("playback_process_mode = 1");
+            nodes.AppendLine("playback_default_blend_time = 0.0");
+            nodes.AppendLine("playback_speed = 1.0");
+            nodes.AppendLine("blend_times = [  ]");
 
             List<Animation> animation = new List<Animation>();
 
@@ -166,30 +168,29 @@ namespace Rose2Godot.GodotExporters
 
                 // info
 
-                //resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, (float)anim.FramesCount / anim.FPS);
-
+                resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, (float)anim.FramesCount / anim.FPS);
                 resource.AppendFormat("resource_name = \"{0}\"\n", anim.Name);
-                resource.AppendFormat("length = {0:G4}\n", (float)(anim.FramesCount - 1) / anim.FPS);
-                //resource.AppendFormat("step = {0:0.0000}\n", (float)anim.FPS / anim.FramesCount);
-                //resource.AppendLine("loop = true");
+                resource.AppendFormat("length = {0:G5}\n", (float)(anim.FramesCount) / anim.FPS);
+                resource.AppendLine("step = 0.05");
+                resource.AppendLine("loop = true");
 
 
                 for (int bone_id = 0; bone_id < zmd.BonesCount; bone_id++)
                 {
                     resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
                     resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, zmd.Bone[bone_id].Name);
-                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
-                    //resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
-                    //resource.AppendFormat("tracks/{0}/imported = false\n", bone_id);
-                    //resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/interp = 2\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/imported = false\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
 
                     List<string> transforms = new List<string>();
                     foreach (AnimationTrack track in anim.GetTracksForBoneId(bone_id))
                     {
                         transforms.Add(track.ToString());
                     }
-                    //resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
-                    resource.AppendFormat("tracks/{0}/keys = [{1}]\n", bone_id, string.Join(", ", transforms.ToArray()));
+                    resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
+                    //resource.AppendFormat("tracks/{0}/keys = [{1}]\n", bone_id, string.Join(", ", transforms.ToArray()));
                 }
                 animation_resource_idx++;
                 resource.AppendLine();

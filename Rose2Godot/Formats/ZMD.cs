@@ -39,8 +39,8 @@ namespace RoseFormats
 
         public bool Load(string FileName)
         {
-            Quaternion rotYneg90 = new Quaternion(new Degree(-90f), Vector3.UnitY);
-            rotYneg90 = rotYneg90.Inverse();
+            //Quaternion rotYneg90 = new Quaternion(new Degree(-90f), Vector3.UnitY);
+            //rotYneg90 = rotYneg90.Inverse();
 
             Encoding koreanEncoding = Encoding.GetEncoding("EUC-KR");
             try

@@ -25,6 +25,11 @@ namespace Rose2Godot.GodotExporters
             return (float)System.Math.Round(val, 4, System.MidpointRounding.AwayFromZero);
         }
 
+        public float Round(double val)
+        {
+            return (float)System.Math.Round(val, 4, System.MidpointRounding.AwayFromZero);
+        }
+
         public string Vector32String(GodotVector3 v)
         {
             return string.Format("{0:G4}, {1:G4}, {2:G4}",
