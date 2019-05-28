@@ -65,7 +65,7 @@ namespace Rose2Godot.GodotExporters
                 }
                 i++;
             }
-            LastResourceIndex += i-1;
+            LastResourceIndex += i - 1;
 
             System.Console.WriteLine("[Mesh export] Return idx: {0}", LastResourceIndex);
         }
@@ -179,7 +179,7 @@ namespace Rose2Godot.GodotExporters
                     {
                         bindices.Add(bw.BoneID);
                         // make sure combined weight applied to vertex doesnt exceed 1.0f
-                        bweights.Add(string.Format("{0:G4}", bw.Weight / total_weight));
+                        bweights.Add(string.Format("{0:G4}", translator.Round(bw.Weight / total_weight)));
                     }
                 }
 

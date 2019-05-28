@@ -66,19 +66,19 @@ namespace Rose2Godot
 #if DEBUG
 
             //larva
-            ProcessFileList(new List<string>() {
-              @"D:\Projects\3D\ROSE\PENGUIN07_BONE.ZMD",
-              @"D:\Projects\3D\ROSE\BODY07.ZMS",
-              //@"D:\Projects\3D\ROSE\HEAD07.ZMS",
-              @"D:\Projects\3D\ROSE\PENGUIN07_WALK.ZMO",
-              //@"D:\Projects\3D\ROSE\PENGUIN07_RUN.ZMO",
-              //@"D:\Projects\3D\ROSE\PENGUIN07_WARNING.ZMO",
-              //@"D:\Projects\3D\ROSE\PENGUIN07_STATUS_SKILL01.ZMO",
-              //@"D:\Projects\3D\ROSE\PENGUIN07_HIT.ZMO",
-              //@"D:\Projects\3D\ROSE\PENGUIN07_DIE.ZMO",
-            });
-            sceneExporter = new SceneExporter("PENGUIN", zms, zmd, zmo);
-            sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\PENGUIN.escn", ZMSFiles);
+            //ProcessFileList(new List<string>() {
+            //@"D:\Projects\3D\ROSE\PENGUIN07_BONE.ZMD",
+            //@"D:\Projects\3D\ROSE\BODY07.ZMS",
+            //@"D:\Projects\3D\ROSE\HEAD07.ZMS",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_WALK.ZMO",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_RUN.ZMO",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_WARNING.ZMO",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_STATUS_SKILL01.ZMO",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_HIT.ZMO",
+            //@"D:\Projects\3D\ROSE\PENGUIN07_DIE.ZMO",
+            //});
+            //sceneExporter = new SceneExporter("PENGUIN", zms, zmd, zmo);
+            //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\PENGUIN.escn", ZMSFiles);
 
             //larva
             //ProcessFileList(new List<string>() {
@@ -118,6 +118,15 @@ namespace Rose2Godot
             //});
             //sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
             //sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/cowboy.escn");
+
+            ProcessFileList(new List<string>()
+            {
+                @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1.ZMS",
+                @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1_BONE.ZMD",
+                @"/home/user/Projects/Rose/3DDATA/Larva/LARVA_WALK.ZMO",
+            });
+            sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/LarvaAnimated.escn", ZMSFiles);
 
 #else
             ProcessFileList(args.ToList());
