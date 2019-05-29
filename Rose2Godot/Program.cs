@@ -66,6 +66,10 @@ namespace Rose2Godot
 #if DEBUG
 
             //larva
+            //ZMSFiles.Clear();
+            //zms.Clear();
+            //zmo.Clear();
+            //zmd.Clear();
             //ProcessFileList(new List<string>() {
             //@"D:\Projects\3D\ROSE\PENGUIN07_BONE.ZMD",
             //@"D:\Projects\3D\ROSE\BODY07.ZMS",
@@ -81,6 +85,10 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\PENGUIN.escn", ZMSFiles);
 
             //larva
+            //ZMSFiles.Clear();
+            //zms.Clear();
+            //zmo.Clear();
+            //zmd.Clear();
             //ProcessFileList(new List<string>() {
             //@"D:\Projects\3D\ROSE\LARVA1_BONE.ZMD",
             //  @"D:\Projects\3D\ROSE\LARVA1.ZMS",
@@ -92,6 +100,10 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\larva_exported.escn", ZMSFiles);
 
             // exported
+            //ZMSFiles.Clear();
+            //zms.Clear();
+            //zmo.Clear();
+            //zmd.Clear();
             //ProcessFileList(new List<string>() {
             //    @"D:\Projects\3D\ROSE\EXPORTED_BONE.ZMD",
             //    @"D:\Projects\3D\ROSE\EXPORTED.ZMS",
@@ -100,6 +112,10 @@ namespace Rose2Godot
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\exported_exported.escn", ZMSFiles);
 
             // akines
+            //ZMSFiles.Clear();
+            //zms.Clear();
+            //zmo.Clear();
+            //zmd.Clear();
             //ProcessFileList(new List<string>() {
             //    @"D:\Projects\3D\ROSE\AKINES_BODY01.ZMS",
             //    @"D:\Projects\3D\ROSE\AKINES_HEAD01.ZMS",
@@ -109,24 +125,51 @@ namespace Rose2Godot
             //sceneExporter = new SceneExporter("Akines", zms, zmd, zmo);
             //sceneExporter.ExportScene(@"E:\Godot\Projects\ROSE\scenes\akines.escn", ZMSFiles);
 
+            //ZMSFiles.Clear();
+            //zms.Clear();
+            //zmo.Clear();
+            //zmd.Clear();
             //ProcessFileList(new List<string>()
             //{
             //    @"/home/user/Projects/Rose/3DDATA/Cowboy/BODY01.ZMS",
             //    @"/home/user/Projects/Rose/3DDATA/Cowboy/HEAD01.ZMS",
             //    @"/home/user/Projects/Rose/3DDATA/Cowboy/COWBOY_BONE.ZMD",
-
             //});
             //sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
-            //sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/cowboy.escn");
+            //sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/Cowboy.escn", ZMSFiles);
 
+
+            ZMSFiles.Clear();
+            zms.Clear();
+            zmo.Clear();
+            zmd.Clear();
             ProcessFileList(new List<string>()
             {
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1.ZMS",
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1_BONE.ZMD",
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA_WALK.ZMO",
             });
-            sceneExporter = new SceneExporter("Cowboy", zms, zmd, zmo);
+            sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
             sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/LarvaAnimated.escn", ZMSFiles);
+
+            ZMSFiles.Clear();
+            zms.Clear();
+            zmo.Clear();
+            zmd.Clear();
+            ProcessFileList(new List<string>()
+            {
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_BONE.ZMD",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/BODY07.ZMS",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/HEAD07.ZMS",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_ACTION_SKILL01.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_ATTACK.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_RUN.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_WALK.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Penguin/PENGUIN07_WARNING.ZMO",
+
+            });
+            sceneExporter = new SceneExporter("Penguin", zms, zmd, zmo);
+            sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/PenguinAnimated.escn", ZMSFiles);
 
 #else
             ProcessFileList(args.ToList());

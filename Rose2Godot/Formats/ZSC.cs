@@ -261,9 +261,11 @@ namespace RoseFormats
         {
             uint transFlags = ZSC_TRANSITION_NONE;
 
-            ZSCPart part = new ZSCPart();
-            part.MeshID = bh.ReadWord();
-            part.MaterialID = bh.ReadWord();
+            ZSCPart part = new ZSCPart
+            {
+                MeshID = bh.ReadWord(),
+                MaterialID = bh.ReadWord()
+            };
 
             while (true)
             {
@@ -338,10 +340,11 @@ namespace RoseFormats
         {
             uint transFlags = ZSC_TRANSITION_NONE;
 
-            ZSCEffect effect = new ZSCEffect();
-
-            effect.EffectID = bh.ReadWord();
-            effect.EffectType = bh.ReadWord();
+            ZSCEffect effect = new ZSCEffect
+            {
+                EffectID = bh.ReadWord(),
+                EffectType = bh.ReadWord()
+            };
             transFlags = ZSC_TRANSITION_NONE;
 
             while (true)

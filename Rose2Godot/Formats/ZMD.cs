@@ -34,6 +34,7 @@ namespace RoseFormats
 
         public ZMD(string FileName)
         {
+            Clear();
             Load(FileName);
         }
 

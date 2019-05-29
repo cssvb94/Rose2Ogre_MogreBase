@@ -179,9 +179,9 @@ namespace Rose2Godot.GodotExporters
                 {
                     resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
                     resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, zmd.Bone[bone_id].Name);
-                    resource.AppendFormat("tracks/{0}/interp = 2\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
                     resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/imported = false\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/imported = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
 
                     List<string> transforms = new List<string>();

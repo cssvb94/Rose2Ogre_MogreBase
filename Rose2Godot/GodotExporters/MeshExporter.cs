@@ -57,11 +57,11 @@ namespace Rose2Godot.GodotExporters
             int i = 1;
             foreach (ZMS mesh in zms)
             {
-                string name = string.Format("{0}", mesh_names[i - 1]);
-                BuildMeshData(name, mesh, i, exportWithBones);
+                string mesh_name = string.Format("{0}", mesh_names[i - 1]);
+                BuildMeshData(mesh_name, mesh, i, exportWithBones);
                 if (mesh == zms[0]) // set 1st mesh name as MeshName
                 {
-                    MeshName = name;
+                    MeshName = mesh_name;
                 }
                 i++;
             }
@@ -78,14 +78,14 @@ namespace Rose2Godot.GodotExporters
 
             // vertices
 
-            //resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertex.Count);
+            resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertex.Count);
             resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, null, null));
 
             // normals
 
             if (zms.HasNormal())
             {
-                //resource.AppendFormat("\t\t; normals: {0}\n", zms.Normal.Count);
+                resource.AppendFormat("\t\t; normals: {0}\n", zms.Normal.Count);
                 resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, null, null));
             }
             else
@@ -97,7 +97,7 @@ namespace Rose2Godot.GodotExporters
             // FloatArray()
             if (zms.HasTangents())
             {
-                //resource.AppendFormat("\t\t; tangents: {0}\n", zms.Tangent.Count);
+                resource.AppendFormat("\t\t; tangents: {0}\n", zms.Tangent.Count);
                 resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, null, null));
             }
             else
@@ -115,7 +115,7 @@ namespace Rose2Godot.GodotExporters
 
             if (zms.HasUV0())
             {
-                //resource.AppendFormat("\t\t; UV1: {0}\n", zms.UV[0].Count);
+                resource.AppendFormat("\t\t; UV1: {0}\n", zms.UV[0].Count);
                 resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[0]));
             }
             else
@@ -127,7 +127,7 @@ namespace Rose2Godot.GodotExporters
 
             if (zms.HasUV1())
             {
-                //resource.AppendFormat("\t\t; UV2: {0}\n", zms.UV[1].Count);
+                resource.AppendFormat("\t\t; UV2: {0}\n", zms.UV[1].Count);
                 resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[1]));
             }
             else
@@ -186,7 +186,7 @@ namespace Rose2Godot.GodotExporters
                 string bone_indices = string.Format("\t\tIntArray({0}),", string.Join(", ", bindices.ToArray()));
                 string bone_weights = string.Format("\t\tFloatArray({0}),", string.Join(", ", bweights.ToArray()));
 
-                //resource.AppendFormat("\t\t; bone weights: {0}, after proccessing: {1} \n", zms.BoneWeights.Count, vgroups.Count * 4);
+                resource.AppendFormat("\t\t; bone weights: {0}, after proccessing: {1} \n", zms.BoneWeights.Count, vgroups.Count * 4);
                 resource.AppendLine(bone_indices);
                 resource.AppendLine(bone_weights);
             }
@@ -197,7 +197,7 @@ namespace Rose2Godot.GodotExporters
             }
 
             // face indices
-            //resource.AppendFormat("\t\t; triangle faces: {0}\n", zms.Face.Count);
+            resource.AppendFormat("\t\t; triangle faces: {0}\n", zms.Face.Count);
             resource.AppendFormat("\t\t{0}\n", Vector3wToArray(zms.Face));
 
             resource.AppendLine("\t],"); // end of mesh arrays
