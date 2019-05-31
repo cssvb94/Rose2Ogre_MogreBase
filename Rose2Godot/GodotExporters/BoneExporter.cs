@@ -15,7 +15,7 @@ namespace Rose2Godot.GodotExporters
         public BoneExporter(int resource_index, ZMD zmd)
         {
             sbone = new StringBuilder();
-            //sbone.Append("; skelton node - mesh nodes parent\n");
+            sbone.Append("; skelton node - mesh nodes parent\n");
             sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".:\"]");
             sbone.AppendLine("bones_in_world_transform = true");
             sbone.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
@@ -27,12 +27,14 @@ namespace Rose2Godot.GodotExporters
             foreach (RoseBone bone in zmd.Bone)
             {
                 GodotTransform transform = new GodotTransform(translator.ToQuat(bone.Rotation), translator.ToVector3(bone.Position));
+                GodotTransform rest = new GodotTransform(translator.ToQuat(bone.TransformMatrix.ExtractQuaternion()), translator.ToVector3(bone.TransformMatrix.Translation));
                 bone.Rotation.ToAngleAxis(out Radian radian, out Vector3 axis);
 
                 sbone.AppendFormat("bones/{0}/name = \"{1}\"\n", idx, bone.Name);
                 sbone.AppendFormat("bones/{0}/parent = {1}\n", idx, idx == 0 ? -1 : bone.ParentID);
                 //sbone.AppendFormat("; Position: {0}\n; Rotation: {1}\n; Angle(rad): {2:G4} Angle(deg): {3:G4} Axis: {4}\n", bone.Position, bone.Rotation, radian.ValueRadians, radian.ValueDegrees, axis);
                 sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
+                sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, translator.Transform2String(rest));
                 //sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, "Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
                 sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
                 sbone.AppendFormat("bones/{0}/bound_children = [ ]\n", idx);

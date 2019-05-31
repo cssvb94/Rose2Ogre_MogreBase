@@ -18,6 +18,7 @@ namespace RoseFormats
         public List<RoseBone> Dummy = new List<RoseBone>();
 
         private BinaryHelper bh;
+        private readonly float scaleFactor = 0.01f;
 
         public void Clear()
         {
@@ -61,13 +62,16 @@ namespace RoseFormats
                     {
                         for (int i = 0; i < BonesCount; i++)
                         {
-                            RoseBone bone = new RoseBone(br.ReadInt32(), bh.ReadZString(), bh.ReadVector3f() /** scaleFactor*/, bh.ReadQuaternion());
+                            RoseBone bone = new RoseBone(br.ReadInt32(), bh.ReadZString(), bh.ReadVector3f() * scaleFactor, bh.ReadQuaternion());
                             bone.ID = i;
-                            bone.Position /= 100f;
+
+                            bone.TransformMatrix = new Matrix4(bone.Rotation);
+                            bone.TransformMatrix.SetTrans(bone.Position);
 
                             if (i != 0)
                             {
                                 Bone[bone.ParentID].ChildID.Add(i);
+                                bone.TransformMatrix *= Bone[bone.ParentID].TransformMatrix;
                             }
 
                             Bone.Add(bone);
@@ -85,15 +89,28 @@ namespace RoseFormats
                             if (FormatString.Equals("ZMD0003"))
                             {
                                 // dummies are read different then bones;
-                                dummy = new RoseBone(bh.ReadZString(), br.ReadInt32(), bh.ReadVector3f() /* * scaleFactor*/, bh.ReadQuaternion());
+                                dummy = new RoseBone(bh.ReadZString(), br.ReadInt32(), bh.ReadVector3f() * scaleFactor, bh.ReadQuaternion());
+
                             } // if
 
                             if (FormatString.Equals("ZMD0002"))
                             {
-                                dummy = new RoseBone(bh.ReadZString(), br.ReadInt32(), bh.ReadVector3f() /* * scaleFactor*/);
+                                dummy = new RoseBone(bh.ReadZString(), br.ReadInt32(), bh.ReadVector3f() * scaleFactor);
                             } // if 
                             dummy.ID = (int)BonesCount + i;
-                            dummy.Position /= 100f;
+
+
+                            dummy.TransformMatrix = new Matrix4(dummy.Rotation);
+                            dummy.TransformMatrix.SetTrans(dummy.Position);
+
+                            if (dummy.ParentID < BonesCount)
+                            {
+                                dummy.TransformMatrix *= Bone[dummy.ParentID].TransformMatrix;
+                            }
+                            else
+                            {
+                                dummy.TransformMatrix *= Dummy[dummy.ParentID].TransformMatrix;
+                            }
 
                             Dummy.Add(dummy);
                         } // for

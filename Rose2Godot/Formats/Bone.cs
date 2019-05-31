@@ -118,7 +118,7 @@ namespace RoseFormats
             }
         }
 
-        public Matrix4 InverseMatrix;
+        //public Matrix4 InverseMatrix;
 
         public Matrix4 TransformMatrix;
 
@@ -137,8 +137,9 @@ namespace RoseFormats
             ParentID = -1;
             ID = -1;
             isDummy = false;
-            InverseMatrix = new Matrix4();
-            TransformMatrix = new Matrix4();
+            //InverseMatrix = new Matrix4();
+            TransformMatrix = Matrix4.Identity;
+
             BoneAnimations = new List<BoneAnimation>();
         }
 

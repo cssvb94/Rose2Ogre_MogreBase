@@ -148,6 +148,8 @@ namespace Rose2Godot
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1.ZMS",
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA1_BONE.ZMD",
                 @"/home/user/Projects/Rose/3DDATA/Larva/LARVA_WALK.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Larva/LARVA_WARNING.ZMO",
+                @"/home/user/Projects/Rose/3DDATA/Larva/LARVA_ATTACK.ZMO",
             });
             sceneExporter = new SceneExporter("Larva", zms, zmd, zmo);
             sceneExporter.ExportScene(@"/home/user/Downloads/Godot/Projects/Rose/scenes/LarvaAnimated.escn", ZMSFiles);

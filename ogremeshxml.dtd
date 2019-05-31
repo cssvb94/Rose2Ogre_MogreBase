@@ -55,7 +55,7 @@
 <!ATTLIST lodfacelist
 	submeshindex		CDATA	#REQUIRED
 	numfaces			CDATA	#REQUIRED>
-	
+
 <!ELEMENT vertexbuffer (vertex+)>
 <!ATTLIST vertexbuffer
 	positions 					(true|false)	"false"
@@ -112,7 +112,7 @@
 	u	CDATA	#REQUIRED	
 	v	CDATA	"0"	
 	w	CDATA	"0"	
-	x	CDATA	"0" >
+	x	CDATA	"0">
 <!ELEMENT submeshnames (submeshname+)>
 <!ELEMENT submeshname EMPTY>
 <!ATTLIST submeshname 
@@ -138,8 +138,7 @@
 	z		CDATA	#REQUIRED 
 	nx		CDATA	""
 	ny		CDATA	""
-	nz		CDATA	""
-	>
+	nz		CDATA	"">
 <!ELEMENT animations (animation+)>
 <!ELEMENT animation (baseinfo?, tracks)>
 <!ATTLIST animation

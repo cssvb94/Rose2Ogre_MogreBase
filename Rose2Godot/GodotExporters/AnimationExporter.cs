@@ -121,6 +121,7 @@ namespace Rose2Godot.GodotExporters
 
             List<Animation> animation = new List<Animation>();
 
+
             foreach (ZMO mo in zmo)
             {
                 animation.Add(new Animation(mo.AnimationName, mo.Frames, mo.FPS));
@@ -137,7 +138,10 @@ namespace Rose2Godot.GodotExporters
                         int fidx = 0;
                         foreach (BoneFrame frame in boneAnimation.Frames)
                         {
-                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, frame.Position, frame.Rotation, frame.Scale, bone.ID, bone.Name));
+                            Quaternion r = frame.Rotation;
+                            Vector3 p = new Matrix4(new Quaternion(new Radian(-1.57079633f), new Vector3(1.0f, 0.0f, 0.0f))) * frame.Position;
+
+                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, p, r.Normalized(), frame.Scale, bone.ID, bone.Name));
                         }
                     }
                 }
@@ -146,6 +150,9 @@ namespace Rose2Godot.GodotExporters
             //dummies
             foreach (RoseBone bone in zmd.Dummy)
             {
+                Quaternion bakedQ = bone.TransformMatrix.ExtractQuaternion().Normalized();
+                Vector3 bakedP = bone.TransformMatrix.Translation;
+
                 foreach (BoneAnimation boneAnimation in bone.BoneAnimations)
                 {
                     Animation anim = animation.Find(a => a.Name.Equals(boneAnimation.Name));
@@ -154,7 +161,7 @@ namespace Rose2Godot.GodotExporters
                         int fidx = 0;
                         foreach (BoneFrame frame in boneAnimation.Frames)
                         {
-                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, frame.Position, frame.Rotation, frame.Scale, bone.ID, bone.Name));
+                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, frame.Position, frame.Rotation.Normalized(), frame.Scale, bone.ID, bone.Name));
                         }
                     }
                 }

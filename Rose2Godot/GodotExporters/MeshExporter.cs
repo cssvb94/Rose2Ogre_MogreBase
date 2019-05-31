@@ -225,16 +225,6 @@ namespace Rose2Godot.GodotExporters
             nodes.AppendFormat("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
         }
 
-        //private string BoneIndicesToArray(List<ushort> indices)
-        //{
-        //    List<string> vs = new List<string>();
-        //    foreach (ushort idx in indices)
-        //    {
-        //        vs.Add(idx.ToString());
-        //    }
-        //    return string.Format("IntArray({0})", string.Join(", ", vs.ToArray()));
-        //}
-
         private string Vector3fToArray(List<Vector3> vlist, Matrix3? transform, float? scale)
         {
             List<string> vs = new List<string>();

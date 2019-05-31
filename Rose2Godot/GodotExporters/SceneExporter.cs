@@ -83,7 +83,7 @@ namespace Rose2Godot.GodotExporters
                     idx = animExporter.LastResourceIndex;
                 }
 
-                //scene.AppendLine("; root of the scene");
+                scene.AppendLine("; scene root node");
                 scene.AppendFormat("[node type=\"Spatial\" name=\"{0}\"]\n", objName);
                 scene.AppendLine("transform = Transform(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)\n");
 
