@@ -1,15 +1,11 @@
 ﻿using Godot;
-using System.Numerics;
 using Revise;
 using Revise.Types;
 using Revise.ZMS;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
-using Revise.ZMD;
-using Revise.ZMO;
-using System.IO;
-using System;
 
 namespace Rose2Godot.GodotExporters
 {

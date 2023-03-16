@@ -92,6 +92,14 @@ namespace Rose2Godot.GodotExporters
         private TileFile til_file;
         private Dictionary<string, Rect> AtlasRectHash;
 
+        private void ScanFolder(string folder_path)
+        {
+            char[] sep = { '_', '.' };
+            string[] tokens = folder_path.Split(sep);
+            int col = int.Parse(tokens[0]);
+            int row = int.Parse(tokens[1]);
+        }
+
         public TerrainExporter(List<string> file_paths)
         {
             AtlasRectHash = new Dictionary<string, Rect>();
@@ -102,8 +110,10 @@ namespace Rose2Godot.GodotExporters
 
             zon_file = new ZoneFile();
             var directory_info = new DirectoryInfo(files.First());
+            string root_folder = directory_info.Parent.FullName;
+            Console.WriteLine($"Root folder: {root_folder}");
 
-            string zon_path = Path.Combine(directory_info.Parent.FullName, $"{directory_info.Parent.Name}.ZON");
+            string zon_path = Path.Combine(root_folder, $"{directory_info.Parent.Name}.ZON");
             Console.WriteLine($"Loading ZON file: \"{zon_path}\"");
             try
             {
