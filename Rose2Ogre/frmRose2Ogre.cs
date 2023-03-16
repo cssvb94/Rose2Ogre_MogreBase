@@ -21,7 +21,7 @@ namespace Rose2Ogre
         private readonly string[] args;
         private List<string> ARGFiles = new List<string>();
         private bool bConvert;
-       
+
         public frmRose2Ogre()
         {
             args = Environment.GetCommandLineArgs();
@@ -156,10 +156,7 @@ namespace Rose2Ogre
         }
         #endregion
 
-        private bool IsEnabledConvert()
-        {
-            return lstZMS.Items.Count != 0 || txtZMD.Text.Trim().Length != 0;
-        }
+        private bool IsEnabledConvert() => lstZMS.Items.Count != 0 || txtZMD.Text.Trim().Length != 0;
 
         private void Convert()
         {
@@ -223,7 +220,7 @@ namespace Rose2Ogre
             var zmss = from f in existing where Path.GetExtension(f).IndexOf("ZMS", StringComparison.OrdinalIgnoreCase) >= 0 select f;
             var zmos = from f in existing where Path.GetExtension(f).IndexOf("ZMO", StringComparison.OrdinalIgnoreCase) >= 0 select f;
             var zmds = from f in existing where Path.GetExtension(f).IndexOf("ZMD", StringComparison.OrdinalIgnoreCase) >= 0 select f;
-            
+
             // Fill in the listboxes and lists
 
             if (zmds.Any())
@@ -239,9 +236,7 @@ namespace Rose2Ogre
                 ZMSFiles = ZMSFiles.Distinct().ToList();
                 lstZMS.Items.Clear();
                 foreach (string fzms in ZMSFiles)
-                {
                     lstZMS.Items.Add(Path.GetFileName(fzms));
-                }
             }
 
 
@@ -252,9 +247,7 @@ namespace Rose2Ogre
                 ZMOFiles = ZMOFiles.Distinct().ToList();
                 lstZMO.Items.Clear();
                 foreach (string fzmo in ZMOFiles)
-                {
                     lstZMO.Items.Add(Path.GetFileName(fzmo));
-                }
             }
         }
 
@@ -266,16 +259,12 @@ namespace Rose2Ogre
                 {
                     ARGFiles = args.ToList();
                     foreach (string arg in ARGFiles)
-                    {
                         bConvert |= arg.Equals("/CONVERT", StringComparison.OrdinalIgnoreCase);
-                    }
 
                     ProcessFileList(ARGFiles);
 
                     if (bConvert)
-                    {
                         Convert();
-                    }
                 }
             } // count > 0
         } // Load
@@ -302,9 +291,7 @@ namespace Rose2Ogre
                 List<string> files = new List<string>();
 
                 foreach (string fname in a)
-                {
-                    files.Add(fname);   
-                }
+                    files.Add(fname);
 
                 ProcessFileList(files);
 
@@ -315,9 +302,6 @@ namespace Rose2Ogre
             }
         }
 
-        private void txtZMD_TextChanged(object sender, EventArgs e)
-        {
-            btnConvert.Enabled = IsEnabledConvert();
-        }
+        private void txtZMD_TextChanged(object sender, EventArgs e) => btnConvert.Enabled = IsEnabledConvert();
     } // class
 }

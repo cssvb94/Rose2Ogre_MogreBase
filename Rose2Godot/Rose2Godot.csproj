@@ -19,23 +19,27 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\ROSE\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\ROSE\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,40 +48,261 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Formats\BinaryHelper.cs" />
-    <Compile Include="Formats\Bone.cs" />
-    <Compile Include="Formats\BoneWeight.cs" />
-    <Compile Include="Formats\CHR.cs" />
-    <Compile Include="Formats\HIM.cs" />
-    <Compile Include="Formats\STB.cs" />
-    <Compile Include="Formats\ZMD.cs" />
-    <Compile Include="Formats\ZMO.cs" />
-    <Compile Include="Formats\ZMOTrack.cs" />
-    <Compile Include="Formats\ZMS.cs" />
-    <Compile Include="Formats\ZMSSkin.cs" />
-    <Compile Include="Formats\ZSC.cs" />
+    <Compile Include="GodotExporters\Animation.cs" />
     <Compile Include="GodotExporters\AnimationExporter.cs" />
+    <Compile Include="GodotExporters\AnimationTrack.cs" />
     <Compile Include="GodotExporters\BoneExporter.cs" />
+    <Compile Include="GodotExporters\BuildingsAndDecorsExporter.cs" />
     <Compile Include="GodotExporters\MeshExporter.cs" />
     <Compile Include="GodotExporters\SceneExporter.cs" />
+    <Compile Include="GodotExporters\TerrainExporter.cs" />
     <Compile Include="GodotExporters\Translator.cs" />
-    <Compile Include="Math3D\Vector2w.cs" />
-    <Compile Include="Math3D\Vector3w.cs" />
-    <Compile Include="Math3D\Vector4w.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Revise\AIP\AbilityType.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackNearestCharacterAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackNearestCharacterDuplicateAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackNearestCharacterUsingNumberOfMonstersAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackOwnerIfNotAllyAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackSelectedCharacterAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackTargetCharacterAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackTargetUsingAlliedMonstersAction.cs" />
+    <Compile Include="Revise\AIP\Actions\AttackTargetUsingNumberOfMonstersAction.cs" />
+    <Compile Include="Revise\AIP\Actions\CommitSuicideAction.cs" />
+    <Compile Include="Revise\AIP\Actions\DropRandomItemAction.cs" />
+    <Compile Include="Revise\AIP\Actions\GiveItemToOwnerAction.cs" />
+    <Compile Include="Revise\AIP\Actions\HaltActionsAction.cs" />
+    <Compile Include="Revise\AIP\Actions\Invalid22Action.cs" />
+    <Compile Include="Revise\AIP\Actions\Invalid23Action.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveAwayFromTargetAction.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveNearOwnerAction.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveToNearbyCharacterByAbilityAction.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveToRandomPositionAction.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveToRandomPositionOfSelectedCharacterAction.cs" />
+    <Compile Include="Revise\AIP\Actions\MoveToRandomSpawnLocationAction.cs" />
+    <Compile Include="Revise\AIP\Actions\PerformEmotionAction.cs" />
+    <Compile Include="Revise\AIP\Actions\PerformSkillAction.cs" />
+    <Compile Include="Revise\AIP\Actions\PerformSpecialAttackAction.cs" />
+    <Compile Include="Revise\AIP\Actions\PerformTriggerAction.cs" />
+    <Compile Include="Revise\AIP\Actions\RunAwayAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SayMessageAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SayMessageByTypeAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetAIVariableAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetEconomyVariableAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetNPCVariableAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetPlayerKillFlagAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetRegenerationSystemAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SetWorldVariableAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SpawnMonsterAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SpawnMonsterAtPositionAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SpawnMonsterAtPositionWithMasterTypeAction.cs" />
+    <Compile Include="Revise\AIP\Actions\SpawnMonsterWithMasterTypeAction.cs" />
+    <Compile Include="Revise\AIP\Actions\TransformIntoMonsterAction.cs" />
+    <Compile Include="Revise\AIP\ArtificialIntelligenceAction.cs" />
+    <Compile Include="Revise\AIP\ArtificialIntelligenceCondition.cs" />
+    <Compile Include="Revise\AIP\ArtificialIntelligenceEvent.cs" />
+    <Compile Include="Revise\AIP\ArtificialIntelligenceFile.cs" />
+    <Compile Include="Revise\AIP\ArtificialIntelligencePattern.cs" />
+    <Compile Include="Revise\AIP\Attributes\ArtificialIntelligenceTypeAttribute.cs" />
+    <Compile Include="Revise\AIP\ComparisonOperator.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckAbilityCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckChannelNumberCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckClanMasterStatusCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckDamageCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckDateAndTimeCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckDistanceBetweenOwnerCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckEconomicVariableCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckHealthCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckMagicStatusCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckMoveDistanceCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckNPCVariableCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckOwnerCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckOwnerTargetCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckSourceAbilityCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckTargetAbilityCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckTargetDistanceCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckVariableCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckWeekDayAndTimeCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckWorldTimeCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckWorldVariableCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CheckZoneTimeCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\CompareAbilityCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\FightOrDelayCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\HasTargetCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\RandomCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\SelectNearestCharacterByCountCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\SelectNearestCharacterByTypeCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\SelectNearestCharacterCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\SelectNPCCondition.cs" />
+    <Compile Include="Revise\AIP\Conditions\TimeOfDayCondition.cs" />
+    <Compile Include="Revise\AIP\Interfaces\IArtificialIntelligenceAction.cs" />
+    <Compile Include="Revise\AIP\Interfaces\IArtificialIntelligenceCondition.cs" />
+    <Compile Include="Revise\AIP\MagicStatus.cs" />
+    <Compile Include="Revise\AIP\MessageType.cs" />
+    <Compile Include="Revise\AIP\SummonPosition.cs" />
+    <Compile Include="Revise\AIP\TargetType.cs" />
+    <Compile Include="Revise\AIP\VariableOperation.cs" />
+    <Compile Include="Revise\BoundingBox.cs" />
+    <Compile Include="Revise\BoundingCylinder.cs" />
+    <Compile Include="Revise\CHR\AnimationType.cs" />
+    <Compile Include="Revise\CHR\Character.cs" />
+    <Compile Include="Revise\CHR\CharacterAnimation.cs" />
+    <Compile Include="Revise\CHR\CharacterEffect.cs" />
+    <Compile Include="Revise\CHR\CharacterFile.cs" />
+    <Compile Include="Revise\CHR\CharacterObject.cs" />
+    <Compile Include="Revise\CONV\ConversationFile.cs" />
+    <Compile Include="Revise\CONV\ConversationFunction.cs" />
+    <Compile Include="Revise\CONV\ConversationMenu.cs" />
+    <Compile Include="Revise\CONV\ConversationMessage.cs" />
+    <Compile Include="Revise\CONV\ConversationMessageType.cs" />
+    <Compile Include="Revise\EFT\EffectAnimation.cs" />
+    <Compile Include="Revise\EFT\EffectFile.cs" />
+    <Compile Include="Revise\EFT\EffectParticle.cs" />
+    <Compile Include="Revise\Enum.cs" />
+    <Compile Include="Revise\Exceptions\FileIdentifierMismatchException.cs" />
+    <Compile Include="Revise\Exceptions\FileInUseException.cs" />
+    <Compile Include="Revise\Exceptions\FileNotLoadedException.cs" />
+    <Compile Include="Revise\Exceptions\FileReadOnlyException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidArtificialIntelligenceActionException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidArtificialIntelligenceConditionException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidBoneCountException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidHelpNodeCountException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidMapBlockTypeException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidMotionChannelType.cs" />
+    <Compile Include="Revise\Exceptions\InvalidParticleEventTypeException.cs" />
+    <Compile Include="Revise\Exceptions\InvalidVersionException.cs" />
+    <Compile Include="Revise\FileLoader.cs" />
+    <Compile Include="Revise\HIM\HeightmapFile.cs" />
+    <Compile Include="Revise\HIM\HeightmapPatch.cs" />
+    <Compile Include="Revise\HLP\HelpFile.cs" />
+    <Compile Include="Revise\HLP\HelpNode.cs" />
+    <Compile Include="Revise\HLP\HelpPage.cs" />
+    <Compile Include="Revise\IDX\VirtualFileIndexEntry.cs" />
+    <Compile Include="Revise\IDX\VirtualFileIndexFile.cs" />
+    <Compile Include="Revise\IDX\VirtualFileIndexSystem.cs" />
+    <Compile Include="Revise\IFO\Attributes\MapBlockTypeAttribute.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapAnimation.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapBlock.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapBuilding.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapCollisionObject.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapEffect.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapEventObject.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapMonsterSpawn.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapNPC.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapObject.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapSound.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapWarpPoint.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapWaterPatches.cs" />
+    <Compile Include="Revise\IFO\Blocks\MapWaterPlane.cs" />
+    <Compile Include="Revise\IFO\Blocks\MonsterSpawnPoint.cs" />
+    <Compile Include="Revise\IFO\Blocks\WaterPatch.cs" />
+    <Compile Include="Revise\IFO\Interfaces\IMapBlock.cs" />
+    <Compile Include="Revise\IFO\MapBlockType.cs" />
+    <Compile Include="Revise\IFO\MapDataFile.cs" />
+    <Compile Include="Revise\IO\AlignedBinaryReader.cs" />
+    <Compile Include="Revise\IO\AlignedBinaryWriter.cs" />
+    <Compile Include="Revise\LIT\LightmapFile.cs" />
+    <Compile Include="Revise\LIT\LightmapObject.cs" />
+    <Compile Include="Revise\LIT\LightmapPart.cs" />
+    <Compile Include="Revise\LOD\LevelOfDetailFile.cs" />
+    <Compile Include="Revise\LTB\LanguageFile.cs" />
+    <Compile Include="Revise\LTB\LanguageRow.cs" />
+    <Compile Include="Revise\MinMax.cs" />
+    <Compile Include="Revise\MOV\MovementFile.cs" />
+    <Compile Include="Revise\PTL\AlignmentType.cs" />
+    <Compile Include="Revise\PTL\Attributes\ParticleEventTypeAttribute.cs" />
+    <Compile Include="Revise\PTL\CoordinateType.cs" />
+    <Compile Include="Revise\PTL\Events\AlphaEvent.cs" />
+    <Compile Include="Revise\PTL\Events\BlueColourEvent.cs" />
+    <Compile Include="Revise\PTL\Events\ColourEvent.cs" />
+    <Compile Include="Revise\PTL\Events\GreenColourEvent.cs" />
+    <Compile Include="Revise\PTL\Events\ParticleEvent.cs" />
+    <Compile Include="Revise\PTL\Events\RedColourEvent.cs" />
+    <Compile Include="Revise\PTL\Events\RotationEvent.cs" />
+    <Compile Include="Revise\PTL\Events\ScaleEvent.cs" />
+    <Compile Include="Revise\PTL\Events\TextureEvent.cs" />
+    <Compile Include="Revise\PTL\Events\TimerEvent.cs" />
+    <Compile Include="Revise\PTL\Events\VelocityEvent.cs" />
+    <Compile Include="Revise\PTL\Events\VelocityXEvent.cs" />
+    <Compile Include="Revise\PTL\Events\VelocityYEvent.cs" />
+    <Compile Include="Revise\PTL\Events\VelocityZEvent.cs" />
+    <Compile Include="Revise\PTL\ImplementationType.cs" />
+    <Compile Include="Revise\PTL\Interfaces\IParticleEvent.cs" />
+    <Compile Include="Revise\PTL\ParticleEventType.cs" />
+    <Compile Include="Revise\PTL\ParticleFile.cs" />
+    <Compile Include="Revise\PTL\ParticleSequence.cs" />
+    <Compile Include="Revise\ReaderWriter\BinaryReader.cs" />
+    <Compile Include="Revise\ReaderWriter\BinaryWriter.cs" />
+    <Compile Include="Revise\STB\DataColumn.cs" />
+    <Compile Include="Revise\STB\DataFile.cs" />
+    <Compile Include="Revise\STB\DataRow.cs" />
+    <Compile Include="Revise\STL\Attributes\StringTableTypeIdentifierAttribute.cs" />
+    <Compile Include="Revise\STL\StringTableFile.cs" />
+    <Compile Include="Revise\STL\StringTableKey.cs" />
+    <Compile Include="Revise\STL\StringTableLanguage.cs" />
+    <Compile Include="Revise\STL\StringTableRow.cs" />
+    <Compile Include="Revise\STL\StringTableType.cs" />
+    <Compile Include="Revise\TBL\TableFile.cs" />
+    <Compile Include="Revise\TIL\TileFile.cs" />
+    <Compile Include="Revise\TIL\TilePatch.cs" />
+    <Compile Include="Revise\TSI\Sprite.cs" />
+    <Compile Include="Revise\TSI\SpriteFile.cs" />
+    <Compile Include="Revise\TSI\SpriteTexture.cs" />
+    <Compile Include="Revise\Types\Color3.cs" />
+    <Compile Include="Revise\Types\Color4.cs" />
+    <Compile Include="Revise\Types\IntVector2.cs" />
+    <Compile Include="Revise\Types\ShortVector2.cs" />
+    <Compile Include="Revise\Types\ShortVector3.cs" />
+    <Compile Include="Revise\Types\ShortVector4.cs" />
+    <Compile Include="Revise\Types\Utils.cs" />
+    <Compile Include="Revise\ZCA\CameraFile.cs" />
+    <Compile Include="Revise\ZCA\ProjectionType.cs" />
+    <Compile Include="Revise\ZMD\Bone.cs" />
+    <Compile Include="Revise\ZMD\BoneFile.cs" />
+    <Compile Include="Revise\ZMO\Attributes\MotionChannelTypeAttribute.cs" />
+    <Compile Include="Revise\ZMO\Channels\AlphaChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\MotionChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\NormalChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\PositionChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\RotationChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\ScaleChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\TextureAnimationChannel.cs" />
+    <Compile Include="Revise\ZMO\Channels\TextureCoordinateChannel.cs" />
+    <Compile Include="Revise\ZMO\ChannelType.cs" />
+    <Compile Include="Revise\ZMO\MotionFile.cs" />
+    <Compile Include="Revise\ZMS\ModelFile.cs" />
+    <Compile Include="Revise\ZMS\ModelVertex.cs" />
+    <Compile Include="Revise\ZMS\PoolType.cs" />
+    <Compile Include="Revise\ZMS\VertexFormat.cs" />
+    <Compile Include="Revise\ZON\SpawnPoint.cs" />
+    <Compile Include="Revise\ZON\TileRotation.cs" />
+    <Compile Include="Revise\ZON\ZoneBlock.cs" />
+    <Compile Include="Revise\ZON\ZoneFile.cs" />
+    <Compile Include="Revise\ZON\ZonePosition.cs" />
+    <Compile Include="Revise\ZON\ZoneTile.cs" />
+    <Compile Include="Revise\ZON\ZoneType.cs" />
+    <Compile Include="Revise\ZSC\BlendType.cs" />
+    <Compile Include="Revise\ZSC\CollisionType.cs" />
+    <Compile Include="Revise\ZSC\EffectType.cs" />
+    <Compile Include="Revise\ZSC\GlowType.cs" />
+    <Compile Include="Revise\ZSC\ModelListEffect.cs" />
+    <Compile Include="Revise\ZSC\ModelListFile.cs" />
+    <Compile Include="Revise\ZSC\ModelListObject.cs" />
+    <Compile Include="Revise\ZSC\ModelListPart.cs" />
+    <Compile Include="Revise\ZSC\ModelListPropertyType.cs" />
+    <Compile Include="Revise\ZSC\TextureFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Godot.Core\Godot.Core.csproj">
-      <Project>{62a5c1b4-a63f-423c-9bd1-1cf5ff967978}</Project>
-      <Name>Godot.Core</Name>
+    <ProjectReference Include="..\DDSReader\DDSReader.csproj">
+      <Project>{d74a367a-7311-4e21-abab-d065442ff603}</Project>
+      <Name>DDSReader</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Mogre.Base\Mogre.Base.csproj">
-      <Project>{6f7dd672-bbdd-4eed-b207-1bcbea6d68b4}</Project>
-      <Name>Mogre.Base</Name>
+    <ProjectReference Include="..\Godot.Core\Godot.Core.csproj">
+      <Project>{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}</Project>
+      <Name>Godot.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

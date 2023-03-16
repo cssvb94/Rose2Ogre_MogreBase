@@ -1,35 +1,94 @@
-﻿using RoseFormats;
+﻿using Revise.ZMD;
+using Revise.ZMO;
+using Revise.ZMS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Rose2Godot.GodotExporters
 {
     public class SceneExporter
     {
-        public readonly StringBuilder scene;
-        public readonly int num_resources;
-        public readonly List<ZMS> zms;
-        public readonly ZMD zmd;
-        public readonly List<ZMO> zmo;
-        public readonly string objName;
+        public StringBuilder scene { get; private set; }
+        public int num_resources { get; private set; }
+        public List<ModelFile> zms { get; private set; }
+        public BoneFile zmd { get; private set; }
+        public List<MotionFile> zmo { get; private set; }
+        public string objName { get; private set; }
+        public List<string> nodes { get; private set; }
+        public List<string> resources { get; private set; }
 
-        public readonly List<string> nodes;
-        public readonly List<string> resources;
+        private string ZMDFile;
+        private List<string> ZMSFiles;
+        private List<string> ZMOFiles;
 
-        public SceneExporter(
-            string objectName,
-            List<ZMS> mesh,
-            ZMD skeleton,
-            List<ZMO> animation)
+        private void ProcessFileList(List<string> FileNameList)
         {
-            scene = new StringBuilder();
-            zms = mesh;
-            zmd = skeleton;
-            zmo = animation;
-            objName = objectName;
+            ZMSFiles = new List<string>();
+            ZMOFiles = new List<string>();
 
+            zms = new List<ModelFile>();
+            zmo = new List<MotionFile>();
+            zmd = new BoneFile();
+
+            // Get only files that exist
+            var existing = from f in FileNameList where File.Exists(f) select f;
+
+            // Separate by types
+            IEnumerable<string> zmss = from f in existing where Path.GetExtension(f).IndexOf("ZMS", StringComparison.OrdinalIgnoreCase) >= 0 select Translator.FixPath(f);
+            IEnumerable<string> zmos = from f in existing where Path.GetExtension(f).IndexOf("ZMO", StringComparison.OrdinalIgnoreCase) >= 0 select Translator.FixPath(f);
+            IEnumerable<string> zmds = from f in existing where Path.GetExtension(f).IndexOf("ZMD", StringComparison.OrdinalIgnoreCase) >= 0 select Translator.FixPath(f);
+
+            // Fill in the listboxes and lists
+            try
+            {
+                if (zmds.Any())
+                {
+                    ZMDFile = zmds.First();
+                    Console.WriteLine($"Loading ZMD: {ZMDFile}");
+                    zmd.Load(ZMDFile);
+                }
+
+                if (zmss.Any())
+                {
+                    ZMSFiles.AddRange(zmss.ToList());
+                    ZMSFiles = ZMSFiles.Distinct().ToList();
+                    foreach (string zms_filename in ZMSFiles)
+                    {
+                        Console.WriteLine($"Loading ZMS: {zms_filename}");
+                        ModelFile zms_file = new ModelFile();
+                        zms_file.Load(zms_filename);
+                        zms.Add(zms_file);
+                    }
+                }
+
+                if (zmos.Any() && zmds.Any())
+                {
+                    ZMOFiles.AddRange(zmos.ToList());
+                    ZMOFiles = ZMOFiles.Distinct().ToList();
+                    foreach (string zmo_filename in ZMOFiles)
+                    {
+                        Console.WriteLine($"Loading ZMO: {zmo_filename}");
+                        MotionFile zmo_file = new MotionFile();
+                        zmo_file.Load(zmo_filename);
+                        zmo.Add(zmo_file);
+                    }
+                }
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine(x);
+                throw;
+            }
+        }
+
+        public SceneExporter(string objectName, string model_file_path)
+        {
+            objName = objectName;
+            ProcessFileList(new List<string>() { model_file_path });
+            scene = new StringBuilder();
             nodes = new List<string>();
             resources = new List<string>();
 
@@ -39,72 +98,72 @@ namespace Rose2Godot.GodotExporters
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
         }
 
-        public bool ExportScene(string fileName, List<string> zmsFileNames)
+        public SceneExporter(string objectName, List<string> file_paths)
         {
-            int idx = 1;
+            objName = objectName;
+            ProcessFileList(file_paths);
+            scene = new StringBuilder();
+            nodes = new List<string>();
+            resources = new List<string>();
+
+            // should include num of external objects
+            //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
+            num_resources = zms.Count;
+            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
+        }
+
+        public bool ExportScene(string output_file_name)
+        {
+            int resource_index = 1;
             try
             {
-                StreamWriter fileStream = new StreamWriter(fileName);
+                StreamWriter fileStream = new StreamWriter(output_file_name);
 
-                //List<string> animationNames = new List<string>();
+                List<string> model_name = new List<string>();
 
-                //foreach (string fname in zmoFileNames)
-                //{
-                //    animationNames.Add(Path.GetFileNameWithoutExtension(fname));
-                //}
+                foreach (string model_file_name in ZMSFiles)
+                    model_name.Add(Path.GetFileNameWithoutExtension(model_file_name));
 
-                List<string> meshNames = new List<string>();
+                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any());
 
-                foreach (string fname in zmsFileNames)
-                {
-                    meshNames.Add(Path.GetFileNameWithoutExtension(fname));
-                }
-
-                MeshExporter meshExporter = new MeshExporter(idx, zms, meshNames, zmd.BonesCount > 0);
-
-                idx = meshExporter.LastResourceIndex;
+                resource_index = meshExporter.LastResourceIndex;
 
                 scene.AppendLine(meshExporter.Resources);
 
-                AnimationExporter animExporter = new AnimationExporter(idx, zmo, zmd);
+                AnimationExporter animExporter = new AnimationExporter(resource_index, zmo, zmd);
 
                 // meshes & bone weights
 
-                idx = animExporter.LastResourceIndex;
-
+                resource_index = animExporter.last_resource_index;
 
                 // animations
                 // normalize the rotation quats!
 
-                if (zmo.Count > 0)
+                if (zmo.Any())
                 {
                     scene.AppendLine(animExporter.Resources);
-
-                    idx = animExporter.LastResourceIndex;
+                    resource_index = animExporter.last_resource_index;
                 }
 
                 scene.AppendLine("; scene root node");
                 scene.AppendFormat("[node type=\"Spatial\" name=\"{0}\"]\n", objName);
-                scene.AppendLine("transform = Transform(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)\n");
+                scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
 
                 // skeleton
 
-                if (zmd.BonesCount > 0)
+                if (zmd.Bones.Any())
                 {
-                    BoneExporter boneExporter = new BoneExporter(idx, zmd);
+                    BoneExporter boneExporter = new BoneExporter(resource_index, zmd);
                     scene.AppendLine(boneExporter.ToString());
-                    idx = animExporter.LastResourceIndex;
+                    resource_index = animExporter.last_resource_index;
                 }
 
                 scene.AppendLine(meshExporter.Nodes);
 
-                if (zmo.Count > 0)
-                {
+                if (zmo.Any() && zmd.Bones.Any())
                     scene.AppendLine(animExporter.Nodes);
-                }
 
                 fileStream.WriteLine(scene);
-
                 fileStream.Close();
 
                 return true;
@@ -112,8 +171,8 @@ namespace Rose2Godot.GodotExporters
             catch (Exception x)
             {
                 // log?
-                Console.WriteLine(x.Message);
-                return false;
+                Console.WriteLine($"SceneExporter: {x.Message}");
+                throw;
             }
         }
     }

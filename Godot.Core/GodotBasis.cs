@@ -37,13 +37,7 @@ namespace Godot
         public GodotVector3 y;
         public GodotVector3 z;
 
-        public static GodotBasis Identity
-        {
-            get
-            {
-                return identity;
-            }
-        }
+        public static GodotBasis Identity => identity;
 
         public GodotVector3 Scale
         {
@@ -139,10 +133,7 @@ namespace Godot
             return (this[0, 0] * ((this[1, 1] * this[2, 2]) - (this[2, 1] * this[1, 2]))) - (this[1, 0] * ((this[0, 1] * this[2, 2]) - (this[2, 1] * this[0, 2]))) + (this[2, 0] * ((this[0, 1] * this[1, 2]) - (this[1, 1] * this[0, 2])));
         }
 
-        public GodotVector3 GetAxis(int axis)
-        {
-            return new GodotVector3(this[0, axis], this[1, axis], this[2, axis]);
-        }
+        public GodotVector3 GetAxis(int axis) => new GodotVector3(this[0, axis], this[1, axis], this[2, axis]);
 
         public GodotVector3 GetEuler()
         {
@@ -220,10 +211,7 @@ namespace Godot
             return CreateFromAxes(axis1, yAxis, zAxis);
         }
 
-        public GodotBasis Rotated(GodotVector3 axis, float phi)
-        {
-            return new GodotBasis(axis, phi) * this;
-        }
+        public GodotBasis Rotated(GodotVector3 axis, float phi) => new GodotBasis(axis, phi) * this;
 
         public GodotBasis Scaled(GodotVector3 scale)
         {
@@ -240,20 +228,11 @@ namespace Godot
             return basis;
         }
 
-        public float Tdotx(GodotVector3 with)
-        {
-            return (this[0, 0] * with[0]) + (this[1, 0] * with[1]) + (this[2, 0] * with[2]);
-        }
+        public float Tdotx(GodotVector3 with) => (this[0, 0] * with[0]) + (this[1, 0] * with[1]) + (this[2, 0] * with[2]);
 
-        public float Tdoty(GodotVector3 with)
-        {
-            return (this[0, 1] * with[0]) + (this[1, 1] * with[1]) + (this[2, 1] * with[2]);
-        }
+        public float Tdoty(GodotVector3 with) => (this[0, 1] * with[0]) + (this[1, 1] * with[1]) + (this[2, 1] * with[2]);
 
-        public float Tdotz(GodotVector3 with)
-        {
-            return (this[0, 2] * with[0]) + (this[1, 2] * with[1]) + (this[2, 2] * with[2]);
-        }
+        public float Tdotz(GodotVector3 with) => (this[0, 2] * with[0]) + (this[1, 2] * with[1]) + (this[2, 2] * with[2]);
 
         public GodotBasis Transposed()
         {
@@ -337,9 +316,9 @@ namespace Godot
             GodotVector3 vector3 = new GodotVector3(axis.x * axis.x, axis.y * axis.y, axis.z * axis.z);
             float num1 = GodotMathf.Cos(phi);
             float num2 = GodotMathf.Sin(phi);
-            x = new GodotVector3(vector3.x + (num1 * (1f - vector3.x)), (float)((axis.x * axis.y * (1.0 - num1)) - (axis.z * num2)), (float)((axis.z * axis.x * (1.0 - num1)) + (axis.y * num2)));
-            y = new GodotVector3((float)((axis.x * axis.y * (1.0 - num1)) + (axis.z * num2)), vector3.y + (num1 * (1f - vector3.y)), (float)((axis.y * axis.z * (1.0 - num1)) - (axis.x * num2)));
-            z = new GodotVector3((float)((axis.z * axis.x * (1.0 - num1)) - (axis.y * num2)), (float)((axis.y * axis.z * (1.0 - num1)) + (axis.x * num2)), vector3.z + (num1 * (1f - vector3.z)));
+            x = new GodotVector3(vector3.x + (num1 * (1f - vector3.x)), ((axis.x * axis.y * (1.0f - num1)) - (axis.z * num2)), ((axis.z * axis.x * (1.0f - num1)) + (axis.y * num2)));
+            y = new GodotVector3(((axis.x * axis.y * (1.0f - num1)) + (axis.z * num2)), vector3.y + (num1 * (1f - vector3.y)), ((axis.y * axis.z * (1.0f - num1)) - (axis.x * num2)));
+            z = new GodotVector3(((axis.z * axis.x * (1.0f - num1)) - (axis.y * num2)), ((axis.y * axis.z * (1.0f - num1)) + (axis.x * num2)), vector3.z + (num1 * (1f - vector3.z)));
         }
 
         public GodotBasis(GodotVector3 xAxis, GodotVector3 yAxis, GodotVector3 zAxis)
@@ -370,53 +349,20 @@ namespace Godot
             return new GodotBasis(right.Tdotx(left[0]), right.Tdoty(left[0]), right.Tdotz(left[0]), right.Tdotx(left[1]), right.Tdoty(left[1]), right.Tdotz(left[1]), right.Tdotx(left[2]), right.Tdoty(left[2]), right.Tdotz(left[2]));
         }
 
-        public static bool operator ==(GodotBasis left, GodotBasis right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(GodotBasis left, GodotBasis right) => left.Equals(right);
 
-        public static bool operator !=(GodotBasis left, GodotBasis right)
-        {
-            return !left.Equals(right);
-        }
+        public static bool operator !=(GodotBasis left, GodotBasis right) => !left.Equals(right);
 
-        public override bool Equals(object obj)
-        {
-            if (obj is GodotBasis)
-                return Equals((GodotBasis)obj);
-            return false;
-        }
+        public override bool Equals(object obj) => obj is GodotBasis basis && Equals(basis);
 
-        public bool Equals(GodotBasis other)
-        {
-            if (x.Equals(other.x) && y.Equals(other.y))
-                return z.Equals(other.z);
-            return false;
-        }
+        public bool Equals(GodotBasis other) => x.Equals(other.x) && y.Equals(other.y) && z.Equals(other.z);
 
-        public override int GetHashCode()
-        {
-            return x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
-        }
+        public override int GetHashCode() => x.GetHashCode() ^ y.GetHashCode() ^ z.GetHashCode();
 
-        public override string ToString()
-        {
-            return string.Format("({0}, {1}, {2})", new object[3]
-            {
-             x.ToString(),
-             y.ToString(),
-             z.ToString()
-            });
-        }
+        public string ToStringNoBrackets() => $"{x.ToStringNoBrackets()}, {y.ToStringNoBrackets()}, {z.ToStringNoBrackets()}";
 
-        public string ToString(string format)
-        {
-            return string.Format("({0}, {1}, {2})", new object[3]
-            {
-             x.ToString(format),
-             y.ToString(format),
-             z.ToString(format)
-            });
-        }
+        public override string ToString() => $"({ToStringNoBrackets()})";
+
+        public string ToString(string format) => $"({x.ToString(format)}, {y.ToString(format)}, {z.ToString(format)})";
     }
 }

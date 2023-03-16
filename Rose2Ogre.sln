@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33027.164
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rose2Ogre", "Rose2Ogre\Rose2Ogre.csproj", "{C7A8F788-6210-48EE-9FF5-85104ADCC524}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rose2Godot", "Rose2Godot\Rose2Godot.csproj", "{585324F8-7128-4E83-902D-DD4F734A5D58}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Godot.Core", "Godot.Core\Godot.Core.csproj", "{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDSReader", "DDSReader\DDSReader.csproj", "{D74A367A-7311-4E21-ABAB-D065442FF603}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,14 @@ Global
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|x86.ActiveCfg = Release|Any CPU
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|x86.Build.0 = Release|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Debug|x86.Build.0 = Debug|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Release|x86.ActiveCfg = Release|Any CPU
+		{D74A367A-7311-4E21-ABAB-D065442FF603}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

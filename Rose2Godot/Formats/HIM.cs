@@ -4,45 +4,52 @@ using System.Text;
 
 namespace RoseFormats
 {
+    public struct HeightmapPatch
+    {
+        /// <summary>
+        /// Gets or sets the minimum height of the patch
+        /// </summary>
+        public float Minimum;
+
+        /// <summary>
+        /// Gets or sets the maximum height of the patch.
+        /// </summary>
+        public float Maximum;
+    }
+
     public class HIM
     {
-        public uint Height;
-        public uint Width;
-        public uint GridCount;
-        public float GridSize;
+        private const int PATCH_WIDTH = 16;
+        private const int PATCH_HEIGHT = 16;
+        private const int QUAD_PATCH_COUNT = 85;
 
-        public float MinValue = 0f;
-        public float MaxValue = 0f;
+        public int Width => Heights.GetLength(1);
+        public int Height => Heights.GetLength(0);
+        public uint GridCount { get; private set; }
+        public float GridSize { get; private set; }
+        public string Name { get; private set; }
+
         public float this[int x, int y]
         {
-            get
-            {
-                return element[x, y];
-            }
-            set
-            {
-                element[x, y] = value;
-            }
+            get => Heights[x, y];
+            set => Heights[x, y] = value;
         }
 
         private BinaryHelper bh;
         private Encoding koreanEncoding = Encoding.GetEncoding("EUC-KR");
-        private float[,] element = new float[65, 65];
+        public float[,] Heights { get; private set; }
+        public int PatchCount { get; private set; }
+        public float PatchSize { get; private set; }
+        private HeightmapPatch[,] patches;
+        private HeightmapPatch[] quadPatches;
 
         public HIM()
-        {
-        }
+        { }
 
-        public HIM(string FileName)
-        {
-            Load(FileName);
-        }
+        public HIM(string FileName) => Load(FileName);
 
         public bool Load(string FileName)
         {
-            MaxValue = 0f;
-            MinValue = 0f;
-
             try
             {
                 FileStream fileStream = File.OpenRead(FileName);
@@ -52,20 +59,37 @@ namespace RoseFormats
 
                 try
                 {
-                    Height = bh.ReadDWord();
-                    Width = bh.ReadDWord();
+                    uint width = bh.ReadDWord();
+                    uint height = bh.ReadDWord();
+
+                    Heights = new float[height, width];
+
                     GridCount = bh.ReadDWord();
                     GridSize = br.ReadSingle();
-                    for (int i = 0; i < 65; i++)
-                    {
-                        for (int j = 0; j < 65; j++)
+
+                    for (int h = 0; h < height; h++)
+                        for (int w = 0; w < width; w++)
+                            Heights[h, w] = br.ReadSingle();
+
+                    Name = br.ReadString();
+                    PatchCount = br.ReadInt32();
+
+                    patches = new HeightmapPatch[PATCH_HEIGHT, PATCH_WIDTH];
+                    quadPatches = new HeightmapPatch[QUAD_PATCH_COUNT];
+
+                    for (int h = 0; h < 16; h++)
+                        for (int w = 0; w < 16; w++)
                         {
-                            element[i, j] = br.ReadSingle();
-                            if (element[i, j] > MaxValue)
-                                MaxValue = element[i, j];
-                            if (element[i, j] < MinValue)
-                                MinValue = element[i, j];
+                            patches[h, w].Maximum = br.ReadSingle();
+                            patches[h, w].Minimum = br.ReadSingle();
                         }
+
+                    int quadPatchCount = br.ReadInt32();
+
+                    for (int i = 0; i < quadPatchCount; i++)
+                    {
+                        quadPatches[i].Maximum = br.ReadSingle();
+                        quadPatches[i].Minimum = br.ReadSingle();
                     }
                 }
                 finally

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Godot
 {
-    public struct GodotVector3 : IEquatable<GodotVector3>
+    public partial struct GodotVector3 : IEquatable<GodotVector3>
     {
         public float x;
         public float y;
@@ -58,6 +59,9 @@ namespace Godot
             }
         }
 
+        public static GodotVector3 One => new GodotVector3(1f, 1f, 1f);
+        public static GodotVector3 Zero => new GodotVector3(0f, 0f, 0f);
+
         public GodotVector3 Abs()
         {
             return new GodotVector3(GodotMathf.Abs(x), GodotMathf.Abs(y), GodotMathf.Abs(z));
@@ -73,11 +77,13 @@ namespace Godot
             return -Reflect(n);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GodotVector3 Ceil()
         {
             return new GodotVector3(GodotMathf.Ceil(x), GodotMathf.Ceil(y), GodotMathf.Ceil(z));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GodotVector3 Cross(GodotVector3 b)
         {
             return new GodotVector3((y * b.z) - (z * b.y), (z * b.x) - (x * b.z), (x * b.y) - (y * b.x));
@@ -315,50 +321,16 @@ namespace Godot
             return left.y > right.y;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is GodotVector3)
-                return Equals((GodotVector3)obj);
-            return false;
-        }
+        public override bool Equals(object obj) => obj is GodotVector3 vector && Equals(vector);
 
-        public bool Equals(GodotVector3 other)
-        {
-            if (x == other.x && y == other.y)
-                return z == other.z;
-            return false;
-        }
+        public bool Equals(GodotVector3 other) => x == other.x && y == other.y && z == other.z;
 
-        public override int GetHashCode()
-        {
-            return y.GetHashCode() ^ x.GetHashCode() ^ z.GetHashCode();
-        }
+        public override int GetHashCode() => y.GetHashCode() ^ x.GetHashCode() ^ z.GetHashCode();
 
-        public override string ToString()
-        {
-            return string.Format("({0}, {1}, {2})", new object[3]
-            {
-             x.ToString(),
-             y.ToString(),
-             z.ToString()
-            });
-        }
+        public string ToStringNoBrackets() => $"{x:g8}, {y:g8}, {z:g8}";
 
-        public string ToString(string format)
-        {
-            return string.Format("({0}, {1}, {2})", new object[3]
-            {
-             x.ToString(format),
-             y.ToString(format),
-             z.ToString(format)
-            });
-        }
+        public override string ToString() => $"({ToStringNoBrackets()})";
 
-        public enum Axis
-        {
-            X,
-            Y,
-            Z,
-        }
+        public string ToString(string format) => $"({x.ToString(format)}, {y.ToString(format)}, {z.ToString(format)})";
     }
 }

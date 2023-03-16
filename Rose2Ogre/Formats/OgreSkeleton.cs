@@ -1,6 +1,6 @@
-﻿using System.Xml;
-using Mogre;
+﻿using Mogre;
 using RoseFormats;
+using System.Xml;
 
 namespace OgreRose
 {
@@ -8,12 +8,12 @@ namespace OgreRose
     {
         public XmlDocument XMLDoc;
 
-        private static float fscale = 0.01f;
+        private static readonly float fscale = 0.01f;
 
         private Matrix4 RotationTransformMatrix = new Matrix4(new Quaternion(new Radian(-1.57079633f), new Vector3(0.0f, 0.0f, 1.0f)));
 
         private Matrix4 VertexTransformMatrix = new Matrix4(new Quaternion(new Radian(-1.57079633f), new Vector3(1.0f, 0.0f, 0.0f)));
-            
+
         private XmlAttribute SetAttr(string Name, string Value)
         {
             XmlAttribute xattr = XMLDoc.CreateAttribute(Name);
@@ -52,18 +52,18 @@ namespace OgreRose
                 rot.ToAngleAxis(out Radian Angle, out Vector3 Axis);
 
                 XmlNode position = XMLDoc.CreateNode(XmlNodeType.Element, "position", null);
-                position.Attributes.Append(SetAttr("x", string.Format("{0:0.000000000}", pos.x)));
-                position.Attributes.Append(SetAttr("y", string.Format("{0:0.000000000}", pos.y)));
-                position.Attributes.Append(SetAttr("z", string.Format("{0:0.000000000}", pos.z)));
+                position.Attributes.Append(SetAttr("x", string.Format("{0:0.#########}", pos.x)));
+                position.Attributes.Append(SetAttr("y", string.Format("{0:0.#########}", pos.y)));
+                position.Attributes.Append(SetAttr("z", string.Format("{0:0.#########}", pos.z)));
                 bone.AppendChild(position);
 
                 XmlNode rotation = XMLDoc.CreateNode(XmlNodeType.Element, "rotation", null);
-                rotation.Attributes.Append(SetAttr("angle", string.Format("{0:0.00000000}", Angle.ValueRadians)));
+                rotation.Attributes.Append(SetAttr("angle", string.Format("{0:0.#########}", Angle.ValueRadians)));
 
                 XmlNode axis = XMLDoc.CreateNode(XmlNodeType.Element, "axis", null);
-                axis.Attributes.Append(SetAttr("x", string.Format("{0:0.000000000}", Axis.x)));
-                axis.Attributes.Append(SetAttr("y", string.Format("{0:0.000000000}", Axis.y)));
-                axis.Attributes.Append(SetAttr("z", string.Format("{0:0.000000000}", Axis.z)));
+                axis.Attributes.Append(SetAttr("x", string.Format("{0:0.#########}", Axis.x)));
+                axis.Attributes.Append(SetAttr("y", string.Format("{0:0.#########}", Axis.y)));
+                axis.Attributes.Append(SetAttr("z", string.Format("{0:0.#########}", Axis.z)));
 
                 rotation.AppendChild(axis);
                 bone.AppendChild(rotation);
@@ -105,21 +105,21 @@ namespace OgreRose
                 rot.ToAngleAxis(out Radian dummyAngle, out Vector3 dummyAxis);
 
                 XmlNode position = XMLDoc.CreateNode(XmlNodeType.Element, "position", null);
-                
-                position.Attributes.Append(SetAttr("x", string.Format("{0:0.000000}", dummyPos.x)));
-                position.Attributes.Append(SetAttr("y", string.Format("{0:0.000000}", dummyPos.y)));
-                position.Attributes.Append(SetAttr("z", string.Format("{0:0.000000}", dummyPos.z)));
+
+                position.Attributes.Append(SetAttr("x", string.Format("{0:0.######}", dummyPos.x)));
+                position.Attributes.Append(SetAttr("y", string.Format("{0:0.######}", dummyPos.y)));
+                position.Attributes.Append(SetAttr("z", string.Format("{0:0.######}", dummyPos.z)));
 
                 bone.AppendChild(position);
 
                 XmlNode rotation = XMLDoc.CreateNode(XmlNodeType.Element, "rotation", null);
 
-                rotation.Attributes.Append(SetAttr("angle", string.Format("{0:0.00000}", dummyAngle.ValueRadians)));
+                rotation.Attributes.Append(SetAttr("angle", string.Format("{0:0.######}", dummyAngle.ValueRadians)));
 
                 XmlNode axis = XMLDoc.CreateNode(XmlNodeType.Element, "axis", null);
-                axis.Attributes.Append(SetAttr("x", string.Format("{0:0.000000}", dummyAxis.x)));
-                axis.Attributes.Append(SetAttr("y", string.Format("{0:0.000000}", dummyAxis.y)));
-                axis.Attributes.Append(SetAttr("z", string.Format("{0:0.000000}", dummyAxis.z)));
+                axis.Attributes.Append(SetAttr("x", string.Format("{0:0.######}", dummyAxis.x)));
+                axis.Attributes.Append(SetAttr("y", string.Format("{0:0.######}", dummyAxis.y)));
+                axis.Attributes.Append(SetAttr("z", string.Format("{0:0.######}", dummyAxis.z)));
 
                 rotation.AppendChild(axis);
                 bone.AppendChild(rotation);

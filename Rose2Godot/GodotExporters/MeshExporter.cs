@@ -1,8 +1,15 @@
-﻿using Mogre;
-using RoseFormats;
+﻿using Godot;
+using System.Numerics;
+using Revise;
+using Revise.Types;
+using Revise.ZMS;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Revise.ZMD;
+using Revise.ZMO;
+using System.IO;
+using System;
 
 namespace Rose2Godot.GodotExporters
 {
@@ -11,182 +18,156 @@ namespace Rose2Godot.GodotExporters
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
         private readonly string name;
-        public int LastResourceIndex { get; }
+        private readonly List<GodotTransform> transforms;
+
+        public int LastResourceIndex { get; private set; }
         public string MeshName { get; set; }
 
-        public string Resources
+        public string Resources => resource.ToString();
+
+        public string Nodes => nodes.ToString();
+
+        private string GodotVector3fToArray(IEnumerable<GodotVector3> vlist)
         {
-            get
-            {
-                return resource.ToString();
-            }
+            List<string> vs = new List<string>();
+            foreach (GodotVector3 vertex in vlist)
+                vs.Add($"{vertex.x:0.####}, {vertex.y:0.####}, {vertex.z:0.####}");
+            return $"Vector3Array({string.Join(", ", vs.ToArray())})";
         }
 
-        public string Nodes
+        private string VerticesColorsToArray(IEnumerable<Color4> color_list)
         {
-            get
-            {
-                return nodes.ToString();
-            }
+            List<string> vcolors = new List<string>();
+            foreach (Color4 color in color_list)
+                vcolors.Add($"{color.Red:0.####}, {color.Green:0.####}, {color.Blue:0.####}, {color.Alpha:0.####}");
+            return $"ColorArray({string.Join(", ", vcolors.ToArray())})";
         }
 
-        private Matrix3 rotatePositive90;
-
-        private readonly Translator translator = new Translator();
-
-        public MeshExporter(int resource_index, List<ZMS> zms, List<string> mesh_names, bool exportWithBones)
+        private string Vector2fToArray(IEnumerable<Vector2> vlist)
         {
-            rotatePositive90 = new Quaternion(new Degree(90f), new Vector3(1f, 0f, 0f)).ToRotationMatrix();
+            List<string> vs = new List<string>();
+            foreach (Vector2 v in vlist)
+                vs.Add($"{v.X:0.####}, {v.Y:0.####}");
+
+            return $"Vector2Array({string.Join(", ", vs.ToArray())})";
+        }
+
+        private string ShortVector3ToArray(IEnumerable<ShortVector3> vlist)
+        {
+            List<string> vs = new List<string>();
+            foreach (ShortVector3 v in vlist)
+                vs.Add($"{v.X}, {v.Z}, {v.Y}");
+
+            return $"IntArray({string.Join(", ", vs.ToArray())})";
+        }
+
+        public MeshExporter(int resource_index, List<ModelFile> zms, List<string> mesh_names, bool exportWithBones, List<GodotTransform> transforms = null)
+        {
             nodes = new StringBuilder();
             resource = new StringBuilder();
-            name = mesh_names[0];
+            name = mesh_names.First();
             LastResourceIndex = resource_index;
-
-            System.Console.WriteLine("[Mesh export] Start from idx: {0}", resource_index);
-
+            this.transforms = transforms;
 
             if (zms.Count == 1)
             {
                 MeshName = mesh_names[0];
-                BuildMeshData(name, zms[0], LastResourceIndex, exportWithBones);
+                BuildMeshData(name, zms[0], LastResourceIndex, exportWithBones, 0);
                 LastResourceIndex++;
-                System.Console.WriteLine("[Mesh export] Return idx: {0}", LastResourceIndex);
                 return;
             }
 
             int i = 1;
-            foreach (ZMS mesh in zms)
+            foreach (ModelFile mesh in zms)
             {
-                string mesh_name = string.Format("{0}", mesh_names[i - 1]);
-                BuildMeshData(mesh_name, mesh, i, exportWithBones);
+                string mesh_name = $"{mesh_names[i - 1]}";
+                BuildMeshData(mesh_name, mesh, LastResourceIndex + i - 1, exportWithBones, i - 1);
                 if (mesh == zms[0]) // set 1st mesh name as MeshName
-                {
                     MeshName = mesh_name;
-                }
                 i++;
             }
-            LastResourceIndex += i - 1;
-
-            System.Console.WriteLine("[Mesh export] Return idx: {0}", LastResourceIndex);
+            LastResourceIndex = LastResourceIndex + i - 1;
         }
 
-        private void BuildMeshData(string mesh_data_name, ZMS zms, int idx, bool exportWithBones)
+        private void BuildMeshData(string mesh_data_name, ModelFile zms, int idx, bool exportWithBones, int transform_idx)
         {
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", idx);
-            resource.AppendFormat("resource_name = \"{0}\"\n", mesh_data_name);
+            resource.AppendFormat($"resource_name = \"{mesh_data_name}\"\n");
             resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
             // vertices
 
-            resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertex.Count);
-            resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Vertex, null, null));
+            resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertices.Count);
+            resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.Rose2GodotPosition(v.Position))));
 
             // normals
 
-            if (zms.HasNormal())
+            if (zms.NormalsEnabled)
             {
-                resource.AppendFormat("\t\t; normals: {0}\n", zms.Normal.Count);
-                resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Normal, null, null));
+                resource.AppendFormat("\t\t; normals: {0}\n", zms.Vertices.Count);
+                resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.ToGodotVector3XYZ(v.Normal))));
             }
             else
-            {
                 resource.AppendLine("\t\tnull, ; no normals");
-            }
 
             // tangents
             // FloatArray()
-            if (zms.HasTangents())
+            if (zms.TangentsEnabled)
             {
-                resource.AppendFormat("\t\t; tangents: {0}\n", zms.Tangent.Count);
-                resource.AppendFormat("\t\t{0},\n", Vector3fToArray(zms.Tangent, null, null));
+                resource.AppendFormat("\t\t; tangents: {0}\n", zms.Vertices.Count);
+                resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.Rose2GodotPosition(v.Tangent))));
             }
             else
-            {
                 resource.AppendLine("\t\tnull, ; no tangents");
-            }
 
             // vertex colors
-
             // FORMAT: ColorArray(r, g, b, alpha)
 
-            resource.AppendLine("\t\tnull, ; no vertex colors");
+            if (zms.ColoursEnabled)
+            {
+                resource.AppendFormat("\t\t; vertex colors: {0}\n", zms.Vertices.Count);
+                resource.AppendFormat("\t\t{0},\n", VerticesColorsToArray(zms.Vertices.Select(v => v.Colour)));
+            }
+            else
+                resource.AppendLine("\t\tnull, ; no vertex colors");
 
             // UV1
 
-            if (zms.HasUV0())
+            if (zms.TextureCoordinates1Enabled)
             {
-                resource.AppendFormat("\t\t; UV1: {0}\n", zms.UV[0].Count);
-                resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[0]));
+                resource.AppendFormat("\t\t; UV1: {0}\n", zms.Vertices.Count);
+                resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.Vertices.Select(v => v.TextureCoordinates[0])));
             }
             else
-            {
                 resource.AppendLine("\t\tnull, ; no UV1");
-            }
 
             // UV2
 
-            if (zms.HasUV1())
+            if (zms.TextureCoordinates2Enabled)
             {
-                resource.AppendFormat("\t\t; UV2: {0}\n", zms.UV[1].Count);
-                resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.UV[1]));
+                resource.AppendFormat("\t\t; UV2: {0}\n", zms.Vertices.Count);
+                resource.AppendFormat("\t\t{0},\n", Vector2fToArray(zms.Vertices.Select(v => v.TextureCoordinates[1])));
             }
             else
-            {
                 resource.AppendLine("\t\tnull, ; no UV2");
-            }
 
             // Bone indices & Bone weights per vertex
 
-            if (zms.HasBoneIndex() && zms.HasBoneWeight() && exportWithBones)
+            if (zms.BonesEnabled && exportWithBones)
             {
-                List<int> bindices = new List<int>();
-                List<string> bweights = new List<string>();
+                List<int> bone_indices_list = new List<int>();
+                List<float> bone_weights_list = new List<float>();
 
-                var vgroups = zms.BoneWeights.OrderBy(bw => bw.VertexID)
-                    .GroupBy(bw => bw.VertexID)
-                    .Select(g => new List<BoneWeight>(g.ToList()))
-                    .ToList();
-
-                if (vgroups.Count < zms.VertexCount)
+                foreach (var vertex in zms.Vertices)
                 {
-                    int groups_to_add = zms.VertexCount - vgroups.Count();
-                    for (int i = 0; i < groups_to_add; i++)
-                    {
-                        vgroups.Add(new List<BoneWeight>());
-                    }
+                    bone_indices_list.AddRange(new List<int>() { zms.BoneTable[vertex.BoneIndices.X], zms.BoneTable[vertex.BoneIndices.Y], zms.BoneTable[vertex.BoneIndices.Z], zms.BoneTable[vertex.BoneIndices.W] });
+                    bone_weights_list.AddRange(new List<float>() { vertex.BoneWeights.X, vertex.BoneWeights.Y, vertex.BoneWeights.Z, vertex.BoneWeights.W });
                 }
 
-                foreach (var vgroup in vgroups)
-                {
-                    if (vgroup.Count < 4)
-                    {
-                        // add up to 4 bone per vertex
-                        int missing_num = 4 - vgroup.Count;
-                        int vertexId = vgroup.FirstOrDefault()?.VertexID ?? 0;
+                string bone_indices = $"\t\tIntArray({string.Join(", ", bone_indices_list.ToArray())}),";
+                string bone_weights = $"\t\tFloatArray({string.Join(", ", bone_weights_list.Select(w => $"{w:0.####}").ToArray())}),";
 
-                        for (int m = 0; m < missing_num; m++)
-                        {
-                            vgroup.Add(new BoneWeight(vertexId, 0, 0f));
-                        }
-                    }
-                }
-
-                foreach (var vgroup in vgroups.ToList())
-                {
-                    float total_weight = vgroup.Sum(bw => bw.Weight);
-
-                    foreach (BoneWeight bw in vgroup)
-                    {
-                        bindices.Add(bw.BoneID);
-                        // make sure combined weight applied to vertex doesnt exceed 1.0f
-                        bweights.Add(string.Format("{0:G4}", translator.Round(bw.Weight / total_weight)));
-                    }
-                }
-
-                string bone_indices = string.Format("\t\tIntArray({0}),", string.Join(", ", bindices.ToArray()));
-                string bone_weights = string.Format("\t\tFloatArray({0}),", string.Join(", ", bweights.ToArray()));
-
-                resource.AppendFormat("\t\t; bone weights: {0}, after proccessing: {1} \n", zms.BoneWeights.Count, vgroups.Count * 4);
+                resource.AppendFormat("\t\t; bone weights: {0} \n", bone_weights_list.Count);
                 resource.AppendLine(bone_indices);
                 resource.AppendLine(bone_weights);
             }
@@ -197,86 +178,35 @@ namespace Rose2Godot.GodotExporters
             }
 
             // face indices
-            resource.AppendFormat("\t\t; triangle faces: {0}\n", zms.Face.Count);
-            resource.AppendFormat("\t\t{0}\n", Vector3wToArray(zms.Face));
+            resource.AppendFormat("\t\t; triangle faces: {0}\n", zms.Indices.Count);
+            resource.AppendFormat("\t\t{0}\n", ShortVector3ToArray(zms.Indices.Select(vidx => Translator.Rose2GodotTriangleIndices(vidx))));
 
             resource.AppendLine("\t],"); // end of mesh arrays
             resource.AppendLine("\t\"morph_arrays\":[]");
             resource.AppendLine("}"); // end of surface/0
 
             if (exportWithBones)
-            {
                 nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\"Armature\"]\n", mesh_data_name);
-            }
             else
-            {
                 nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", mesh_data_name);
-            }
 
             nodes.AppendFormat("mesh = SubResource({0})\n", idx);
 
             nodes.AppendLine("visible = true");
 
-            if (zms.HasBoneIndex() && zms.HasBoneWeight() && exportWithBones)
-            {
+            if (zms.BonesEnabled && exportWithBones)
                 nodes.AppendLine("skeleton = NodePath(\"..:Armature\")");
-            }
 
-            nodes.AppendFormat("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
-        }
-
-        private string Vector3fToArray(List<Vector3> vlist, Matrix3? transform, float? scale)
-        {
-            List<string> vs = new List<string>();
-            foreach (Vector3 vertex in vlist)
+            if (transforms != null && transforms.Any())
             {
-                Vector3 v = vertex;
-                if (scale.HasValue)
-                {
-                    v *= scale.Value;
-                }
-
-                if (transform.HasValue)
-                {
-                    v *= transform.Value;
-                }
-
-                vs.Add(string.Format("{0:G4}, {1:G4}, {2:G4}",
-                    translator.Round(v.x),
-                    translator.Round(v.y),
-                    translator.Round(v.z)));
+                nodes.AppendLine($"transform = {Translator.GodotTransform2String(transforms[transform_idx])}");
             }
-
-            return string.Format("Vector3Array({0})", string.Join(", ", vs.ToArray()));
-        }
-
-        private string Vector2fToArray(List<Vector2> vlist)
-        {
-            List<string> vs = new List<string>();
-            foreach (Vector2 v in vlist)
+            else
             {
-                vs.Add(string.Format("{0:G4}, {1:G4}",
-                    translator.Round(v.x),
-                    translator.Round(v.y)));
+                nodes.AppendFormat("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
             }
-
-            return string.Format("Vector2Array({0})", string.Join(", ", vs.ToArray()));
         }
 
-        private string Vector3wToArray(List<Vector3w> vlist)
-        {
-            List<string> vs = new List<string>();
-            foreach (Vector3w v in vlist)
-            {
-                vs.Add(string.Format("{0}, {1}, {2}", v.x, v.z, v.y));
-            }
-
-            return string.Format("IntArray({0})", string.Join(", ", vs.ToArray()));
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}{1}", resource, nodes);
-        }
+        public override string ToString() => $"{resource}{nodes}";
     }
 }

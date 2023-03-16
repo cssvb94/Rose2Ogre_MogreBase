@@ -526,7 +526,7 @@ namespace Mogre
 
             if (Math.Abs(fSin) >= float.Epsilon)
             {
-                float fCoeff = fSin / (fAngle.ValueRadians);
+                float fCoeff = fSin / fAngle.ValueRadians;
                 result.x = fCoeff * x;
                 result.y = fCoeff * y;
                 result.z = fCoeff * z;
@@ -578,7 +578,7 @@ namespace Mogre
             Vector3 qvec = new Vector3(q.X, q.Y, q.Z);
             uv = qvec.CrossProduct(v);
             uuv = qvec.CrossProduct(uv);
-            uv *= (2.0f * q.w);
+            uv *= 2.0f * q.w;
             uuv *= 2.0f;
 
             return v + uv + uuv;
@@ -692,24 +692,23 @@ namespace Mogre
 
         public void ToAngleAxis(out Degree dAngle, out Vector3 rkAxis)
         {
-            Radian rfAngle = new Radian();
-            this.ToAngleAxis(out rfAngle, out rkAxis);
-            Degree degree = (Degree)rfAngle;
+            ToAngleAxis(out Radian rfAngle, out rkAxis);
+            Degree degree = rfAngle;
             dAngle = degree;
         }
 
         public void ToAngleAxis(out Radian rfAngle, out Vector3 rkAxis)
         {
             rkAxis = Vector3.ZERO;
-            float fValue = (float)((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
+            float fValue = (float)((x * x) + (y * y) + (z * z));
             if (fValue > 0.0)
             {
-                Radian radian = (Radian)((float)(2.0 * System.Math.Acos(this.w)));
+                Radian radian = (float)(2.0 * System.Math.Acos(w));
                 rfAngle = radian;
                 float num = Math.InvSqrt(fValue);
-                rkAxis.x = this.x * num;
-                rkAxis.y = this.y * num;
-                rkAxis.z = this.z * num;
+                rkAxis.x = x * num;
+                rkAxis.y = y * num;
+                rkAxis.z = z * num;
             }
             else
             {
@@ -724,18 +723,18 @@ namespace Mogre
         public Matrix3 ToRotationMatrix()
         {
             Matrix3 matrix3 = new Matrix3();
-            float num1 = 2f * this.x;
-            float num2 = 2f * this.y;
-            float num3 = 2f * this.z;
-            float num4 = num1 * this.w;
-            float num5 = num2 * this.w;
-            float num6 = num3 * this.w;
-            float num7 = num1 * this.x;
-            float num8 = num2 * this.x;
-            float num9 = num3 * this.x;
-            float num10 = num2 * this.y;
-            float num11 = num3 * this.y;
-            float num12 = num3 * this.z;
+            float num1 = 2f * x;
+            float num2 = 2f * y;
+            float num3 = 2f * z;
+            float num4 = num1 * w;
+            float num5 = num2 * w;
+            float num6 = num3 * w;
+            float num7 = num1 * x;
+            float num8 = num2 * x;
+            float num9 = num3 * x;
+            float num10 = num2 * y;
+            float num11 = num3 * y;
+            float num12 = num3 * z;
             matrix3.m00 = (float)(1.0 - (num10 + num12));
             matrix3.m01 = num8 - num6;
             matrix3.m02 = num9 + num5;

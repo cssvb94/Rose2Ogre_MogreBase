@@ -27,7 +27,7 @@ namespace RoseFormats
                 }
                 else
                 {
-                    return (float)(Frames - 1) / (float)FPS;
+                    return (Frames - 1) / (float)FPS;
                 }
 
             }
@@ -42,7 +42,7 @@ namespace RoseFormats
         {
             if (Frames == 0) return 0.0f;
 
-            return ((float)FrameIndex / (float)FPS);
+            return (FrameIndex / (float)FPS);
         }
 
         public bool Load(string FileName, ZMD zmd)
@@ -78,9 +78,7 @@ namespace RoseFormats
 
                     // set frames number for each bone
                     foreach (RoseBone bone in zmd.Bone)
-                    {
                         bone.InitFrames(Frames);
-                    }
 
                     // Read tracks data
                     for (int frameIDX = 0; frameIDX < Frames; frameIDX++)

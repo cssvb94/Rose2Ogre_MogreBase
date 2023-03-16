@@ -5,12 +5,14 @@ namespace Godot
     public struct GodotQuat : IEquatable<GodotQuat>
     {
         private static readonly GodotQuat identity = new GodotQuat(0.0f, 0.0f, 0.0f, 1f);
+        private static readonly GodotQuat zero = new GodotQuat(0.0f, 0.0f, 0.0f, 0f);
         public float x;
         public float y;
         public float z;
         public float w;
 
         public static GodotQuat Identity => identity;
+        public static GodotQuat Zero => zero;
 
         public float this[int index]
         {
@@ -54,16 +56,28 @@ namespace Godot
 
         public GodotQuat CubicSlerp(GodotQuat b, GodotQuat preA, GodotQuat postB, float t)
         {
-            float t1 = (float)((1.0 - t) * t * 2.0);
+            float t1 = (1.0f - t) * t * 2.0f;
             return Slerp(b, t).Slerpni(preA.Slerpni(postB, t), t1);
         }
 
-        public float Dot(GodotQuat b)
-        {
-            return (x * b.x) + (y * b.y) + (z * b.z) + (w * b.w);
-        }
+        public float Dot(GodotQuat b) => (x * b.x) + (y * b.y) + (z * b.z) + (w * b.w);
 
         public GodotQuat Inverse()
+        {
+            float fNorm = (w * w) + (x * x) + (y * y) + (z * z);
+            if (fNorm > 0.0f)
+            {
+                float fInvNorm = 1.0f / fNorm;
+                return new GodotQuat(-x * fInvNorm, -y * fInvNorm, -z * fInvNorm, w * fInvNorm);
+            }
+            else
+            {
+                // return an invalid result to flag the error
+                return Zero;
+            }
+        }
+
+        public GodotQuat UnitInverse()
         {
             return new GodotQuat(-x, -y, -z, w);
         }
@@ -141,7 +155,7 @@ namespace Godot
 
         public GodotVector3 Xform(GodotVector3 v)
         {
-            GodotQuat quat = this * v * Inverse();
+            GodotQuat quat = this * v * UnitInverse();
             return new GodotVector3(quat.x, quat.y, quat.z);
         }
 
@@ -173,88 +187,36 @@ namespace Godot
             }
         }
 
-        public static GodotQuat operator *(GodotQuat left, GodotQuat right)
-        {
-            return new GodotQuat(left.w * right.x + (left.x * right.w) + (left.y * right.z) - (left.z * right.y), (left.w * right.y) + (left.y * right.w) + (left.z * right.x) - (left.x * right.z), (left.w * right.z) + (left.z * right.w) + (left.x * right.y) - (left.y * right.x), (left.w * right.w) - (left.x * right.x) - (left.y * right.y) - (left.z * right.z));
-        }
+        public static GodotQuat operator *(GodotQuat left, GodotQuat right) => new GodotQuat(left.w * right.x + (left.x * right.w) + (left.y * right.z) - (left.z * right.y), (left.w * right.y) + (left.y * right.w) + (left.z * right.x) - (left.x * right.z), (left.w * right.z) + (left.z * right.w) + (left.x * right.y) - (left.y * right.x), (left.w * right.w) - (left.x * right.x) - (left.y * right.y) - (left.z * right.z));
 
-        public static GodotQuat operator +(GodotQuat left, GodotQuat right)
-        {
-            return new GodotQuat(left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w);
-        }
+        public static GodotQuat operator +(GodotQuat left, GodotQuat right) => new GodotQuat(left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w);
 
-        public static GodotQuat operator -(GodotQuat left, GodotQuat right)
-        {
-            return new GodotQuat(left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w);
-        }
+        public static GodotQuat operator -(GodotQuat left, GodotQuat right) => new GodotQuat(left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w);
 
-        public static GodotQuat operator -(GodotQuat left)
-        {
-            return new GodotQuat(-left.x, -left.y, -left.z, -left.w);
-        }
+        public static GodotQuat operator -(GodotQuat left) => new GodotQuat(-left.x, -left.y, -left.z, -left.w);
 
-        public static GodotQuat operator *(GodotQuat left, GodotVector3 right)
-        {
-            return new GodotQuat((left.w * right.x) + (left.y * right.z) - (left.z * right.y), (left.w * right.y) + (left.z * right.x) - (left.x * right.z), (left.w * right.z) + (left.x * right.y) - (left.y * right.x), (-left.x * right.x) - (left.y * right.y) - (left.z * right.z));
-        }
+        public static GodotQuat operator *(GodotQuat left, GodotVector3 right) => new GodotQuat((left.w * right.x) + (left.y * right.z) - (left.z * right.y), (left.w * right.y) + (left.z * right.x) - (left.x * right.z), (left.w * right.z) + (left.x * right.y) - (left.y * right.x), (-left.x * right.x) - (left.y * right.y) - (left.z * right.z));
 
-        public static GodotQuat operator *(GodotVector3 left, GodotQuat right)
-        {
-            return new GodotQuat((right.w * left.x) + (right.y * left.z) - (right.z * left.y), (right.w * left.y) + (right.z * left.x) - (right.x * left.z), (right.w * left.z) + (right.x * left.y) - (right.y * left.x), (-right.x * left.x) - (right.y * left.y) - (right.z * left.z));
-        }
+        public static GodotQuat operator *(GodotVector3 left, GodotQuat right) => new GodotQuat((right.w * left.x) + (right.y * left.z) - (right.z * left.y), (right.w * left.y) + (right.z * left.x) - (right.x * left.z), (right.w * left.z) + (right.x * left.y) - (right.y * left.x), (-right.x * left.x) - (right.y * left.y) - (right.z * left.z));
 
-        public static GodotQuat operator *(GodotQuat left, float right)
-        {
-            return new GodotQuat(left.x * right, left.y * right, left.z * right, left.w * right);
-        }
+        public static GodotQuat operator *(GodotQuat left, float right) => new GodotQuat(left.x * right, left.y * right, left.z * right, left.w * right);
 
-        public static GodotQuat operator *(float left, GodotQuat right)
-        {
-            return new GodotQuat(right.x * left, right.y * left, right.z * left, right.w * left);
-        }
+        public static GodotQuat operator *(float left, GodotQuat right) => new GodotQuat(right.x * left, right.y * left, right.z * left, right.w * left);
 
-        public static GodotQuat operator /(GodotQuat left, float right)
-        {
-            return left * (1f / right);
-        }
+        public static GodotQuat operator /(GodotQuat left, float right) => left * (1f / right);
 
-        public static bool operator ==(GodotQuat left, GodotQuat right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(GodotQuat left, GodotQuat right) => left.Equals(right);
 
-        public static bool operator !=(GodotQuat left, GodotQuat right)
-        {
-            return !left.Equals(right);
-        }
+        public static bool operator !=(GodotQuat left, GodotQuat right) => !left.Equals(right);
 
-        public override bool Equals(object obj)
-        {
-            if (obj is GodotVector2)
-                return Equals((GodotVector2)obj);
-            return false;
-        }
+        public override bool Equals(object obj) => obj is GodotVector2 vector && Equals(vector);
 
-        public bool Equals(GodotQuat other)
-        {
-            if (x == (double)other.x && y == (double)other.y && z == (double)other.z)
-                return w == (double)other.w;
-            return false;
-        }
+        public bool Equals(GodotQuat other) => x == other.x && y == other.y && z == other.z && w == other.w;
 
-        public override int GetHashCode()
-        {
-            return y.GetHashCode() ^ x.GetHashCode() ^ z.GetHashCode() ^ w.GetHashCode();
-        }
+        public override int GetHashCode() => y.GetHashCode() ^ x.GetHashCode() ^ z.GetHashCode() ^ w.GetHashCode();
 
-        public override string ToString()
-        {
-            return string.Format("({0}, {1}, {2}, {3})", x.ToString(), y.ToString(), z.ToString(), w.ToString());
-        }
+        public override string ToString() => $"({x:0.#######}, {y:0.#######}, {z:0.#######}, {w:0.#######})";
 
-        public string ToString(string format)
-        {
-            return string.Format("({0}, {1}, {2}, {3})", x.ToString(format), y.ToString(format), z.ToString(format), w.ToString(format));
-        }
+        public string ToString(string format) => $"({x.ToString(format)}, {y.ToString(format)}, {z.ToString(format)}, {w.ToString(format)})";
     }
 }

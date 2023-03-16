@@ -8,6 +8,8 @@ namespace Godot
 
         public GodotVector3 origin;
 
+        public static GodotTransform IDENTITY => new GodotTransform(new GodotVector3(1, 0, 0), new GodotVector3(0, 1, 0), new GodotVector3(0, 0, 1), new GodotVector3(0, 0, 0));
+
         public GodotTransform AffineInverse()
         {
             GodotBasis basis = this.basis.Inverse();
@@ -27,20 +29,11 @@ namespace Godot
             return transform;
         }
 
-        public GodotTransform Orthonormalized()
-        {
-            return new GodotTransform(basis.Orthonormalized(), origin);
-        }
+        public GodotTransform Orthonormalized() => new GodotTransform(basis.Orthonormalized(), origin);
 
-        public GodotTransform Rotated(GodotVector3 axis, float phi)
-        {
-            return new GodotTransform(new GodotBasis(axis, phi), new GodotVector3()) * this;
-        }
+        public GodotTransform Rotated(GodotVector3 axis, float phi) => new GodotTransform(new GodotBasis(axis, phi), new GodotVector3()) * this;
 
-        public GodotTransform Scaled(GodotVector3 scale)
-        {
-            return new GodotTransform(basis.Scaled(scale), origin * scale);
-        }
+        public GodotTransform Scaled(GodotVector3 scale) => new GodotTransform(basis.Scaled(scale), origin * scale);
 
         public void SetLookAt(GodotVector3 eye, GodotVector3 target, GodotVector3 up)
         {
@@ -102,6 +95,20 @@ namespace Godot
             return new GodotVector3((basis[0, 0] * vector3.x) + (basis[1, 0] * vector3.y) + (basis[2, 0] * vector3.z), (basis[0, 1] * vector3.x) + (basis[1, 1] * vector3.y) + (basis[2, 1] * vector3.z), (basis[0, 2] * vector3.x) + (basis[1, 2] * vector3.y) + (basis[2, 2] * vector3.z));
         }
 
+        public GodotTransform(
+            float cxx, float cyx, float czx,
+            float cxy, float cyy, float czy,
+            float cxz, float cyz, float czz,
+            float originx, float originy, float originz)
+        {
+            GodotVector3 xaxis = new GodotVector3(cxx, cxy, cxz);
+            GodotVector3 yaxis = new GodotVector3(cyx, cyy, cyz);
+            GodotVector3 zaxis = new GodotVector3(czx, czy, czz);
+            GodotVector3 origin = new GodotVector3(originx, originy, originz);
+            basis = GodotBasis.CreateFromAxes(xaxis, yaxis, zaxis);
+            this.origin = origin;
+        }
+
         public GodotTransform(GodotVector3 xAxis, GodotVector3 yAxis, GodotVector3 zAxis, GodotVector3 origin)
         {
             basis = GodotBasis.CreateFromAxes(xAxis, yAxis, zAxis);
@@ -127,51 +134,18 @@ namespace Godot
             return left;
         }
 
-        public static bool operator ==(GodotTransform left, GodotTransform right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(GodotTransform left, GodotTransform right) => left.Equals(right);
 
-        public static bool operator !=(GodotTransform left, GodotTransform right)
-        {
-            return !left.Equals(right);
-        }
+        public static bool operator !=(GodotTransform left, GodotTransform right) => !left.Equals(right);
 
-        public override bool Equals(object obj)
-        {
-            if (obj is GodotTransform)
-                return Equals((GodotTransform)obj);
-            return false;
-        }
+        public override bool Equals(object obj) => obj is GodotTransform transform && Equals(transform);
 
-        public bool Equals(GodotTransform other)
-        {
-            if (basis.Equals(other.basis))
-                return origin.Equals(other.origin);
-            return false;
-        }
+        public bool Equals(GodotTransform other) => basis.Equals(other.basis) && origin.Equals(other.origin);
 
-        public override int GetHashCode()
-        {
-            return basis.GetHashCode() ^ origin.GetHashCode();
-        }
+        public override int GetHashCode() => basis.GetHashCode() ^ origin.GetHashCode();
 
-        public override string ToString()
-        {
-            return string.Format("{0} - {1}", new object[2]
-            {
-             basis.ToString(),
-             origin.ToString()
-            });
-        }
+        public override string ToString() => $"({basis.ToStringNoBrackets()}, {origin.ToStringNoBrackets()})";
 
-        public string ToString(string format)
-        {
-            return string.Format("{0} - {1}", new object[2]
-            {
-             basis.ToString(format),
-             origin.ToString(format)
-            });
-        }
+        public string ToString(string format) => $"{basis.ToString(format)}, {origin.ToString(format)}";
     }
 }

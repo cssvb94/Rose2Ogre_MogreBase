@@ -6,7 +6,7 @@ namespace OgreRose
 {
     class OgreAnimation
     {
-        private static float fscale = 0.01f;
+        private static readonly float fscale = 0.01f;
 
         private Matrix4 VertexTransformMatrix = new Matrix4(new Quaternion(new Radian(-1.57079633f), new Vector3(1.0f, 0.0f, 0.0f)));
 
@@ -36,7 +36,7 @@ namespace OgreRose
 
             XmlNode animation = XMLDoc.CreateNode(XmlNodeType.Element, "animation", null);
             animation.Attributes.Append(SetAttr(XMLDoc, "name", AnimationName));
-            animation.Attributes.Append(SetAttr(XMLDoc, "length", string.Format("{0:0.000000}", zmo.Length * 1.5f)));
+            animation.Attributes.Append(SetAttr(XMLDoc, "length", $"{zmo.Length * 1.5f:0.######}"));
 
             XmlNode tracks = XMLDoc.CreateNode(XmlNodeType.Element, "tracks", null);
 
@@ -51,7 +51,7 @@ namespace OgreRose
                 for (int frameidx = 0; frameidx < zmo.Frames; frameidx++)
                 {
                     XmlNode keyframe = XMLDoc.CreateNode(XmlNodeType.Element, "keyframe", null);
-                    keyframe.Attributes.Append(SetAttr(XMLDoc, "time", string.Format("{0:0.000000}", zmo.FrameTime(frameidx) * 1.5f)));
+                    keyframe.Attributes.Append(SetAttr(XMLDoc, "time", $"{zmo.FrameTime(frameidx) * 1.5f:0.######}"));
 
                     XmlNode translate = XMLDoc.CreateNode(XmlNodeType.Element, "translate", null);
 
@@ -62,34 +62,32 @@ namespace OgreRose
                         translateVector *= fscale;
                     }
 
-                    translate.Attributes.Append(SetAttr(XMLDoc, "x", string.Format("{0:0.000000}", translateVector.x)));
-                    translate.Attributes.Append(SetAttr(XMLDoc, "y", string.Format("{0:0.000000}", translateVector.y)));
-                    translate.Attributes.Append(SetAttr(XMLDoc, "z", string.Format("{0:0.000000}", translateVector.z)));
+                    translate.Attributes.Append(SetAttr(XMLDoc, "x", $"{translateVector.x:0.######}"));
+                    translate.Attributes.Append(SetAttr(XMLDoc, "y", $"{translateVector.y:0.######}"));
+                    translate.Attributes.Append(SetAttr(XMLDoc, "z", $"{translateVector.z:0.######}"));
                     keyframe.AppendChild(translate);
 
                     // Rotations
 
                     Quaternion qRot = bone.Rotation.UnitInverse() * bone.Frame[frameidx].Rotation;
 
-                    Radian RotAngle;
-                    Vector3 RotAxis;
-                    qRot.ToAngleAxis(out RotAngle, out RotAxis);
+                    qRot.ToAngleAxis(out Radian RotAngle, out Vector3 RotAxis);
 
                     XmlNode rotate = XMLDoc.CreateNode(XmlNodeType.Element, "rotate", null);
-                    rotate.Attributes.Append(SetAttr(XMLDoc, "angle", string.Format("{0:0.00000000}", RotAngle.ValueRadians)));
+                    rotate.Attributes.Append(SetAttr(XMLDoc, "angle", string.Format("{0:0.########}", RotAngle.ValueRadians)));
 
                     XmlNode axis = XMLDoc.CreateNode(XmlNodeType.Element, "axis", null);
-                    axis.Attributes.Append(SetAttr(XMLDoc, "x", string.Format("{0:0.000000000}", RotAxis.x)));
-                    axis.Attributes.Append(SetAttr(XMLDoc, "y", string.Format("{0:0.000000000}", RotAxis.y)));
-                    axis.Attributes.Append(SetAttr(XMLDoc, "z", string.Format("{0:0.000000000}", RotAxis.z)));
+                    axis.Attributes.Append(SetAttr(XMLDoc, "x", $"{RotAxis.x:0.#########}"));
+                    axis.Attributes.Append(SetAttr(XMLDoc, "y", $"{RotAxis.y:0.#########}"));
+                    axis.Attributes.Append(SetAttr(XMLDoc, "z", $"{RotAxis.z:0.#########}"));
 
                     rotate.AppendChild(axis);
                     keyframe.AppendChild(rotate);
 
                     XmlNode scale = XMLDoc.CreateNode(XmlNodeType.Element, "scale", null);
-                    scale.Attributes.Append(SetAttr(XMLDoc, "x", string.Format("{0:0.000000000}", bone.Frame[frameidx].Scale.x)));
-                    scale.Attributes.Append(SetAttr(XMLDoc, "y", string.Format("{0:0.000000000}", bone.Frame[frameidx].Scale.y)));
-                    scale.Attributes.Append(SetAttr(XMLDoc, "z", string.Format("{0:0.000000000}", bone.Frame[frameidx].Scale.z)));
+                    scale.Attributes.Append(SetAttr(XMLDoc, "x", $"{bone.Frame[frameidx].Scale.x:0.#########}"));
+                    scale.Attributes.Append(SetAttr(XMLDoc, "y", $"{bone.Frame[frameidx].Scale.y:0.#########}"));
+                    scale.Attributes.Append(SetAttr(XMLDoc, "z", $"{bone.Frame[frameidx].Scale.z:0.#########}"));
 
                     keyframe.AppendChild(scale);
 

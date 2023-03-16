@@ -25,14 +25,14 @@ namespace OgreRose
         {
             XmlNode vertex = XMLDoc.CreateNode(XmlNodeType.Element, "vertex", null);
             XmlNode position = XMLDoc.CreateNode(XmlNodeType.Element, "position", null);
-            position.Attributes.Append(SetAttr("x", string.Format("{0:0.000000}", pos.x)));
-            position.Attributes.Append(SetAttr("y", string.Format("{0:0.000000}", pos.y)));
-            position.Attributes.Append(SetAttr("z", string.Format("{0:0.000000}", pos.z)));
+            position.Attributes.Append(SetAttr("x", $"{pos.x:0.######}"));
+            position.Attributes.Append(SetAttr("y", $"{pos.y:0.######}"));
+            position.Attributes.Append(SetAttr("z", $"{pos.z:0.######}"));
 
             XmlNode normal = XMLDoc.CreateNode(XmlNodeType.Element, "normal", null);
-            normal.Attributes.Append(SetAttr("x", string.Format("{0:0.000000}", norm.x)));
-            normal.Attributes.Append(SetAttr("y", string.Format("{0:0.000000}", norm.y)));
-            normal.Attributes.Append(SetAttr("z", string.Format("{0:0.000000}", norm.z)));
+            normal.Attributes.Append(SetAttr("x", $"{norm.x:0.######}"));
+            normal.Attributes.Append(SetAttr("y", $"{norm.y:0.######}"));
+            normal.Attributes.Append(SetAttr("z", $"{norm.z:0.######}"));
 
             vertex.AppendChild(position);
             vertex.AppendChild(normal);
@@ -44,8 +44,8 @@ namespace OgreRose
         {
             XmlNode xmluv = XMLDoc.CreateNode(XmlNodeType.Element, "vertex", null);
             XmlNode xmluvcoord = XMLDoc.CreateNode(XmlNodeType.Element, "texcoord", null);
-            xmluvcoord.Attributes.Append(SetAttr("u", string.Format("{0:0.000000}", uv.x)));
-            xmluvcoord.Attributes.Append(SetAttr("v", string.Format("{0:0.000000}", uv.y)));
+            xmluvcoord.Attributes.Append(SetAttr("u", $"{uv.x:0.######}"));
+            xmluvcoord.Attributes.Append(SetAttr("v", $"{uv.y:0.######}"));
             xmluv.AppendChild(xmluvcoord);
             return xmluv;
         }
@@ -127,7 +127,7 @@ namespace OgreRose
                     XmlNode vertexboneassignment = XMLDoc.CreateNode(XmlNodeType.Element, "vertexboneassignment", null);
                     vertexboneassignment.Attributes.Append(SetAttr("vertexindex", zms.BoneWeights[bwi].VertexID.ToString()));
                     vertexboneassignment.Attributes.Append(SetAttr("boneindex", zms.BoneWeights[bwi].BoneID.ToString()));
-                    vertexboneassignment.Attributes.Append(SetAttr("weight", string.Format("{0:0.000000}", zms.BoneWeights[bwi].Weight)));
+                    vertexboneassignment.Attributes.Append(SetAttr("weight", $"{zms.BoneWeights[bwi].Weight:0.######}"));
 
                     boneassignments.AppendChild(vertexboneassignment);
                 }

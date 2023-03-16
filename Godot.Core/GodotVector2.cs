@@ -280,34 +280,12 @@ namespace Godot
             return false;
         }
 
-        public bool Equals(GodotVector2 other)
-        {
-            if (x == other.x)
-                return y == other.y;
-            return false;
-        }
+        public bool Equals(GodotVector2 other) => x == other.x && y == other.y;
 
-        public override int GetHashCode()
-        {
-            return y.GetHashCode() ^ x.GetHashCode();
-        }
+        public override int GetHashCode() => y.GetHashCode() ^ x.GetHashCode();
 
-        public override string ToString()
-        {
-            return string.Format("({0}, {1})", new object[2]
-            {
-             x.ToString(),
-             y.ToString()
-            });
-        }
+        public override string ToString() => $"({x}, {y})";
 
-        public string ToString(string format)
-        {
-            return string.Format("({0}, {1})", new object[2]
-            {
-             x.ToString(format),
-             y.ToString(format)
-            });
-        }
+        public string ToString(string format) => $"({x.ToString(format)}, {y.ToString(format)})";
     }
 }

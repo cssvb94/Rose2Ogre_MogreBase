@@ -1,70 +1,72 @@
 ﻿using Godot;
-using Mogre;
-using RoseFormats;
+using Revise.ZMD;
+using System.Linq;
 using System.Text;
 
 namespace Rose2Godot.GodotExporters
 {
     public class BoneExporter
     {
-        private readonly StringBuilder sbone;
-        private readonly Translator translator = new Translator();
+        public int last_resource_index { get; private set; }
 
-        public int LastResourceIndex { get; }
+        private readonly StringBuilder bone_node;
+        private readonly StringBuilder dummy_bone_attachment_node;
 
-        public BoneExporter(int resource_index, ZMD zmd)
+        private void AppendGodotBone(ref int index, Bone bone)
         {
-            sbone = new StringBuilder();
-            sbone.Append("; skelton node - mesh nodes parent\n");
-            sbone.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".:\"]");
-            sbone.AppendLine("bones_in_world_transform = true");
-            sbone.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+            bone.Translation /= 100f; // scale down
+            GodotQuat rotation = new GodotQuat(bone.Rotation.X, bone.Rotation.Z, bone.Rotation.Y, bone.Rotation.W).Inverse().Normalized();
+            GodotVector3 position = Translator.RoseToGodotVector3(bone.Translation);
+            GodotTransform transform = new GodotTransform(rotation, position);
+
+            bone_node.AppendFormat("bones/{0}/name = \"{1}\"\n", index, bone.Name);
+            bone_node.AppendFormat("bones/{0}/parent = {1}\n", index, index == 0 ? -1 : bone.Parent);
+            bone_node.AppendFormat("bones/{0}/rest = {1}\n", index, Translator.GodotTransform2String(transform));
+            bone_node.AppendFormat("bones/{0}/enabled = true\n", index);
+            bone_node.AppendFormat("bones/{0}/bound_children = [ ]\n", index);
+            index++;
+        }
+
+        public BoneExporter(int resource_index, BoneFile zmd)
+        {
+            bone_node = new StringBuilder();
+            dummy_bone_attachment_node = new StringBuilder();
+            bone_node.Append("; skeleton node - mesh nodes parent\n");
+            bone_node.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".\"]");
+            bone_node.AppendLine("bones_in_world_transform = true");
+            bone_node.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
             int idx = 0;
-
-            GodotTransform IdentityTransform = new GodotTransform(GodotQuat.Identity, translator.ToVector3(Vector3.ZERO));
-
-            foreach (RoseBone bone in zmd.Bone)
+            foreach (Bone bone in zmd.Bones)
             {
-                GodotTransform transform = new GodotTransform(translator.ToQuat(bone.Rotation), translator.ToVector3(bone.Position));
-                GodotTransform rest = new GodotTransform(translator.ToQuat(bone.TransformMatrix.ExtractQuaternion()), translator.ToVector3(bone.TransformMatrix.Translation));
-                bone.Rotation.ToAngleAxis(out Radian radian, out Vector3 axis);
-
-                sbone.AppendFormat("bones/{0}/name = \"{1}\"\n", idx, bone.Name);
-                sbone.AppendFormat("bones/{0}/parent = {1}\n", idx, idx == 0 ? -1 : bone.ParentID);
-                //sbone.AppendFormat("; Position: {0}\n; Rotation: {1}\n; Angle(rad): {2:G4} Angle(deg): {3:G4} Axis: {4}\n", bone.Position, bone.Rotation, radian.ValueRadians, radian.ValueDegrees, axis);
-                sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
-                sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, translator.Transform2String(rest));
-                //sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, "Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-                sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
-                sbone.AppendFormat("bones/{0}/bound_children = [ ]\n", idx);
-                idx++;
+                AppendGodotBone(ref idx, bone);
             }
 
-            if (zmd.DummiesCount > 0)
+            if (zmd.DummyBones.Any())
             {
-                sbone.Append("; dummy bones\n");
-                foreach (RoseBone dummy in zmd.Dummy)
+                bone_node.Append("; dummy bones\n");
+                foreach (Bone dummy in zmd.DummyBones)
                 {
-                    GodotTransform transform = new GodotTransform(translator.ToQuat(dummy.Rotation), translator.ToVector3(dummy.Position));
-
-                    sbone.AppendFormat("bones/{0}/name = \"{1}\"\n", idx, dummy.Name);
-                    sbone.AppendFormat("bones/{0}/parent = {1}\n", idx, idx == 0 ? -1 : dummy.ParentID);
-                    //sbone.AppendFormat("; Position: {0}\n; Rotation: {1}\n", dummy.Position, dummy.Rotation);
-                    sbone.AppendFormat("bones/{0}/rest = {1}\n", idx, translator.Transform2String(transform));
-                    //sbone.AppendFormat("bones/{0}/pose = {1}\n", idx, translator.Transform2String(IdentityTransform));
-                    sbone.AppendFormat("bones/{0}/enabled = true\n", idx);
-                    sbone.AppendFormat("bones/{0}/bound_children = []\n", idx);
-                    idx++;
+                    // Add BoneAttachment node for each dummy bone
+                    dummy_bone_attachment_node.Append(MakeBoneAttachment(dummy));
+                    AppendGodotBone(ref idx, dummy);
                 }
             }
+            last_resource_index += resource_index;
 
-            LastResourceIndex += resource_index;
+            bone_node.AppendLine();
+            bone_node.AppendLine(dummy_bone_attachment_node.ToString());
         }
 
-        public override string ToString()
+        private string MakeBoneAttachment(Bone bone)
         {
-            return sbone.ToString();
+            StringBuilder attachment = new StringBuilder();
+            attachment.AppendLine($"[node name=\"{bone.Name}\" type=\"BoneAttachment\" parent=\"Armature\"]");
+            attachment.AppendLine($"bone_name = \"{bone.Name}\"\n");
+
+            return attachment.ToString();
         }
+
+        public override string ToString() => bone_node.ToString();
     }
 }

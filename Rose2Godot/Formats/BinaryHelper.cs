@@ -9,37 +9,19 @@ namespace RoseFormats
         private BinaryReader br;
         private BinaryWriter bw;
 
-        private Encoding koreanEncoding = Encoding.GetEncoding("EUC-KR");
+        private readonly Encoding koreanEncoding = Encoding.GetEncoding("EUC-KR");
 
-        public BinaryHelper(BinaryReader aBinaryReader)
-        {
-            br = aBinaryReader;
-        }
+        public BinaryHelper(BinaryReader aBinaryReader) => br = aBinaryReader;
 
-        public BinaryHelper(BinaryWriter aBinaryWriter)
-        {
-            bw = aBinaryWriter;
-        }
+        public BinaryHelper(BinaryWriter aBinaryWriter) => bw = aBinaryWriter;
 
-        public uint ReadWord()
-        {
-            return (uint)(br.ReadByte() | (br.ReadByte() << 8));
-        }
+        public uint ReadWord() => (uint)(br.ReadByte() | (br.ReadByte() << 8));
 
-        public uint ReadDWord()
-        {
-            return (uint)(br.ReadByte() | (br.ReadByte() << 8) | (br.ReadByte() << 16) | (br.ReadByte() << 32));
-        }
+        public uint ReadDWord() => (uint)(br.ReadByte() | (br.ReadByte() << 8) | (br.ReadByte() << 16) | (br.ReadByte() << 32));
 
-        public Vector2 ReadUVVector2f()
-        {
-            return new Vector2(br.ReadSingle(), 1.0f - br.ReadSingle());
-        } // ReadVector2
+        public Vector2 ReadUVVector2f() => new Vector2(br.ReadSingle(), 1.0f - br.ReadSingle()); // ReadVector2
 
-        public Vector2 ReadVector2f()
-        {
-            return new Vector2(br.ReadSingle(), br.ReadSingle());
-        } // ReadVector2
+        public Vector2 ReadVector2f() => new Vector2(br.ReadSingle(), br.ReadSingle()); // ReadVector2
 
         public void WriteVector2f(Vector2 v)
         {
@@ -53,10 +35,7 @@ namespace RoseFormats
             bw.Write(1.0f - v.y);
         }
 
-        public Vector3 ReadVector3f()
-        {
-            return new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        } // ReadVector3
+        public Vector3 ReadVector3f() => new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()); // ReadVector3
 
         public void WriteVector3f(Vector3 v)
         {
@@ -65,10 +44,7 @@ namespace RoseFormats
             bw.Write(v.z);
         }
 
-        public Vector3w ReadVector3w()
-        {
-            return new Vector3w(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16());
-        } // ReadVector3w
+        public Vector3w ReadVector3w() => new Vector3w(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16()); // ReadVector3w
 
         //public void WriteVector3w(Vector3w v)
         //{
@@ -77,10 +53,7 @@ namespace RoseFormats
         //    bw.Write(v.z);
         //}
 
-        public Vector4 ReadVector4f()
-        {
-            return new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        } // ReadVector4f
+        public Vector4 ReadVector4f() => new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle()); // ReadVector4f
 
         public void WriteVector4f(Vector4 v)
         {
@@ -108,10 +81,7 @@ namespace RoseFormats
             bw.Write(q.z);
         }
 
-        public Vector4w ReadVector4w()
-        {
-            return new Vector4w(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16());
-        }
+        public Vector4w ReadVector4w() => new Vector4w(br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16(), br.ReadUInt16());
 
         //public void WriteVector4w(Vector4w v)
         //{
@@ -124,36 +94,30 @@ namespace RoseFormats
         // Read zero terminated string
         public string ReadZString()
         {
-            string stringValue = "";
-
+            string string_value = string.Empty;
             while (true)
             {
-                byte addingValue = br.ReadByte();
-                if (addingValue == 0)
-                    return stringValue;
-                stringValue += (char)addingValue;
+                byte byte_value = br.ReadByte();
+                if (byte_value == 0)
+                    return string_value;
+                string_value += (char)byte_value;
             }
         } // ReadZString
 
         public void WriteZString(string Text)
         {
             for (int c = 0; c < Text.Length; c++)
-            {
                 bw.Write(Text[c]);
-            }
             bw.Write((byte)0);
         }
 
         public string ReadWString()
         {
-            uint len = ReadWord();
-            return koreanEncoding.GetString(br.ReadBytes((int)len));
+            uint string_length = ReadWord();
+            return koreanEncoding.GetString(br.ReadBytes((int)string_length));
         }
 
-        public void WriteWString(string Text)
-        {
-            bw.Write(Text);
-        }
+        public void WriteWString(string Text) => bw.Write(Text);
 
     } // class
 }

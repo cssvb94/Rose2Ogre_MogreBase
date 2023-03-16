@@ -1,209 +1,156 @@
 ﻿using Godot;
-using Mogre;
-using RoseFormats;
+using Revise.ZMD;
+using Revise.ZMO;
+using Revise.ZMO.Channels;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Numerics;
 using System.Text;
 
 namespace Rose2Godot.GodotExporters
 {
-
-    public struct AnimationTrack
-    {
-        public float TimeStamp { get; set; }
-        public float Transition { get; set; } // default 1.0f in transform track
-        public Vector3 Translation { get; set; }
-        public Quaternion Rotation { get; set; }
-        public Vector3 Scale { get; set; }
-        public string BoneName { get; set; }
-        public int BoneId { get; set; }
-
-        private static readonly Translator translator = new Translator();
-
-        public AnimationTrack(float timeStamp, float transition, Vector3 translation, Quaternion rotation, Vector3 scale, int boneId, string boneName)
-        {
-            TimeStamp = timeStamp; // secs
-            Transition = transition; // 1.0f
-            Translation = translation;
-            Rotation = rotation;
-            Scale = scale;
-            BoneId = boneId;
-            BoneName = boneName;
-        }
-
-        public override string ToString()
-        {
-            GodotQuat gq = translator.ToQuat(Rotation);
-            string v3t = string.Format("{0:G5}, {1:G5}, {2:G5}",
-                 translator.Round(Translation.x),
-                 translator.Round(Translation.y),
-                 translator.Round(Translation.z));
-            string qr = string.Format("{0:G5}, {1:G5}, {2:G5}, {3:G5}",
-                translator.Round(gq.x),
-                translator.Round(gq.y),
-                translator.Round(gq.z),
-                translator.Round(gq.w)
-                );
-            string v3s = string.Format("{0:G5}, {1:G5}, {2:G5}",
-                translator.Round(Scale.x),
-                translator.Round(Scale.y),
-                translator.Round(Scale.z));
-
-            return string.Format("{0:G5}, {1:G}, {2}, {3}, {4}",
-                translator.Round(TimeStamp),
-                translator.Round(Transition), v3t, qr, v3s);
-        }
-    }
-
-    public class Animation
-    {
-        public string Name { get; set; }
-        public int FramesCount { get; set; }
-        public float FPS { get; set; }
-        public List<AnimationTrack> Tracks { get; set; }
-
-        public Animation(string Name, int FramesCount, float FPS)
-        {
-            this.Name = Name;
-            this.FramesCount = FramesCount;
-            this.FPS = FPS;
-            Tracks = new List<AnimationTrack>();
-        }
-
-        public List<AnimationTrack> GetTracksForBoneId(int boneId)
-        {
-            return Tracks.Where(b => b.BoneId == boneId).OrderBy(t => t.TimeStamp).ToList();
-        }
-    }
-
     public class AnimationExporter
     {
-        public int LastResourceIndex { get; }
+        public int last_resource_index { get; private set; }
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
 
-        public string Resources
-        {
-            get
-            {
-                return resource.ToString();
-            }
-        }
+        public string Resources => resource.ToString();
 
-        public string Nodes
-        {
-            get
-            {
-                return nodes.ToString();
-            }
-        }
+        public string Nodes => nodes.ToString();
 
-        public AnimationExporter(
-            int resource_index,
-            List<ZMO> zmo,
-            ZMD zmd)
+        public AnimationExporter(int resource_index, List<MotionFile> zmo_files, BoneFile zmd)
         {
             int animation_resource_idx = resource_index;
 
-            System.Console.WriteLine("[Animation export] Start from idx: {0}", animation_resource_idx);
-
             nodes = new StringBuilder();
             resource = new StringBuilder();
-            LastResourceIndex = resource_index;
+            last_resource_index = resource_index;
 
-            nodes.AppendLine("[node name=\"AnimationPlayer\" type=\"AnimationPlayer\" parent=\"Armature\"]");
-            //nodes.AppendLine("root_node = NodePath(\"Armature\")");
+            nodes.AppendLine($"[node name=\"AnimationPlayer\" type=\"AnimationPlayer\" parent=\"Armature\"]");
             nodes.AppendLine("autoplay = \"\"");
             nodes.AppendLine("playback_process_mode = 1");
             nodes.AppendLine("playback_default_blend_time = 0.0");
             nodes.AppendLine("playback_speed = 1.0");
             nodes.AppendLine("blend_times = [  ]");
 
-            List<Animation> animation = new List<Animation>();
+            int bones_count = zmd.Bones.Count;
 
+            List<Animation> animations = new List<Animation>();
 
-            foreach (ZMO mo in zmo)
+            foreach (MotionFile zmo in zmo_files)
             {
-                animation.Add(new Animation(mo.AnimationName, mo.Frames, mo.FPS));
-            }
+                Animation animation = new Animation(Path.GetFileNameWithoutExtension(zmo.FilePath), zmo.FrameCount, zmo.FramesPerSecond);
 
-            // bones
-            foreach (RoseBone bone in zmd.Bone)
-            {
-                foreach (BoneAnimation boneAnimation in bone.BoneAnimations)
+                for (int i = 0; i < zmo.ChannelCount; i++)
                 {
-                    Animation anim = animation.Find(a => a.Name.Equals(boneAnimation.Name));
-                    if (anim != null)
+                    MotionChannel channel = zmo[i];
+                    Bone bone;
+                    if (channel.Index >= bones_count)
                     {
-                        int fidx = 0;
-                        foreach (BoneFrame frame in boneAnimation.Frames)
-                        {
-                            Quaternion r = frame.Rotation;
-                            Vector3 p = new Matrix4(new Quaternion(new Radian(-1.57079633f), new Vector3(1.0f, 0.0f, 0.0f))) * frame.Position;
+                        int dummy_idx = bones_count - channel.Index;
+                        if (dummy_idx < 0)
+                            continue;
+                        bone = zmd.DummyBones[dummy_idx];
+                    }
+                    else
+                    {
+                        bone = zmd.Bones[channel.Index];
+                    }
 
-                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, p, r.Normalized(), frame.Scale, bone.ID, bone.Name));
+                    string bone_name = bone.Name;
+
+                    if (!animation.Tracks.ContainsKey(bone_name))
+                        animation.Tracks.Add(bone_name, new Dictionary<float, AnimationTrack>());
+
+                    var track = animation.Tracks[bone_name];
+                    for (int frame_idx = 0; frame_idx < zmo.FrameCount; ++frame_idx)
+                    {
+                        float track_time = frame_idx / animation.FPS;
+                        if (!track.ContainsKey(track_time))
+                        {
+                            GodotQuat channel_rotation = GodotQuat.Identity;
+                            //GodotVector3 channel_position = Translator.Rose2GodotPosition(bone.Translation / 1000f);
+                            GodotVector3 channel_position = new GodotVector3(bone.Translation.Z / 1000f, bone.Translation.X / 1000f, bone.Translation.Y / 1000f);
+
+                            track.Add(track_time, new AnimationTrack(
+                                                        track_time,
+                                                        1f,
+                                                        channel_position,
+                                                        channel_rotation,
+                                                        GodotVector3.One,
+                                                        channel.Index,
+                                                        bone_name));
+
                         }
+
+                        AnimationTrack anim_track = track[track_time];
+
+                        if (channel.Type == ChannelType.Rotation)
+                        {
+                            RotationChannel rchannel = channel as RotationChannel;
+                            GodotQuat bone_rotation = Translator.Rose2GodotRotation(bone.Rotation);
+                            GodotQuat inverted_rotation = bone_rotation.UnitInverse();
+                            GodotQuat frame_rotation = Translator.Rose2GodotRotation(rchannel.Frames[frame_idx]);
+                            GodotQuat channel_rotation = inverted_rotation * frame_rotation;
+                            anim_track.Rotation = channel_rotation.Normalized();
+
+                        }
+
+                        if (channel.Type == ChannelType.Position)
+                        {
+                            PositionChannel pchannel = channel as PositionChannel;
+                            Vector3 position = pchannel.Frames[frame_idx] / 100f;
+                            GodotVector3 channel_position = new GodotVector3(position.Z, position.X / 1000f, -position.Y);
+                            anim_track.Translation = channel_position;
+                        }
+
+                        track[track_time] = anim_track;
                     }
                 }
+                animations.Add(animation);
             }
 
-            //dummies
-            foreach (RoseBone bone in zmd.Dummy)
-            {
-                Quaternion bakedQ = bone.TransformMatrix.ExtractQuaternion().Normalized();
-                Vector3 bakedP = bone.TransformMatrix.Translation;
-
-                foreach (BoneAnimation boneAnimation in bone.BoneAnimations)
-                {
-                    Animation anim = animation.Find(a => a.Name.Equals(boneAnimation.Name));
-                    if (anim != null)
-                    {
-                        int fidx = 0;
-                        foreach (BoneFrame frame in boneAnimation.Frames)
-                        {
-                            anim.Tracks.Add(new AnimationTrack(fidx++ / anim.FPS, 1f, frame.Position, frame.Rotation.Normalized(), frame.Scale, bone.ID, bone.Name));
-                        }
-                    }
-                }
-            }
-
-            foreach (Animation anim in animation)
+            foreach (Animation anim in animations)
             {
                 nodes.AppendFormat("anims/{0} = SubResource({1})\n", anim.Name, animation_resource_idx);
-
                 resource.AppendFormat("[sub_resource id={0} type=\"Animation\"]\n", animation_resource_idx);
 
-                // info
+                // animation header
 
-                resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, (float)anim.FramesCount / anim.FPS);
+                resource.AppendFormat("; FPS: {0} Frames: {1} Length: {2:G} sec\n", anim.FPS, anim.FramesCount, anim.FramesCount / anim.FPS);
                 resource.AppendFormat("resource_name = \"{0}\"\n", anim.Name);
-                resource.AppendFormat("length = {0:G5}\n", (float)(anim.FramesCount) / anim.FPS);
-                resource.AppendLine("step = 0.05");
+                resource.AppendFormat("length = {0:0.#####}\n", anim.FramesCount / anim.FPS);
+                resource.AppendLine($"step = {1f / anim.FPS:0.#####}");
                 resource.AppendLine("loop = true");
 
-
-                for (int bone_id = 0; bone_id < zmd.BonesCount; bone_id++)
+                foreach (var bone_tracks in anim.Tracks)
                 {
+                    List<string> transforms = new List<string>();
+                    int track_num = 0;
+                    var track_value = bone_tracks.Value;
+                    string bone_name = bone_tracks.Key;
+                    int bone_id = track_value[0].BoneId;
+
                     resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, zmd.Bone[bone_id].Name);
+                    resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, bone_name);
                     resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
                     resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/imported = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
 
-                    List<string> transforms = new List<string>();
-                    foreach (AnimationTrack track in anim.GetTracksForBoneId(bone_id))
+                    foreach (var time_track in track_value)
                     {
+                        AnimationTrack track = time_track.Value;
                         transforms.Add(track.ToString());
+                        track_num++;
                     }
                     resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
-                    //resource.AppendFormat("tracks/{0}/keys = [{1}]\n", bone_id, string.Join(", ", transforms.ToArray()));
                 }
                 animation_resource_idx++;
                 resource.AppendLine();
             }
-
-            LastResourceIndex = animation_resource_idx++;
+            last_resource_index = animation_resource_idx++;
         }
     }
 }
