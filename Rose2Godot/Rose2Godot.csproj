@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Rose2Godot</RootNamespace>
     <AssemblyName>Rose2Godot</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
@@ -36,8 +36,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.5.1.2\lib\net46\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors" />
     <Reference Include="System.Xml.Linq" />
@@ -53,7 +58,9 @@
     <Compile Include="GodotExporters\AnimationTrack.cs" />
     <Compile Include="GodotExporters\BoneExporter.cs" />
     <Compile Include="GodotExporters\BuildingsAndDecorsExporter.cs" />
+    <Compile Include="GodotExporters\MapExporter.cs" />
     <Compile Include="GodotExporters\MeshExporter.cs" />
+    <Compile Include="GodotExporters\Rect.cs" />
     <Compile Include="GodotExporters\SceneExporter.cs" />
     <Compile Include="GodotExporters\TerrainExporter.cs" />
     <Compile Include="GodotExporters\Translator.cs" />
@@ -291,9 +298,14 @@
     <Compile Include="Revise\ZSC\ModelListPart.cs" />
     <Compile Include="Revise\ZSC\ModelListPropertyType.cs" />
     <Compile Include="Revise\ZSC\TextureFile.cs" />
+    <Compile Include="RoseMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DDSReader\DDSReader.csproj">

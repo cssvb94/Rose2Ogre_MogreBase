@@ -11,6 +11,7 @@ namespace Rose2Godot.GodotExporters
 {
     public class MeshExporter
     {
+        private static readonly NLog.Logger log = NLog.LogManager.GetLogger("MeshExporter");
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
         private readonly string name;

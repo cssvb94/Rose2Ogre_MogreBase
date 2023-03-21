@@ -10,6 +10,7 @@ namespace Rose2Godot.GodotExporters
 {
     public class BuildingsAndDecorsExporter
     {
+        private static readonly NLog.Logger log = NLog.LogManager.GetLogger("BuildingsAndDecorsExporter");
         private ModelListFile zsc;
         private readonly string zsc_file_name;
         private StringBuilder scene;
@@ -89,7 +90,7 @@ namespace Rose2Godot.GodotExporters
             int resource_index = 1;
 
             string output_folder_path = Path.GetDirectoryName(output_file_name);
-            Console.WriteLine($"Exporting assets to: \"{output_folder_path}\"");
+            log.Info($"Exporting assets to: \"{output_folder_path}\"");
 
 
             zsc = new ModelListFile();
@@ -99,7 +100,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x.Message);
+                log.Error(x.Message);
                 throw;
             }
 
@@ -128,7 +129,7 @@ namespace Rose2Godot.GodotExporters
                     foreach (ModelListPart part in obj.Parts)
                     {
                         GodotTransform part_transform = new GodotTransform(Translator.Rose2GodotRotation(part.Rotation), new GodotVector3(part.Position.Z / 10f, part.Position.Y / 100f, part.Position.X / 10f));
-                        Console.WriteLine($"{part.Position} \"{zsc.ModelFiles[part.Model]}\"");
+                        log.Info($"{part.Position} \"{zsc.ModelFiles[part.Model]}\"");
                         model_transforms.Add(part_transform);
 
                         string parent_name = ".";
@@ -157,7 +158,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x.Message);
+                log.Error(x.Message);
                 throw;
             }
 

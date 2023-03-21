@@ -11,6 +11,7 @@ namespace Rose2Godot.GodotExporters
 {
     public class SceneExporter
     {
+        private static readonly NLog.Logger log = NLog.LogManager.GetLogger("SceneExporter");
         public StringBuilder scene { get; private set; }
         public int num_resources { get; private set; }
         public List<ModelFile> zms { get; private set; }
@@ -170,8 +171,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                // log?
-                Console.WriteLine($"SceneExporter: {x.Message}");
+                log.Error(x);
                 throw;
             }
         }

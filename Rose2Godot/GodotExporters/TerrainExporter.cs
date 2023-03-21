@@ -10,32 +10,6 @@ using System.Text;
 
 namespace Rose2Godot.GodotExporters
 {
-    public class Rect
-    {
-        public float Height { get => Size.Y; }
-        public float Width { get => Size.X; }
-        public float X { get => Position.X; }
-        public float Y { get => Position.Y; }
-        public Rect Zero => new Rect();
-        public Vector2 Position { get; set; }
-        public Vector2 Size { get; set; }
-        public Vector2 Min => new Vector2(Position.X, Position.Y);
-        public Vector2 Max => (Position + Size);
-
-        public Vector2 Center => new Vector2(Position.X + Size.X / 2f, Position.Y + Size.Y / 2);
-
-        public Rect()
-        {
-            Position = Vector2.Zero;
-            Size = Vector2.Zero;
-        }
-
-        public Rect(Vector2 position, Vector2 size)
-        {
-            Position = new Vector2(Math.Min(position.X, size.X), Math.Min(position.Y, size.Y));
-            Size = new Vector2(Math.Abs(size.X), Math.Abs(size.Y));
-        }
-    }
 
     public class Tile
     {
@@ -78,6 +52,8 @@ namespace Rose2Godot.GodotExporters
 
     public class TerrainExporter
     {
+        private static readonly NLog.Logger log = NLog.LogManager.GetLogger("TerrainExporter");
+
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
         private string name;
@@ -87,17 +63,37 @@ namespace Rose2Godot.GodotExporters
         public string MeshName { get; set; }
         public string Resources => resource.ToString();
         public string Nodes => nodes.ToString();
+
+        public int ZoneMinimapStartY { get; set; }
+        public int ZoneMinimapStartX { get; set; }
+
         private HeightmapFile him_file;
         private ZoneFile zon_file;
         private TileFile til_file;
         private Dictionary<string, Rect> AtlasRectHash;
 
+        private List<List<HeightmapFile>> HIMHeightsGrid;
+
         private void ScanFolder(string folder_path)
         {
-            char[] sep = { '_', '.' };
-            string[] tokens = folder_path.Split(sep);
-            int col = int.Parse(tokens[0]);
-            int row = int.Parse(tokens[1]);
+            List<string> HIMFiles = new List<string>(Directory.GetFiles(folder_path, "*.HIM"));
+
+            if (!HIMFiles.Any())
+                return;
+
+            List<List<string>> HIMFilesGrid = new List<List<string>>();
+            HIMHeightsGrid = new List<List<HeightmapFile>>();
+
+            for (int map_row_id = 0; map_row_id < HIMFiles.Count; map_row_id++)
+            {
+                List<string> row_him = HIMFiles.OrderBy(h => h).Where(h => h.Contains($"_{ZoneMinimapStartY + map_row_id}.")).ToList();
+                if (!row_him.Any())
+                    break;
+                HIMFilesGrid.Add(row_him);
+            }
+
+            if (!HIMFilesGrid.Any())
+                return;
         }
 
         public TerrainExporter(List<string> file_paths)
@@ -109,21 +105,27 @@ namespace Rose2Godot.GodotExporters
             files = file_paths;
 
             zon_file = new ZoneFile();
-            var directory_info = new DirectoryInfo(files.First());
+            DirectoryInfo directory_info = new DirectoryInfo(files.First());
             string root_folder = directory_info.Parent.FullName;
-            Console.WriteLine($"Root folder: {root_folder}");
+            log.Info($"Root folder: {root_folder}");
 
             string zon_path = Path.Combine(root_folder, $"{directory_info.Parent.Name}.ZON");
-            Console.WriteLine($"Loading ZON file: \"{zon_path}\"");
+            log.Info($"Loading ZON file: \"{zon_path}\"");
             try
             {
                 zon_file.Load(zon_path);
             }
             catch (Exception x)
             {
-                Console.WriteLine(x);
+                log.Error(x);
                 throw;
             }
+
+            log.Info($"Scanning: \"{root_folder}\"");
+
+            ZoneMinimapStartX = 30;
+            ZoneMinimapStartY = 31;
+            ScanFolder(root_folder);
 
             LastResourceIndex = 1;
             //Console.WriteLine($"[Mesh export] Start from idx: {LastResourceIndex}");
@@ -169,19 +171,19 @@ namespace Rose2Godot.GodotExporters
 
             Vector3[] tangents = new Vector3[vertices_num];
 
-            for (int a = 0; a < triangles.Count; a += 3)
+            for (int triangle_idx = 0; triangle_idx < triangles.Count; triangle_idx += 3)
             {
-                int i1 = triangles[a + 0];
-                int i2 = triangles[a + 1];
-                int i3 = triangles[a + 2];
+                int index_1 = triangles[triangle_idx + 0];
+                int index_2 = triangles[triangle_idx + 1];
+                int index_3 = triangles[triangle_idx + 2];
 
-                Vector3 v1 = vertices[i1];
-                Vector3 v2 = vertices[i2];
-                Vector3 v3 = vertices[i3];
+                Vector3 v1 = vertices[index_1];
+                Vector3 v2 = vertices[index_2];
+                Vector3 v3 = vertices[index_3];
 
-                Vector2 w1 = uv[i1];
-                Vector2 w2 = uv[i2];
-                Vector2 w3 = uv[i3];
+                Vector2 w1 = uv[index_1];
+                Vector2 w2 = uv[index_2];
+                Vector2 w3 = uv[index_3];
 
                 float x1 = v2.X - v1.X;
                 float x2 = v3.X - v1.X;
@@ -200,22 +202,22 @@ namespace Rose2Godot.GodotExporters
                 Vector3 sdir = new Vector3((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
                 Vector3 tdir = new Vector3((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
 
-                tan1[i1] += sdir;
-                tan1[i2] += sdir;
-                tan1[i3] += sdir;
+                tan1[index_1] += sdir;
+                tan1[index_2] += sdir;
+                tan1[index_3] += sdir;
 
-                tan2[i1] += tdir;
-                tan2[i2] += tdir;
-                tan2[i3] += tdir;
+                tan2[index_1] += tdir;
+                tan2[index_2] += tdir;
+                tan2[index_3] += tdir;
             }
 
-            for (int a = 0; a < vertices_num; ++a)
+            for (int vertex_idx = 0; vertex_idx < vertices_num; ++vertex_idx)
             {
-                Vector3 n = normals[a];
-                Vector3 t = tan1[a];
+                Vector3 normal = normals[vertex_idx];
+                Vector3 tangent = tan1[vertex_idx];
 
-                Vector3 tmp = Vector3.Normalize(t - n * Vector3.Dot(n, t));
-                tangents[a] = new Vector3(tmp.X, tmp.Y, tmp.Z);
+                Vector3 orthonormalized = Vector3.Normalize(tangent - normal * Vector3.Dot(normal, tangent));
+                tangents[vertex_idx] = new Vector3(orthonormalized.X, orthonormalized.Y, orthonormalized.Z);
 
                 // OR -->
                 //Vector3.OrthoNormalize(ref n, ref t);
@@ -253,8 +255,8 @@ namespace Rose2Godot.GodotExporters
                 {
                     int tileID = til_file[t_x, t_y].Tile;
                     //zon_file.Positions
-                    string texture_path_1 = FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer1]);
-                    string texture_path_2 = FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer2]);
+                    string texture_path_1 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer1]);
+                    string texture_path_2 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer2]);
 
                     //Texture2D tex1 = zon_file.Textures[zon_file.Tiles[tileID].Layer1].Tex;
                     //Texture2D tex2 = zon_file.Textures[zon_file.Tiles[tileID].Layer2].Tex;
@@ -282,13 +284,6 @@ namespace Rose2Godot.GodotExporters
             }
         }
 
-        private string FixPath(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return path;
-            return path.Replace('\\', '/').Replace("//", "/").ToUpper().Trim();
-        }
-
         public bool ExportScene(string export_file_name)
         {
             int idx = 1;
@@ -298,7 +293,7 @@ namespace Rose2Godot.GodotExporters
 
             if (!File.Exists(input_file_name))
             {
-                Console.WriteLine($"\"{input_file_name}\" does not exist!");
+                log.Error($"\"{input_file_name}\" does not exist!");
                 return false;
             }
 
@@ -309,7 +304,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x);
+                log.Error(x);
                 throw;
             }
 
@@ -321,7 +316,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x);
+                log.Error(x);
                 throw;
             }
 
@@ -364,7 +359,7 @@ namespace Rose2Godot.GodotExporters
 
             Vector2 center = new Vector2(x_offset + x_stride * (him_file.Width - 1) / 2f, y_offset + y_stride * (him_file.Height - 1) / 2f);
 
-            Console.WriteLine($"Tile center: {center} Offsets: {x_offset} {y_offset} vertices: {vertices_num} triangles: {triangles_num}");
+            log.Info($"Tile center: {center} Offsets: {x_offset} {y_offset} vertices: {vertices_num} triangles: {triangles_num}");
 
             Vector2[,] uvMatrix = new Vector2[5, 5];
             Vector2[,] uvMatrixLR = new Vector2[5, 5];
@@ -393,8 +388,8 @@ namespace Rose2Godot.GodotExporters
                 {
                     Tile tile = new Tile();
                     int tile_idx = til_file[t_y, t_x].Tile;
-                    string texPath1 = FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer1]);
-                    string texPath2 = FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer2]);
+                    string texPath1 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer1]);
+                    string texPath2 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer2]);
 
                     var image = DDSReader.DDSReader.ReadImage(texPath1);
 
@@ -405,7 +400,7 @@ namespace Rose2Godot.GodotExporters
                     tile.TopRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
 
                     tiles.Add(tile);
-                    //Console.WriteLine($"TIL[{t_y} {t_x}] \"{texPath1}\"");
+                    log.Info($"TIL[{t_y} {t_x}] \"{texPath1}\"");
                 }
             }
 
@@ -546,7 +541,6 @@ namespace Rose2Godot.GodotExporters
                 } // y
             } // x
 
-
             #region Calculate shared vertex normals
 
             // CalculateSharedNormals: fix all normals as follows:
@@ -649,7 +643,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x.Message);
+                log.Error(x.Message);
                 return false;
             }
         }

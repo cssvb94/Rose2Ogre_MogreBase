@@ -42,7 +42,7 @@ namespace RoseFormats
         public List<Vector3> Normal = new List<Vector3>();
         public List<Vector3> Tangent = new List<Vector3>();
         public List<Vector4> Color = new List<Vector4>();
-        public List<UInt16> Strip = new List<UInt16>();
+        public List<ushort> Strip = new List<ushort>();
         public List<Vector2>[] UV = new List<Vector2>[4] { new List<Vector2>(), new List<Vector2>(), new List<Vector2>(), new List<Vector2>() };
 
         private BinaryHelper bh;
@@ -221,7 +221,7 @@ namespace RoseFormats
 
         private void LoadMeshType6(BinaryReader br)
         {
-            UInt16 vidx;
+            ushort vidx;
             VertexCount = br.ReadUInt16();
 
 

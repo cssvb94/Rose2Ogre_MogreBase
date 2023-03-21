@@ -1,18 +1,26 @@
 ﻿using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
+using NLog;
 
 namespace Rose2Godot
 {
     internal static class Program
     {
+        private static readonly Logger log = LogManager.GetLogger("App");
         private static SceneExporter sceneExporter;
 
         [STAThread]
         private static void Main(string[] args)
         {
-
+            log.Info("App start");
 #if DEBUG
+
+            MapExporter mapExporter = new MapExporter(1); // 1 -Zant
+            /*
+             
+             */
+
 /*
             // ZSC
             BuildingsAndDecorsExporter buildingsAndDecorsExporter_buildings = new BuildingsAndDecorsExporter("ZANT_Buildings", @"3DDATA/JUNON/LIST_CNST_JDT.ZSC");
@@ -26,12 +34,12 @@ namespace Rose2Godot
 
             // Heightmap export
             
-            TerrainExporter terrain_exporter = new TerrainExporter(
-                new List<string>() {
-                    @"3DDATA\MAPS\JUNON\JDT01\31_30.HIM",
-                });
+            //TerrainExporter terrain_exporter = new TerrainExporter(
+            //    new List<string>() {
+            //        @"3DDATA\MAPS\JUNON\JDT01\31_30.HIM",
+            //    });
 
-            terrain_exporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01.tscn");
+            //terrain_exporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01.tscn");
             
             /*
                         // Chicken

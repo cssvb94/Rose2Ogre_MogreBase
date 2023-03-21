@@ -8,3 +8,4 @@ OgreMain.dll
 .vs/
 *.suo
 Rose/
+packages/**
