@@ -83,6 +83,17 @@ namespace Rose2Godot.GodotExporters
 
         public static Vector3 CalculateVector3Normal(Vector3 p1, Vector3 p2, Vector3 p3) => Vector3.Normalize(Vector3.Cross(p2 - p1, p3 - p1));
 
+        public static string QuaternionToArray(List<Quaternion> vlist)
+        {
+            List<string> qs = new List<string>();
+            for (int v_idx = 0; v_idx < vlist.Count; v_idx++)
+            {
+                Quaternion q = vlist[v_idx];
+                qs.Add($"{q.X:0.###},{q.Y:0.###},{q.Z:0.###},{q.W:0.###}");
+            }
+            return $"FloatArray({string.Join(",", qs.ToArray())})";
+        }
+
         public static string Vector3ToArray(List<Vector3> vlist, float? scale)
         {
             List<string> vs = new List<string>();
