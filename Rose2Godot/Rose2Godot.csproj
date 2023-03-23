@@ -308,10 +308,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DDSReader\DDSReader.csproj">
-      <Project>{d74a367a-7311-4e21-abab-d065442ff603}</Project>
-      <Name>DDSReader</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Godot.Core\Godot.Core.csproj">
       <Project>{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}</Project>
       <Name>Godot.Core</Name>
