@@ -1,66 +1,75 @@
-﻿#region Usings
-
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-
-#endregion
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using System;
+using System.IO;
 
 namespace DDSReader
 {
-    public class DDSImage
-    {
-        private readonly uint _height;
+	public class DDSImage
+	{
+		private readonly Pfim.IImage _image;
 
-        private readonly ICollection<DDSMessage> _messages = new Collection<DDSMessage>();
+		public byte[] Data
+		{
+			get
+			{
+				if (_image != null)
+					return _image.Data;
+				else
+					return new byte[0];
+			}
+		}
 
-        private readonly uint _width;
+		public DDSImage(string file)
+		{
+			_image = Pfim.Pfim.FromFile(file);
+			Process();
+		}
 
-        private readonly ICollection<DDSMipMap> _depthFrames = new Collection<DDSMipMap>();
+		public DDSImage(Stream stream)
+		{
+			if (stream == null)
+				throw new Exception("DDSImage ctor: Stream is null");
 
-        public DDSImage(uint width, uint height)
-        {
-            _width = width;
-            _height = height;
-        }
+			_image = Pfim.Dds.Create(stream, new Pfim.PfimConfig());
+			Process();
+		}
 
-        public uint Width
-        {
-            get { return _width; }
-        }
+		public DDSImage(byte[] data)
+		{
+			if (data == null || data.Length <= 0)
+				throw new Exception("DDSImage ctor: no data");
 
-        public uint Height
-        {
-            get { return _height; }
-        }
+			_image = Pfim.Dds.Create(data, new Pfim.PfimConfig());
+			Process();
+		}
 
-        public IEnumerable<DDSMessage> Messages
-        {
-            get { return _messages; }
-        }
+		public void Save(string file)
+		{
+			if (_image.Format == Pfim.ImageFormat.Rgba32)
+				Save<Bgra32>(file);
+			else if (_image.Format == Pfim.ImageFormat.Rgb24)
+				Save<Bgr24>(file);
+			else
+				throw new Exception("Unsupported pixel format (" + _image.Format + ")");
+		}
 
-        public IEnumerable<DDSMipMap> Frames
-        {
-            get { return _depthFrames; }
-        }
+		private void Process()
+		{
+			if (_image == null)
+				throw new Exception("DDSImage image creation failed");
 
-        internal void AddMessage(DDSMessage message)
-        {
-            if (message == null)
-            {
-                return;
-            }
+			if (_image.Compressed)
+				_image.Decompress();
+		}
 
-            _messages.Add(message);
-        }
+		private void Save<T>(string file)
+			where T : struct, IPixel<T>
+		{
+			Image<T> image = Image.LoadPixelData<T>(
+				_image.Data, _image.Width, _image.Height);
+			image.Save(file);
+		}
 
-        internal void AddFrame(DDSMipMap mipMap)
-        {
-            if (mipMap == null)
-            {
-                return;
-            }
-
-            _depthFrames.Add(mipMap);
-        }
-    }
+	}
 }
