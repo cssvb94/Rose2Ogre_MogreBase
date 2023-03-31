@@ -16,11 +16,10 @@ namespace Rose2Godot
             log.Info("App start");
 #if DEBUG
 
-            MapExporter mapExporter = new MapExporter(1); // 1 -Zant
-            /*
-             
-             */
-
+            // 1 -Zant
+            // 2 - Junon
+            MapExporter mapExporter = new MapExporter(1); 
+           
 /*
             // ZSC
             BuildingsAndDecorsExporter buildingsAndDecorsExporter_buildings = new BuildingsAndDecorsExporter("ZANT_Buildings", @"3DDATA/JUNON/LIST_CNST_JDT.ZSC");

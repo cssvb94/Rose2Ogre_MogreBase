@@ -1,4 +1,5 @@
-﻿using Godot;
+﻿using g4;
+using Godot;
 using Revise;
 using System.Collections.Generic;
 using System.Numerics;
@@ -81,7 +82,7 @@ namespace Rose2Godot.GodotExporters
             return path.Replace('\\', '/').Replace("//", "/").Trim().ToUpper();
         }
 
-        public static Vector3 CalculateVector3Normal(Vector3 p1, Vector3 p2, Vector3 p3) => Vector3.Normalize(Vector3.Cross(p2 - p1, p3 - p1));
+        public static Vector3 CalculateVector3Normal(Vector3 p1, Vector3 p2, Vector3 p3) => Vector3.Normalize(Vector3.Cross(p3 - p1, p2 - p1));
 
         public static string QuaternionToArray(List<Quaternion> vlist)
         {
@@ -106,11 +107,35 @@ namespace Rose2Godot.GodotExporters
             return $"Vector3Array({string.Join(",", vs.ToArray())})";
         }
 
+        public static string Vector3ToArray(List<Vector3d> vlist, float? scale)
+        {
+            List<string> vs = new List<string>();
+            for (int v_idx = 0; v_idx < vlist.Count; v_idx++)
+            {
+                Vector3d v = vlist[v_idx];
+                v.z *= scale ?? 1f;
+                vs.Add($"{v.x:0.###},{v.y:0.###},{v.z:0.###}");
+            }
+            return $"Vector3Array({string.Join(",", vs.ToArray())})";
+        }
+
         public static string TriangleIndices(List<int> vlist)
         {
             List<string> vs = new List<string>();
             for (int idx = 0; idx < vlist.Count; idx++)
                 vs.Add($"{vlist[idx]}");
+            return $"IntArray({string.Join(",", vs.ToArray())})";
+        }
+
+        public static string TriangleIndices(List<Index3i> tlist)
+        {
+            List<string> vs = new List<string>();
+            for (int idx = 0; idx < tlist.Count; idx++)
+            {
+                vs.Add($"{tlist[idx].a}");
+                vs.Add($"{tlist[idx].b}");
+                vs.Add($"{tlist[idx].c}");
+            }
             return $"IntArray({string.Join(",", vs.ToArray())})";
         }
 

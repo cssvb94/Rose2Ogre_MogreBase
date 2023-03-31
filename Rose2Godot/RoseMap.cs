@@ -1,15 +1,19 @@
-﻿using Revise.HIM;
+﻿using g4;
+using Pfim;
+using Revise.HIM;
 using Revise.IFO;
 using Revise.IFO.Blocks;
-using Revise.TIL;
 using Revise.ZON;
 using Revise.ZSC;
 using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Rose2Godot
@@ -24,12 +28,9 @@ namespace Rose2Godot
 
     public class GodotMapTileMesh
     {
-        public List<Vector3> vertex;
-        public List<Vector3> normal;
-        public List<int> triangle;
-        public List<Vector2> uvsBottom;
-        public List<Vector2> uvsTop;
-        public string Name;
+        public DMesh3 mesh;
+        public string name;
+        public string lightmap_path;
 
         public override string ToString()
         {
@@ -37,22 +38,37 @@ namespace Rose2Godot
             StringBuilder resource = new StringBuilder();
             StringBuilder nodes = new StringBuilder();
 
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", 1);
+            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", 4);
+
+            // Add texture external resource
+            resource.AppendLine();
+            resource.AppendLine($"[ext_resource path=\"{lightmap_path}\" type=\"Texture\" id=1]");
 
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);
-            resource.AppendFormat("resource_name = \"Tile_{0}\"\n", Name);
+            resource.AppendFormat("resource_name = \"Tile_{0}\"\n", name);
             resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
-            resource.AppendFormat("\t\t; vertices: {0}\n", vertex.Count);
-            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(vertex, null));
+            resource.AppendFormat("\t\t; vertices: {0}\n", mesh.Vertices().Count());
+            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(mesh.Vertices().ToList(), null));
 
             // normals
 
-            resource.AppendFormat("\t\t; normals: {0}\n", normal.Count);
-            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(normal, null));
+            resource.AppendFormat("\t\t; normals: {0}\n", mesh.Vertices().Count());
+
+            List<Vector3> normals = new List<Vector3>();
+            List<Vector2> uvsTop = new List<Vector2>();
+
+            for (int vidx = 0; vidx < mesh.VertexCount; vidx++)
+            {
+                var vnormal = mesh.GetVertexNormal(vidx);
+                var uv = mesh.GetVertexUV(vidx);
+                normals.Add(new Vector3(vnormal.x, vnormal.y, vnormal.z));
+                uvsTop.Add(new Vector2(uv.x, uv.y));
+            }
+
+            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(normals, null));
 
             // tangents
-
             resource.AppendLine("\t\tnull, ; no tangents");
 
             // vertex colors
@@ -72,15 +88,15 @@ namespace Rose2Godot
             }
 
             // UV2
-            if (uvsBottom != null && uvsBottom.Any())
-            {
-                resource.AppendFormat("\t\t; UV2: {0}\n", uvsBottom.Count);
-                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsBottom));
-            }
-            else
-            {
-                resource.AppendLine("\t\tnull, ; no UV2");
-            }
+            //if (uvsBottom != null && uvsBottom.Any())
+            //{
+            //    resource.AppendFormat("\t\t; UV2: {0}\n", uvsBottom.Count);
+            //    resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsBottom));
+            //}
+            //else
+            //{
+            resource.AppendLine("\t\tnull, ; no UV2");
+            //}
 
             // no bones
 
@@ -89,32 +105,37 @@ namespace Rose2Godot
 
             // face indices
 
-            resource.AppendFormat("\t\t; triangle faces: {0}\n", triangle.Count);
-            resource.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(triangle));
+            resource.AppendFormat("\t\t; triangle faces: {0}\n", mesh.Triangles().Count());
+            resource.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(mesh.Triangles().ToList()));
 
             resource.AppendLine("\t],"); // end of mesh arrays
             resource.AppendLine("\t\"morph_arrays\":[]");
             resource.AppendLine("}"); // end of surface/0
+            resource.AppendLine("");
 
-            nodes.AppendLine($"\n[node name=\"Tile_{Name}\" type=\"MeshInstance\" parent=\".:\"]");
-            nodes.AppendLine($"mesh = SubResource({1})");
+            // Add material refering external texture resource
+            resource.AppendLine("[sub_resource type=\"SpatialMaterial\" id=2]");
+            resource.AppendLine("flags_unshaded = true");
+            resource.AppendLine("albedo_texture = ExtResource( 1 )");
+
+            nodes.AppendLine($"\n[node name=\"Tile_{name}\" type=\"MeshInstance\" parent=\".:\"]");
+            nodes.AppendLine($"mesh = SubResource( 1 )");
+            nodes.AppendLine($"material/0 = SubResource( 2 )");
             nodes.AppendLine("visible = true");
-            nodes.AppendLine("transform = Transform(1, 0, 0, 0, -1, 0.00000724, 0, -0.00000724, -1, 0, 0, 0)\n"); // X 180
+            //nodes.AppendLine("transform = Transform(1, 0, 0, 0, -1, 0.00000724, 0, -0.00000724, -1, 0, 0, 0)\n"); // X 180
+            nodes.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
-            scene.AppendLine();
             scene.Append(resource);
             scene.AppendLine();
 
             scene.AppendLine("; scene root node");
-            scene.AppendLine("[node type=\"Spatial\" name=\"MapRoot\"]");
-            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
+            scene.AppendLine($"[node type=\"Spatial\" name=\"Map_{name}\"]");
+            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
-            scene.AppendLine();
             scene.Append(nodes);
 
             return scene.ToString();
         }
-
     }
 
     public class GodotObject
@@ -170,6 +191,12 @@ namespace Rose2Godot
         public List<List<string>> TILDataGrid { get; private set; }
         public int TilesX { get; private set; }
         public int TilesY { get; private set; }
+
+        // CW
+        private readonly Quaternion cw = Quaternion.CreateFromAxisAngle(new Vector3(0, 0, 1f), -90f * 0.01745329251994329f);
+        // CCW
+        private readonly Quaternion ccw = Quaternion.CreateFromAxisAngle(new Vector3(0, 0, 1f), 90f * 0.01745329251994329f);
+
         private ModelListFile zsc_objects;
         private ModelListFile zsc_buildings;
         private List<GodotObject> objects;
@@ -226,6 +253,8 @@ namespace Rose2Godot
             if (!HIMFiles.Any())
                 return;
 
+            log.Info("");
+
             List<List<string>> HIMFilesGrid = new List<List<string>>();
             HIMHeightsGrid = new List<List<HeightmapFile>>();
             IFODataGrid = new List<List<MapDataFile>>();
@@ -233,14 +262,21 @@ namespace Rose2Godot
 
             for (int map_row_id = 0; map_row_id < HIMFiles.Count; map_row_id++)
             {
-                List<string> row_him = HIMFiles.OrderBy(h => h).Where(h => h.Contains($"_{ZoneMinimapStartY + map_row_id}.")).Select(hf => Translator.FixPath(hf)).ToList();
+                List<string> row_him = HIMFiles.Where(h => h.Contains($"{ZoneMinimapStartX + map_row_id}_")).OrderBy(h => h).Select(hf => Translator.FixPath(hf)).ToList();
                 if (!row_him.Any())
                     break;
+
+                //log.Info($"{string.Join(" ", row_him.Select(r => Path.GetFileNameWithoutExtension(r)).ToArray())}");
+
                 HIMFilesGrid.Add(row_him);
             }
 
             if (!HIMFilesGrid.Any())
                 return;
+
+            HIMFilesGrid.Reverse();
+
+            log.Info(" ");
 
             TilesX = HIMFilesGrid[0].Count;
             TilesY = HIMFilesGrid.Count;
@@ -309,33 +345,51 @@ namespace Rose2Godot
             GenerateTerrainMesh();
         }
 
-        private void AddVertexToLookup(Dictionary<string, List<int>> lookup, string vertex, int index)
-        {
-            if (!lookup.ContainsKey(vertex))
-            {
-                List<int> ids = new List<int>
-                {
-                    index
-                };
-                lookup.Add(vertex, ids);
-            }
-            else
-                lookup[vertex].Add(index);
-        }
-
         private void GenerateTerrainMesh()
         {
+            string godot_path = @"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\";
+
             for (int row = 0; row < HIMHeightsGrid.Count; row++)
             {
                 List<HeightmapFile> him_row = HIMHeightsGrid[row];
                 for (int col = 0; col < him_row.Count; col++)
+                //for (int col = 0; col < 1; col++)
                 {
                     var him = him_row[col];
-                    log.Info($"Generating 3D mesh for: {him.FilePath}");
-                    var tile_mesh = GenerateTileMesh(him, row, col);
+                    var tile_mesh = GenerateTileMeshG4(him, row, col);
+                    // tile_mesh.lightmap_path = "res://textures/uv_map.png";
 
-                    string godot_path = @"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\";
-                    string file_name = Path.Combine(godot_path, Path.GetFileNameWithoutExtension(him.FilePath)+ ".tscn");
+                    string lmap_dir = Path.Combine(Path.GetDirectoryName(him.FilePath), Path.GetFileNameWithoutExtension(him.FilePath));
+                    string lmap_file_dds = Path.Combine(lmap_dir, $"{Path.GetFileNameWithoutExtension(him.FilePath)}_PLANELIGHTINGMAP.DDS");
+                    log.Info($"{lmap_file_dds}");
+                    using (var image = Pfimage.FromFile(lmap_file_dds))
+                    {
+                        PixelFormat format;
+                        switch (image.Format)
+                        {
+                            case Pfim.ImageFormat.Rgba32:
+                                format = PixelFormat.Format32bppArgb;
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
+                        var handle = GCHandle.Alloc(image.Data, GCHandleType.Pinned);
+                        try
+                        {
+                            var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
+                            var bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
+                            string png_filename = Path.ChangeExtension(Path.GetFileName(lmap_file_dds), ".PNG");
+                            string png_path = Path.Combine(godot_path, png_filename);
+                            tile_mesh.lightmap_path = png_filename;
+                            bitmap.Save(png_path, System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                        finally
+                        {
+                            handle.Free();
+                        }
+                    }
+
+                    string file_name = Path.Combine(godot_path, Path.GetFileNameWithoutExtension(him.FilePath) + ".tscn");
 
                     try
                     {
@@ -352,96 +406,22 @@ namespace Rose2Godot
             }
         }
 
-        private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, int row, int col)
+        private GodotMapTileMesh GenerateTileMeshG4(HeightmapFile him_file, int row, int col)
         {
-            TileFile til_file = new TileFile();
-            try
-            {
-                string til_path = TILDataGrid[row][col];
-                til_file.Load(til_path);
-                log.Info($"TIL: {til_path}");
-            }
-            catch (Exception x)
-            {
-                log.Error(x);
-                throw;
-            }
-
-            List<Tile> tiles = new List<Tile>();
-            int vertices_num = (him_file.Width - 1) * (him_file.Height - 1) * 4;
-            int triangles_num = (him_file.Height - 1) * (him_file.Width - 1) * 6;
-            Dictionary<string, List<int>> edge_vertex_lookup_dict = new Dictionary<string, List<int>>();
-            Vector3[] vertices = new Vector3[vertices_num];
-            List<Vector3> vertex_normals = new List<Vector3>();
-            List<int> triangles = new List<int>(triangles_num);
-
-            Vector2[] uvsBottom = new Vector2[vertices_num];
-            Vector2[] uvsTop = new Vector2[vertices_num];
-
-            int vertex_idx = 0; // vertex index
-
             float x_stride = 2.5f;
             float y_stride = 2.5f;
-            float heightScaler = 300.0f / (x_stride * 1.2f);
+            float heightScaler = (x_stride * 1.2f) / 300.0f;
+            const float factor = 1f / 64f;
 
             float x_offset = row * x_stride * (him_file.Width - 1);
             float y_offset = col * y_stride * (him_file.Height - 1);
 
-            Vector2[,] uvMatrix = new Vector2[5, 5];
-            Vector2[,] uvMatrixLR = new Vector2[5, 5];
-            Vector2[,] uvMatrixTB = new Vector2[5, 5];
-            Vector2[,] uvMatrixLRTB = new Vector2[5, 5];
-            Vector2[,] uvMatrixRotCW = new Vector2[5, 5];  // rotated 90 deg clockwise
-            Vector2[,] uvMatrixRotCCW = new Vector2[5, 5];	// rotated 90 counter clockwise
+            Quaterniond vrot = new Quaterniond(new Vector3d(0, 0, 1), -90);
 
-            for (int uv_x = 0; uv_x < 5; uv_x++)
+            DMesh3 tile_mesh = new DMesh3(true, true, true);
+            for (int y = 0; y < him_file.Height - 1; y++)
             {
-                for (int uv_y = 0; uv_y < 5; uv_y++)
-                {
-                    uvMatrix[uv_y, uv_x] = new Vector2(0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixLR[uv_y, uv_x] = new Vector2(1.0f - 0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixTB[uv_y, uv_x] = new Vector2(0.25f * uv_x, 0.25f * uv_y);
-                    uvMatrixLRTB[uv_y, uv_x] = new Vector2(1.0f - 0.25f * uv_x, 0.25f * uv_y);
-                    uvMatrixRotCCW[uv_x, uv_y] = new Vector2(0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixRotCW[uv_x, uv_y] = new Vector2(0.25f * uv_y, 1.0f - 0.25f * uv_x);
-                }
-            }
-
-            // Populate tiles with texture references
-            for (int t_x = 0; t_x < 16; t_x++)
-            {
-                for (int t_y = 0; t_y < 16; t_y++)
-                {
-                    Tile tile = new Tile();
-                    int tile_idx = til_file[t_y, t_x].Tile;
-                    string texPath1 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer1]);
-                    string texPath2 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer2]);
-
-                    var image = DDSReader.DDSReader.ReadImage(texPath1);
-
-                    tile.BottomTex = texPath1;
-                    tile.BottomRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
-
-                    tile.TopTex = texPath2;
-                    tile.TopRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
-
-                    tiles.Add(tile);
-                    //log.Info($"TIL[{t_y} {t_x}] \"{texPath1}\"");
-                }
-            }
-
-            /*
-            // copy rects to tiles
-            foreach (Tile tile in tiles)
-            {
-                tile.BottomRect = AtlasRectHash[tile.BottomTex];
-                tile.TopRect = AtlasRectHash[tile.TopTex];
-            }
-            */
-
-            for (int x = 0; x < him_file.Height - 1; x++)
-            {
-                for (int y = 0; y < him_file.Width - 1; y++)
+                for (int x = 0; x < him_file.Width - 1; x++)
                 {
                     //    Each quad will be split into two triangles:
                     //
@@ -452,145 +432,88 @@ namespace Rose2Godot
                     //            | /   |
                     //          d *-----* c         
                     //
-                    //  The triangles used are: adb and bdc
+                    //  The triangles used are: bda and cdb
 
-                    int a = vertex_idx + 0;
-                    int b = vertex_idx + 1;
-                    int c = vertex_idx + 2;
-                    int d = vertex_idx + 3;
-                    vertex_idx += 4;
+                    Vector3d vxa = new Vector3d(x, y, -him_file[x, y] * heightScaler);
+                    Vector3d vxb = new Vector3d(x + 1, y, -him_file[x + 1, y] * heightScaler);
+                    Vector3d vxc = new Vector3d(x + 1, y + 1, -him_file[x + 1, y + 1] * heightScaler);
+                    Vector3d vxd = new Vector3d(x, y + 1, -him_file[x, y + 1] * heightScaler);
 
-                    // Calculate vertices
-                    vertices[a] = new Vector3(x * x_stride + x_offset, him_file.Heights[x, y] / heightScaler, y * y_stride + y_offset);
-                    vertices[b] = new Vector3((x + 1) * x_stride + x_offset, him_file.Heights[x + 1, y] / heightScaler, y * y_stride + y_offset);
-                    vertices[c] = new Vector3((x + 1) * x_stride + x_offset, him_file.Heights[x + 1, y + 1] / heightScaler, (y + 1) * y_stride + y_offset);
-                    vertices[d] = new Vector3(x * x_stride + x_offset, him_file.Heights[x, y + 1] / heightScaler, (y + 1) * y_stride + y_offset);
+                    vxa = vrot * vxa;
+                    vxb = vrot * vxb;
+                    vxc = vrot * vxc;
+                    vxd = vrot * vxd;
 
-                    if (y == 0)
-                    {
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), a);
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), b);
-                    }
-                    if (y == him_file.Width - 1)
-                    {
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), d);
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), c);
-                    }
-                    if (x == 0)
-                    {
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), a);
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), d);
-                    }
-                    if (x == him_file.Height - 1)
-                    {
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), b);
-                        AddVertexToLookup(edge_vertex_lookup_dict, vertices[a].ToString(), c);
-                    }
+                    vxa.x = vxa.x * x_stride + x_offset;
+                    vxa.y = vxa.y * y_stride - y_offset;
 
-                    int tileX = x / 4;
-                    int tileY = y / 4;
-                    int tileID = tileY * 16 + tileX;
+                    vxb.x = vxb.x * x_stride + x_offset;
+                    vxb.y = vxb.y * y_stride - y_offset;
 
-                    // TODO:
-                    TileRotation rotation = zon_file.Tiles[til_file[tileX, tileY].Tile].Rotation;
-                    Vector2[,] rotMatrix;
+                    vxc.x = vxc.x * x_stride + x_offset;
+                    vxc.y = vxc.y * y_stride - y_offset;
 
-                    //  if (rotation == TileRotation.Clockwise90Degrees || rotation == TileRotation.CounterClockwise90Degrees)
-                    //      Debug.Log("Rotation: " + (int)rotation);
+                    vxd.x = vxd.x * x_stride + x_offset;
+                    vxd.y = vxd.y * y_stride - y_offset;
 
-                    switch (rotation)
-                    {
-                        case TileRotation.None:
-                            rotMatrix = uvMatrix;
-                            break;
-                        case TileRotation.FlipHorizontal:
-                            rotMatrix = uvMatrixLR;
-                            break;
-                        case TileRotation.Flip:
-                            rotMatrix = uvMatrixLRTB;
-                            break;
-                        case TileRotation.Clockwise90Degrees:
-                            rotMatrix = uvMatrixRotCW;
-                            break;
-                        case TileRotation.CounterClockwise90Degrees:
-                            rotMatrix = uvMatrixRotCCW;
-                            break;
-                        case TileRotation.FlipVertical:
-                            rotMatrix = uvMatrixTB;
-                            break;
-                        default:
-                            rotMatrix = uvMatrix;
-                            break;
-                    }
+                    int index_va = tile_mesh.AppendVertex(vxa);
+                    int index_vb = tile_mesh.AppendVertex(vxb);
+                    int index_vc = tile_mesh.AppendVertex(vxc);
+                    int index_vd = tile_mesh.AppendVertex(vxd);
 
-                    // Get top and bottom UV's using texture atlas and rotation adjustments
-                    uvsTop[a] = tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
-                    uvsTop[b] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    uvsTop[c] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    uvsTop[d] = tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+                    Vector2f uva = new Vector2f(x * factor, y * factor);
+                    Vector2f uvb = new Vector2f((x + 1) * factor, y * factor);
+                    Vector2f uvc = new Vector2f((x + 1) * factor, (y + 1) * factor);
+                    Vector2f uvd = new Vector2f(x * factor, (y + 1) * factor);
 
-                    uvsBottom[a] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, y % 4]);
-                    uvsBottom[b] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    uvsBottom[c] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    uvsBottom[d] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+                    RotateUV(ref uva, 1.5708);
+                    RotateUV(ref uvb, 1.5708);
+                    RotateUV(ref uvc, 1.5708);
+                    RotateUV(ref uvd, 1.5708);
 
-                    triangles.Add(a);
-                    triangles.Add(d);
-                    triangles.Add(b);
+                    tile_mesh.SetVertexUV(index_va, uva);
+                    tile_mesh.SetVertexUV(index_vb, uvb);
+                    tile_mesh.SetVertexUV(index_vc, uvc);
+                    tile_mesh.SetVertexUV(index_vd, uvd);
 
-                    triangles.Add(b);
-                    triangles.Add(d);
-                    triangles.Add(c);
-
-                    // add face normals as vertex normals, prior further optimization implemented after the triangle faces loops
-                    Vector3 normal_triangle_one = Translator.CalculateVector3Normal(vertices[a], vertices[d], vertices[b]);
-                    vertex_normals.Add(normal_triangle_one);
-                    vertex_normals.Add(normal_triangle_one);
-                    vertex_normals.Add(normal_triangle_one);
-
-                    Vector3 normal_triangle_two = Translator.CalculateVector3Normal(vertices[b], vertices[d], vertices[c]);
-                    vertex_normals.Add(normal_triangle_two);
-                } // y
-            } // x
-
-            #region Calculate shared vertex normals
-
-            // CalculateSharedNormals: fix all normals as follows:
-            // Several triangles share same vertex, but it is duplicated
-            // We want to:
-            //	1. search the vertex array for shared vertices
-            //	2. store each shared vertex id in a data structure comprising rows of shared vertices
-            //  3. go through each row of shared vertices and calculate the average normal
-            //	4. store the avg normal and all corresponding vertex id's in different data structure
-            //	5. traverse the new data structure and assign the new normal to all the vertices it belongs to
-
-            Dictionary<string, List<int>> vertex_lookup_dict = new Dictionary<string, List<int>>();
-            // 1. and 2.
-            for (int i = 0; i < vertices_num; i++)
-                AddVertexToLookup(vertex_lookup_dict, vertices[i].ToString(), i);
-
-            // traverse the shared vertex list and calculate new normals
-            // 3.,4. & 5.
-            foreach (KeyValuePair<string, List<int>> vertex in vertex_lookup_dict)
-            {
-                Vector3 avg = Vector3.Zero;
-                foreach (int id in vertex.Value)
-                    avg += vertex_normals[id];
-                avg = Vector3.Normalize(avg);
-                foreach (int id in vertex.Value)
-                    vertex_normals[id] = avg;
+                    tile_mesh.AppendTriangle(index_vb, index_vd, index_va);
+                    tile_mesh.AppendTriangle(index_vc, index_vd, index_vb);
+                }
             }
-            #endregion
 
-            log.Info($"\t verts: {vertices.Length} normals: {vertex_normals.Count} triangles: {triangles.Count} UVs1: {uvsTop.Length} UVs2 {uvsBottom.Length}");
+            var mn = new MeshNormals(tile_mesh);
+            mn.Compute();
+            mn.CopyTo(tile_mesh);
+
+            MeshTransforms.ConvertYUpToZUp(tile_mesh);
+            MeshTransforms.FlipLeftRightCoordSystems(tile_mesh);
 
             return new GodotMapTileMesh()
             {
-                Name = $"{Path.GetFileNameWithoutExtension(him_file.FilePath)}",
-                vertex = vertices.ToList(),
-                normal = vertex_normals,
-                triangle = triangles
+                name = $"{Path.GetFileNameWithoutExtension(him_file.FilePath)}",
+                mesh = tile_mesh,
             };
         }
+
+        private void RotateUV(ref Vector2f uv, double radians)
+        {
+            float rotMatrix00 = (float)Math.Cos(radians);
+            float rotMatrix01 = (float)-Math.Sin(radians);
+            float rotMatrix10 = (float)Math.Sin(radians);
+            float rotMatrix11 = (float)Math.Cos(radians);
+
+            Vector2f halfVector = new Vector2f(0.5f, 0.5f);
+
+            // Switch coordinates to be relative to center of the plane
+            uv -= halfVector;
+            // Apply the rotation matrix
+            float u = rotMatrix00 * uv.x + rotMatrix01 * uv.y;
+            float v = rotMatrix10 * uv.x + rotMatrix11 * uv.y;
+            uv.x = 1f - u;
+            uv.y = v;
+            // Switch back coordinates to be relative to edge
+            uv += halfVector;
+        }
+
     }
 }

@@ -348,6 +348,7 @@ namespace Rose2Godot.GodotExporters
 
             int row = 0;
             int col = 0;
+            const float factor = 1f / 64f;
 
             float x_offset = row * x_stride * (him_file.Width - 1);
             float y_offset = col * y_stride * (him_file.Height - 1);
@@ -391,13 +392,15 @@ namespace Rose2Godot.GodotExporters
                     string texPath1 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer1]);
                     string texPath2 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tile_idx].Layer2]);
 
-                    var image = DDSReader.DDSReader.ReadImage(texPath1);
 
+                    //var image = DDSReader.DDSReader.ReadImage(texPath1);
                     tile.BottomTex = texPath1;
-                    tile.BottomRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
+                    //tile.BottomRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
+                    //tile.TopRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
+                    tile.BottomRect = new Rect(new Vector2(t_y, t_x), new Vector2(256, 256));
+                    tile.TopRect = new Rect(new Vector2(t_y, t_x), new Vector2(256, 256));
 
                     tile.TopTex = texPath2;
-                    tile.TopRect = new Rect(new Vector2(t_y, t_x), new Vector2(image.Width, image.Height));
 
                     tiles.Add(tile);
                     log.Info($"TIL[{t_y} {t_x}] \"{texPath1}\"");
@@ -512,15 +515,20 @@ namespace Rose2Godot.GodotExporters
                     }
 
                     // Get top and bottom UV's using texture atlas and rotation adjustments
-                    uvsTop[a] = tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
-                    uvsTop[b] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    uvsTop[c] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    uvsTop[d] = tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+                    //uvsTop[a] = tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
+                    //uvsTop[b] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
+                    //uvsTop[c] = tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
+                    //uvsTop[d] = tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
 
-                    uvsBottom[a] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, y % 4]);
-                    uvsBottom[b] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    uvsBottom[c] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    uvsBottom[d] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+                    //uvsBottom[a] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, y % 4]);
+                    //uvsBottom[b] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, y % 4]);
+                    //uvsBottom[d] = tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
+                    //uvsBottom[c] = tiles[tileID].GetUVBottom(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+
+                    uvsTop[a] = new Vector2(x * factor, y * factor);
+                    uvsTop[b] = new Vector2((x + 1f) * factor, y * factor);
+                    uvsTop[c] = new Vector2((x + 1f) * factor, (y + 1f) * factor);
+                    uvsTop[d] = new Vector2(x * factor, (y + 1f) * factor);
 
                     triangles.Add(a);
                     triangles.Add(d);
