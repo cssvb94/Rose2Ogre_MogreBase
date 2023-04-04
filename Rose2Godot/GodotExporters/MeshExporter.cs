@@ -16,6 +16,7 @@ namespace Rose2Godot.GodotExporters
         private readonly StringBuilder nodes;
         private readonly string name;
         private readonly List<GodotTransform> transforms;
+        private readonly int ExternalMaterialId;
 
         public int LastResourceIndex { get; private set; }
         public string MeshName { get; set; }
@@ -58,13 +59,14 @@ namespace Rose2Godot.GodotExporters
             return $"IntArray({string.Join(", ", vs.ToArray())})";
         }
 
-        public MeshExporter(int resource_index, List<ModelFile> zms, List<string> mesh_names, bool exportWithBones, List<GodotTransform> transforms = null)
+        public MeshExporter(int resource_index, List<ModelFile> zms, List<string> mesh_names, bool exportWithBones, List<GodotTransform> transforms = null, int ExternalMaterialId = -1)
         {
             nodes = new StringBuilder();
             resource = new StringBuilder();
             name = mesh_names.First();
             LastResourceIndex = resource_index;
             this.transforms = transforms;
+            this.ExternalMaterialId = ExternalMaterialId;
 
             if (zms.Count == 1)
             {
@@ -90,8 +92,13 @@ namespace Rose2Godot.GodotExporters
         {
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", idx);
             resource.AppendFormat($"resource_name = \"{mesh_data_name}\"\n");
-            resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
+            resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,");
+
+            if (ExternalMaterialId > 0)
+                resource.AppendLine($"\t\"material\": ExtResource( {ExternalMaterialId} ),");
+
+            resource.AppendLine("\t\"arrays\":[");
             // vertices
 
             resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertices.Count);

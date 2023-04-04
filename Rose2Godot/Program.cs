@@ -18,7 +18,8 @@ namespace Rose2Godot
 
             // 1 -Zant
             // 2 - Junon
-            MapExporter mapExporter = new MapExporter(1); 
+
+            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes"); 
            
 /*
             // ZSC

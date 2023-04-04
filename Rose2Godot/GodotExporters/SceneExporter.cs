@@ -24,6 +24,7 @@ namespace Rose2Godot.GodotExporters
         private string ZMDFile;
         private List<string> ZMSFiles;
         private List<string> ZMOFiles;
+        private readonly string GodotMaterialFile;
 
         private void ProcessFileList(List<string> FileNameList)
         {
@@ -85,18 +86,22 @@ namespace Rose2Godot.GodotExporters
             }
         }
 
-        public SceneExporter(string objectName, string model_file_path)
+        public SceneExporter(string objectName, string model_file_path, string godot_material_file = "")
         {
             objName = objectName;
             ProcessFileList(new List<string>() { model_file_path });
             scene = new StringBuilder();
             nodes = new List<string>();
             resources = new List<string>();
+            GodotMaterialFile = godot_material_file;
 
             // should include num of external objects
             //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
             num_resources = zms.Count;
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
+
+            if (!string.IsNullOrWhiteSpace(GodotMaterialFile))
+                scene.AppendLine($"\n[ext_resource path=\"{GodotMaterialFile}\" type=\"Texture\" id=1]");
         }
 
         public SceneExporter(string objectName, List<string> file_paths)
@@ -125,7 +130,9 @@ namespace Rose2Godot.GodotExporters
                 foreach (string model_file_name in ZMSFiles)
                     model_name.Add(Path.GetFileNameWithoutExtension(model_file_name));
 
-                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any());
+                int external_material_id = string.IsNullOrWhiteSpace(GodotMaterialFile) ? -1 : 1;
+
+                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), null, external_material_id);
 
                 resource_index = meshExporter.LastResourceIndex;
 

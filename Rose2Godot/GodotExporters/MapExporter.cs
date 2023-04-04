@@ -2,6 +2,7 @@
 using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Rose2Godot
 {
@@ -11,7 +12,7 @@ namespace Rose2Godot
         private readonly int zone_id;
         private readonly DataFile stb_file_zone;
         public RoseMap Map { get; private set; }
-        public MapExporter(int ZoneId)
+        public MapExporter(int ZoneId, string GodotProjectPah)
         {
             zone_id = ZoneId;
             stb_file_zone = new DataFile();
@@ -60,6 +61,9 @@ namespace Rose2Godot
                 MapSize = uint.Parse(cell[26]),
                 STLId = cell[27],
             };
+
+            Map.GodotScenePath = $"{Path.Combine(GodotProjectPah, cell[27])}";
+            Directory.CreateDirectory(Map.GodotScenePath);
 
             Map.GenerateMapData();
         }

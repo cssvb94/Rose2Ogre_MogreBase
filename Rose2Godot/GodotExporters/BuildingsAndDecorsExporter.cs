@@ -1,9 +1,13 @@
 ﻿using Godot;
+using Pfim;
 using Revise.ZSC;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Rose2Godot.GodotExporters
@@ -14,8 +18,8 @@ namespace Rose2Godot.GodotExporters
         private ModelListFile zsc;
         private readonly string zsc_file_name;
         private StringBuilder scene;
-        private StringBuilder resources;
-        private StringBuilder nodes;
+        private readonly StringBuilder resources;
+        private readonly StringBuilder nodes;
         public readonly string objName;
 
         public BuildingsAndDecorsExporter(string objectName, string zsc_file_name)
@@ -54,15 +58,53 @@ namespace Rose2Godot.GodotExporters
             {
                 material_content.Clear();
                 TextureFile texture_file = zsc.TextureFiles[texture_id];
-                string texture_path = Translator.FixPath(texture_file.FilePath);
-                string texture_name = Path.GetFileNameWithoutExtension(texture_path);
-                string output_file_name_path = $"{Path.Combine(output_folder_path, texture_name)}_MAT.tres";
+                string dds_texture_path = Translator.FixPath(texture_file.FilePath);
+                var parent_info = new DirectoryInfo(dds_texture_path).Parent;
+                string parent_folder = parent_info.Name;
+                string full_godot_texture_path = Path.Combine(output_folder_path, parent_folder);
+                Directory.CreateDirectory(full_godot_texture_path);
+                string png_filename = Path.ChangeExtension(Path.GetFileName(dds_texture_path), ".PNG");
+                string full_godot_png_path = Path.Combine(full_godot_texture_path, png_filename);
+
+                if (!Directory.Exists(full_godot_png_path))
+                {
+
+                    using (var image = Pfimage.FromFile(dds_texture_path))
+                    {
+                        PixelFormat format;
+                        switch (image.Format)
+                        {
+                            case Pfim.ImageFormat.Rgba32:
+                                format = PixelFormat.Format32bppArgb;
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
+                        var handle = GCHandle.Alloc(image.Data, GCHandleType.Pinned);
+                        try
+                        {
+                            var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
+                            var bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
+                            bitmap.Save(full_godot_png_path, System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                        finally
+                        {
+                            handle.Free();
+                        }
+                    }
+                
+                }
+
+                string texture_name = Path.GetFileNameWithoutExtension(dds_texture_path);
+                string output_file_name_path = $"{Path.Combine(output_folder_path, texture_name)}.tres";
 
                 AddExternalMaterial(Path.GetFileName(output_file_name_path), start_idx);
                 material_content.AppendLine("[gd_resource type=\"SpatialMaterial\" load_steps=2 format=2]\n");
-                material_content.AppendLine($"[ext_resource path=\"{texture_path}\" type=\"Texture\" id=1]\n");
+                material_content.AppendLine($"[ext_resource path=\"{parent_folder}/{png_filename}\" type=\"Texture\" id=1]\n");
                 material_content.AppendLine("[resource]");
                 material_content.AppendLine("flags_unshaded = true");
+                if (texture_file.TwoSided)
+                    material_content.AppendLine("params_cull_mode = 2"); // dual sided
                 material_content.AppendLine("albedo_texture = ExtResource( 1 )");
                 ExportMaterialFile(output_file_name_path, material_content.ToString());
                 start_idx++;
@@ -90,9 +132,7 @@ namespace Rose2Godot.GodotExporters
             int resource_index = 1;
 
             string output_folder_path = Path.GetDirectoryName(output_file_name);
-            log.Info($"Exporting assets to: \"{output_folder_path}\"");
-
-
+            
             zsc = new ModelListFile();
             try
             {
@@ -106,7 +146,7 @@ namespace Rose2Godot.GodotExporters
 
             ExportMeshes(output_folder_path);
 
-            //ExportMaterials(output_folder_path, zsc.ModelFiles.Count + 1);
+            ExportMaterials(output_folder_path, zsc.ModelFiles.Count + 1);
 
             ///////////////////////////////////////////
 
