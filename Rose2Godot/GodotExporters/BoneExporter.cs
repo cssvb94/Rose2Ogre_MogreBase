@@ -16,7 +16,7 @@ namespace Rose2Godot.GodotExporters
         {
             bone.Translation /= 100f; // scale down
             GodotQuat rotation = new GodotQuat(bone.Rotation.X, bone.Rotation.Z, bone.Rotation.Y, bone.Rotation.W).Inverse().Normalized();
-            GodotVector3 position = Translator.RoseToGodotVector3(bone.Translation);
+            GodotVector3 position = Translator.ToGodotVector3XZY(bone.Translation);
             GodotTransform transform = new GodotTransform(rotation, position);
 
             bone_node.AppendFormat("bones/{0}/name = \"{1}\"\n", index, bone.Name);

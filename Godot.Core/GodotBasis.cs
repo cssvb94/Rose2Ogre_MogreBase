@@ -44,12 +44,12 @@ namespace Godot
             get
             {
                 GodotVector3 vector3 = new GodotVector3(this[0, 0], this[1, 0], this[2, 0]);
-                double num1 = vector3.Length();
+                float num1 = vector3.Length();
                 vector3 = new GodotVector3(this[0, 1], this[1, 1], this[2, 1]);
-                double num2 = vector3.Length();
+                float num2 = vector3.Length();
                 vector3 = new GodotVector3(this[0, 2], this[1, 2], this[2, 2]);
-                double num3 = vector3.Length();
-                return new GodotVector3((float)num1, (float)num2, (float)num3);
+                float num3 = vector3.Length();
+                return new GodotVector3(num1, num2, num3);
             }
         }
 

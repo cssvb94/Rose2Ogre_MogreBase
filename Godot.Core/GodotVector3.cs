@@ -61,6 +61,9 @@ namespace Godot
 
         public static GodotVector3 One => new GodotVector3(1f, 1f, 1f);
         public static GodotVector3 Zero => new GodotVector3(0f, 0f, 0f);
+        public static GodotVector3 NegXScale => new GodotVector3(-1f, 1f, 1f);
+        public static GodotVector3 NegYScale => new GodotVector3(1f, -1f, 1f);
+        public static GodotVector3 NegZScale => new GodotVector3(1f, 1f, -1f);
 
         public GodotVector3 Abs()
         {

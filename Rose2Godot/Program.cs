@@ -1,7 +1,7 @@
-﻿using Rose2Godot.GodotExporters;
+﻿using NLog;
+using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
-using NLog;
 
 namespace Rose2Godot
 {
@@ -16,31 +16,34 @@ namespace Rose2Godot
             log.Info("App start");
 #if DEBUG
 
-            // 1 -Zant
-            // 2 - Junon
+            // 1   - Zant
+            // 2   - Junon
+            // 3   - Dolphin island
+            // 10  - Adventure plains (EVO)
+            // 51  - Magic City of the Eucar
 
-            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes"); 
-           
-/*
-            // ZSC
-            BuildingsAndDecorsExporter buildingsAndDecorsExporter_buildings = new BuildingsAndDecorsExporter("ZANT_Buildings", @"3DDATA/JUNON/LIST_CNST_JDT.ZSC");
-            buildingsAndDecorsExporter_buildings.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\ZANT_Buildings.tscn");
 
-            Console.WriteLine();
+            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
 
-            BuildingsAndDecorsExporter buildingsAndDecorsExporter_objects = new BuildingsAndDecorsExporter("ZANT_Objects", @"3DDATA/JUNON/LIST_DECO_JDT.ZSC");
-            buildingsAndDecorsExporter_objects.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\ZANT_Objects.tscn");
-*/
+            /*
+                // ZSC
+                BuildingsAndDecorsExporter buildingsAndDecorsExporter_buildings = new BuildingsAndDecorsExporter("ZANT_Buildings", @"3DDATA/JUNON/LIST_CNST_JDT.ZSC");
+                buildingsAndDecorsExporter_buildings.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\ZANT_Buildings.tscn");
+
+                Console.WriteLine();
+
+                BuildingsAndDecorsExporter buildingsAndDecorsExporter_objects = new BuildingsAndDecorsExporter("ZANT_Objects", @"3DDATA/JUNON/LIST_DECO_JDT.ZSC");
+                buildingsAndDecorsExporter_objects.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01\ZANT_Objects.tscn");
+            */
 
             // Heightmap export
-            
+
             //TerrainExporter terrain_exporter = new TerrainExporter(
             //    new List<string>() {
             //        @"3DDATA\MAPS\JUNON\JDT01\31_30.HIM",
             //    });
 
             //terrain_exporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\JDT01.tscn");
-            
             /*
                         // Chicken
 
@@ -51,32 +54,37 @@ namespace Rose2Godot
                                 @"3DDATA\NPC\ANIMAL\CHICKEN\CHICKEN_BONE.ZMD",
                                 @"3DDATA\MOTION\NPC\CHICKEN\WALK_01.ZMO",
                             });
-                        sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Chicken.tscn");
-
-
-                        // Avatar
-
-                        sceneExporter = new SceneExporter("Avatar_male", new List<string>()
-                            {
-                                @"3DDATA\AVATAR\ARMS\ARM1_00100.ZMS",
-                                @"3DDATA\AVATAR\BODY\BODY1_00300.ZMS",
-                                @"3DDATA\AVATAR\BODY\BODY1_00310.ZMS",
-                                @"3DDATA\AVATAR\FOOT\FOOT1_00300.ZMS",
-                                @"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
-                                @"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
-                                @"3DDATA\AVATAR\MALE.ZMD",
-                                @"3DDATA\MOTION\AVATAR\EMPTY_RUN_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\EMPTY_WALK_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\DANCE_WALTZ_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\EMOTION_GREETING_M1.ZMO",
-                                //@"3DDATA\MOTION\AVATAR\EMPTY_SIT_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\DANCE_GANGNAMSTYLE_M1.ZMO",
-                                //@"3DDATA\MOTION\AVATAR\EMPTY_STAND_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\SKILL_MAGIC01_M1.ZMO",
-                                @"3DDATA\MOTION\AVATAR\SKILL_UPPERCUT_01.ZMO",
-                            });
-                        sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_male.tscn");
+                        sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\ChickenR.tscn");
             */
+
+
+/*
+            // Avatar
+
+            sceneExporter = new SceneExporter("Avatar_male", new List<string>()
+            {
+                @"3DDATA\AVATAR\ARMS\ARM1_00100.ZMS",
+                @"3DDATA\AVATAR\BODY\BODY1_00300.ZMS",
+                @"3DDATA\AVATAR\BODY\BODY1_00310.ZMS",
+                @"3DDATA\AVATAR\FOOT\FOOT1_00300.ZMS",
+                @"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
+                @"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
+                @"3DDATA\AVATAR\MALE.ZMD",
+                @"3DDATA\MOTION\AVATAR\EMPTY_RUN_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\EMPTY_WALK_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\EMPTY_STAND_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\EMPTY_STOP1_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\EMPTY_STOP2_M1.ZMO",
+                //@"3DDATA\MOTION\AVATAR\DANCE_WALTZ_M1.ZMO",
+                //@"3DDATA\MOTION\AVATAR\EMOTION_GREETING_M1.ZMO",
+                //@"3DDATA\MOTION\AVATAR\EMPTY_SIT_M1.ZMO",
+                //@"3DDATA\MOTION\AVATAR\DANCE_GANGNAMSTYLE_M1.ZMO",
+                //@"3DDATA\MOTION\AVATAR\EMPTY_STAND_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\SKILL_MAGIC01_M1.ZMO",
+                @"3DDATA\MOTION\AVATAR\SKILL_UPPERCUT_01.ZMO",
+            });
+            sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_male.tscn");
+*/
             /*
              
             // Plant

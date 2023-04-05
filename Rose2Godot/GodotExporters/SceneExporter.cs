@@ -1,4 +1,5 @@
-﻿using Revise.ZMD;
+﻿using Godot;
+using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMS;
 using System;
@@ -49,7 +50,7 @@ namespace Rose2Godot.GodotExporters
                 if (zmds.Any())
                 {
                     ZMDFile = zmds.First();
-                    Console.WriteLine($"Loading ZMD: {ZMDFile}");
+                    //log.Info($"Loading ZMD: {ZMDFile}");
                     zmd.Load(ZMDFile);
                 }
 
@@ -59,7 +60,7 @@ namespace Rose2Godot.GodotExporters
                     ZMSFiles = ZMSFiles.Distinct().ToList();
                     foreach (string zms_filename in ZMSFiles)
                     {
-                        Console.WriteLine($"Loading ZMS: {zms_filename}");
+                        //log.Info($"Loading ZMS: {zms_filename}");
                         ModelFile zms_file = new ModelFile();
                         zms_file.Load(zms_filename);
                         zms.Add(zms_file);
@@ -72,7 +73,7 @@ namespace Rose2Godot.GodotExporters
                     ZMOFiles = ZMOFiles.Distinct().ToList();
                     foreach (string zmo_filename in ZMOFiles)
                     {
-                        Console.WriteLine($"Loading ZMO: {zmo_filename}");
+                        //log.Info($"Loading ZMO: {zmo_filename}");
                         MotionFile zmo_file = new MotionFile();
                         zmo_file.Load(zmo_filename);
                         zmo.Add(zmo_file);
@@ -81,7 +82,7 @@ namespace Rose2Godot.GodotExporters
             }
             catch (Exception x)
             {
-                Console.WriteLine(x);
+                log.Error(x);
                 throw;
             }
         }
@@ -118,7 +119,7 @@ namespace Rose2Godot.GodotExporters
             scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
         }
 
-        public bool ExportScene(string output_file_name)
+        public bool ExportScene(string output_file_name, List<GodotTransform> transforms = null)
         {
             int resource_index = 1;
             try
@@ -132,7 +133,7 @@ namespace Rose2Godot.GodotExporters
 
                 int external_material_id = string.IsNullOrWhiteSpace(GodotMaterialFile) ? -1 : 1;
 
-                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), null, external_material_id);
+                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), transforms, external_material_id);
 
                 resource_index = meshExporter.LastResourceIndex;
 

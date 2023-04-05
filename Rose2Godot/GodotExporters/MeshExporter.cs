@@ -102,7 +102,7 @@ namespace Rose2Godot.GodotExporters
             // vertices
 
             resource.AppendFormat("\t\t; vertices: {0}\n", zms.Vertices.Count);
-            resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.Rose2GodotPosition(v.Position))));
+            resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.ToGodotVector3XZY(v.Position))));
 
             // normals
 
@@ -119,7 +119,7 @@ namespace Rose2Godot.GodotExporters
             if (zms.TangentsEnabled)
             {
                 resource.AppendFormat("\t\t; tangents: {0}\n", zms.Vertices.Count);
-                resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.Rose2GodotPosition(v.Tangent))));
+                resource.AppendFormat("\t\t{0},\n", GodotVector3fToArray(zms.Vertices.Select(v => Translator.ToGodotVector3XZY(v.Tangent))));
             }
             else
                 resource.AppendLine("\t\tnull, ; no tangents");

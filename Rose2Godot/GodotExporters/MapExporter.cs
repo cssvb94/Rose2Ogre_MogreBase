@@ -18,7 +18,7 @@ namespace Rose2Godot
             stb_file_zone = new DataFile();
             try
             {
-                stb_file_zone.Load("3DDATA/STB/LIST_ZONE.stb");
+                stb_file_zone.Load("3DDATA/STB/LIST_ZONE.STB");
             }
             catch (Exception x)
             {

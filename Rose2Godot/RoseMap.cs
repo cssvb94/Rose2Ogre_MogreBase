@@ -1,4 +1,5 @@
 ﻿using g4;
+using Godot;
 using Pfim;
 using Revise.HIM;
 using Revise.IFO;
@@ -117,20 +118,20 @@ namespace Rose2Godot
             // Add material refering external texture resource
             resource.AppendLine("[sub_resource type=\"SpatialMaterial\" id=2]");
             resource.AppendLine("flags_unshaded = true");
+            resource.AppendLine("flags_do_not_receive_shadows = true");
             resource.AppendLine("albedo_texture = ExtResource( 1 )");
 
             nodes.AppendLine($"\n[node name=\"Tile_{name}\" type=\"MeshInstance\" parent=\".:\"]");
             nodes.AppendLine($"mesh = SubResource( 1 )");
             nodes.AppendLine($"material/0 = SubResource( 2 )");
             nodes.AppendLine("visible = true");
-            //nodes.AppendLine("transform = Transform(1, 0, 0, 0, -1, 0.00000724, 0, -0.00000724, -1, 0, 0, 0)\n"); // X 180
             nodes.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
             scene.Append(resource);
             scene.AppendLine();
 
             scene.AppendLine("; scene root node");
-            scene.AppendLine($"[node type=\"Spatial\" name=\"Map_{name}\"]");
+            scene.AppendLine($"[node type=\"KinematicBody\" name=\"Map_{name}\"]");
             scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
             scene.Append(nodes);
@@ -194,7 +195,6 @@ namespace Rose2Godot
     public class RoseMap
     {
         private static readonly NLog.Logger log = NLog.LogManager.GetLogger("RoseMap");
-
         public string ShortName { get; set; }
         public string LongName { get; set; }
         public string ZONPath { get; set; }
@@ -217,8 +217,6 @@ namespace Rose2Godot
 
         private ModelListFile zsc_objects;
         private ModelListFile zsc_buildings;
-        private List<GodotObject> Objects;
-        private List<GodotObject> Buildings;
         private ZoneFile zon_file;
         private string ObjectsPath;
         private string BuildingsPath;
@@ -283,6 +281,9 @@ namespace Rose2Godot
             material_content.AppendLine("flags_unshaded = true");
             if (texture_file.TwoSided)
                 material_content.AppendLine("params_cull_mode = 2"); // dual sided
+            if (texture_file.AlphaEnabled)
+                material_content.AppendLine("flags_transparent = true"); // dual sided
+
             material_content.AppendLine("albedo_texture = ExtResource( 1 )");
 
             StreamWriter fileStream = new StreamWriter(output_file_name_path);
@@ -294,10 +295,6 @@ namespace Rose2Godot
 
         public void GenerateMapData()
         {
-            Objects = new List<GodotObject>();
-            Buildings = new List<GodotObject>();
-
-
             objects_material_files = new Dictionary<int, string>();
             buildings_material_files = new Dictionary<int, string>();
 
@@ -312,10 +309,7 @@ namespace Rose2Godot
                     zsc_objects.Load(ObjectsTable);
                     ObjectsPath = Path.Combine(GodotScenePath, "OBJECTS");
                     Directory.CreateDirectory(ObjectsPath);
-                    //string objects_name = $"OBJECTS_{STLId}";
-                    //BuildingsAndDecorsExporter obj_exporter = new BuildingsAndDecorsExporter(objects_name, ObjectsTable);
-                    //obj_exporter.ExportScene($"{Path.Combine(ObjectsPath, objects_name)}.tscn");
-                    // Export .tres material files
+
                     for (int tex_idx = 0; tex_idx < zsc_objects.TextureFiles.Count; tex_idx++)
                     {
                         TextureFile mat = zsc_objects.TextureFiles[tex_idx];
@@ -343,9 +337,7 @@ namespace Rose2Godot
                     zsc_buildings.Load(BuildingsTable);
                     BuildingsPath = Path.Combine(GodotScenePath, "BUILDINGS");
                     Directory.CreateDirectory(BuildingsPath);
-                    //string buildings_name = $"BUILDINGS_{STLId}";
-                    //BuildingsAndDecorsExporter buildings_exporter = new BuildingsAndDecorsExporter(buildings_name, BuildingsTable);
-                    //buildings_exporter.ExportScene($"{Path.Combine(BuildingsPath, buildings_name)}.tscn");
+
                     for (int tex_idx = 0; tex_idx < zsc_buildings.TextureFiles.Count; tex_idx++)
                     {
                         TextureFile mat = zsc_buildings.TextureFiles[tex_idx];
@@ -365,19 +357,6 @@ namespace Rose2Godot
                 }
             }
 
-
-            LightmapsPath = Path.Combine(GodotScenePath, "LIGHTMAPS");
-
-            try
-            {
-                Directory.CreateDirectory(LightmapsPath);
-            }
-            catch (Exception x)
-            {
-                log.Error(x);
-                throw;
-            }
-
             zon_file = new ZoneFile();
             try
             {
@@ -395,6 +374,18 @@ namespace Rose2Godot
 
             if (!HIMFiles.Any())
                 return;
+
+            LightmapsPath = Path.Combine(GodotScenePath, "LIGHTMAPS");
+
+            try
+            {
+                Directory.CreateDirectory(LightmapsPath);
+            }
+            catch (Exception x)
+            {
+                log.Error(x);
+                throw;
+            }
 
             List<List<string>> HIMFilesGrid = new List<List<string>>();
             HIMHeightsGrid = new List<List<HeightmapFile>>();
@@ -416,8 +407,6 @@ namespace Rose2Godot
 
             HIMFilesGrid.Reverse();
 
-            //log.Info(" ");
-
             TilesX = HIMFilesGrid[0].Count;
             TilesY = HIMFilesGrid.Count;
 
@@ -426,6 +415,10 @@ namespace Rose2Godot
             List<HeightmapFile> map_height_row;
             List<MapDataFile> map_data_row;
             List<string> til_data_row;
+
+            //Vector3 NegX = new Vector3(-1f, 1f, 1f);
+
+            List<GodotTransform> transforms = new List<GodotTransform>();
 
             // y
             for (int map_row_id = HIMFilesGrid.Count - 1; map_row_id >= 0; map_row_id--)
@@ -448,7 +441,7 @@ namespace Rose2Godot
                         {
                             for (int building_idx = 0; building_idx < ifo_file.Buildings.Count; building_idx++)
                             {
-                                log.Info($"Exporting Building: {building_idx} {map_col_id} {map_row_id}");
+                                log.Info($"Exporting Building: {building_idx} Tile: [{map_col_id}, {map_row_id}]");
                                 StringBuilder resource = new StringBuilder();
                                 StringBuilder node = new StringBuilder();
 
@@ -457,31 +450,48 @@ namespace Rose2Godot
                                 MapBuilding building = ifo_file.Buildings[building_idx];
                                 var building_parts = zsc_buildings.Objects[building.ObjectID];
 
+                                transforms.Clear();
+                                GodotTransform part_mesh_transform = GodotTransform.IDENTITY;
+                                part_mesh_transform = part_mesh_transform.Scaled(Translator.Rose2GodotScale(building.Scale));
+                                transforms.Add(part_mesh_transform);
+
                                 int resource_idx = 1;
 
                                 for (int part_idx = 0; part_idx < building_parts.Parts.Count; part_idx++)
                                 {
-                                    ModelListPart bld = building_parts.Parts[part_idx];
-                                    string part = buildings_mesh_files[bld.Model];
-                                    string tex = buildings_material_files[bld.Texture];
+                                    ModelListPart building_part = building_parts.Parts[part_idx];
+
+                                    string part = buildings_mesh_files[building_part.Model];
+                                    string tex = buildings_material_files[building_part.Texture];
                                     string part_name = Path.GetFileNameWithoutExtension(part);
                                     SceneExporter exporter = new SceneExporter($"{part_name}", part, tex);
                                     string part_scene_file = Path.Combine(BuildingsPath, $"{part_name}.tscn");
-                                    exporter.ExportScene(part_scene_file);
-                                    resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]");
-                                    node.AppendLine($"[node name=\"PART_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]\n");
-                                    resource_idx ++;
+                                    exporter.ExportScene(part_scene_file, transforms);
+                                    resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
+                                    node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
+
+                                    Vector3 scaled_position = building_part.Scale * building_part.Position / 100f;
+                                    GodotTransform part_transform = Translator.ToGodotTransform(building_part.Rotation, scaled_position);
+
+                                    node.AppendLine($"transform = {Translator.GodotTransform2String(part_transform)}");
+                                    node.AppendLine();
+                                    resource_idx++;
                                 }
 
-                                resource.AppendLine($"\n[node name=\"BUILDING_{building_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]\n");
+                                resource.AppendLine($"[node name=\"BUILDING_{building_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
+
+                                log.Info($"Scale: {building.Scale}");
+                                Vector3 building_scaled_position = (building.Position / 100f);
+                                GodotTransform building_transform = Translator.ToGodotTransform(building.Rotation, building_scaled_position).Scaled(GodotVector3.NegXScale); ;
+
+                                resource.AppendLine($"transform = {Translator.GodotTransform2String(building_transform)}");
+                                resource.AppendLine();
                                 resource.Append(node);
 
                                 string file_name = Path.Combine(BuildingsPath, $"BUILDING_{building_idx:00}_{map_col_id:00}_{map_row_id:00}.tscn");
                                 StreamWriter fileStream = new StreamWriter(file_name);
                                 fileStream.Write(resource.ToString());
                                 fileStream.Close();
-
-                                Buildings.Add(new GodotObject(building_idx, building, building_parts.Parts));
                             }
                         }
 
@@ -489,15 +499,52 @@ namespace Rose2Godot
                         {
                             for (int object_idx = 0; object_idx < ifo_file.Objects.Count; object_idx++)
                             {
+                                StringBuilder resource = new StringBuilder();
+                                StringBuilder node = new StringBuilder();
+
+                                resource.AppendLine("[gd_scene load_steps=2 format=2]\n");
+
                                 MapObject obj = ifo_file.Objects[object_idx];
-                                var obj_parts = zsc_objects.Objects[obj.ObjectID];
-                                for (int part_idx = 0; part_idx < obj_parts.Parts.Count; part_idx++)
+                                var object_parts = zsc_objects.Objects[obj.ObjectID];
+
+                                transforms.Clear();
+                                GodotTransform part_mesh_transform = GodotTransform.IDENTITY;
+                                part_mesh_transform = part_mesh_transform.Scaled(Translator.Rose2GodotScale(obj.Scale));
+                                transforms.Add(part_mesh_transform);
+
+                                int resource_idx = 1;
+
+                                for (int part_idx = 0; part_idx < object_parts.Parts.Count; part_idx++)
                                 {
-                                    ModelListPart obj_part = obj_parts.Parts[part_idx];
-                                    string part = objects_mesh_files[obj_part.Model];
-                                    string tex = objects_material_files[obj_part.Texture];
+                                    ModelListPart object_part = object_parts.Parts[part_idx];
+                                    string part = objects_mesh_files[object_part.Model];
+                                    string tex = objects_material_files[object_part.Texture];
+                                    string part_name = Path.GetFileNameWithoutExtension(part);
+                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex);
+                                    string part_scene_file = Path.Combine(ObjectsPath, $"{part_name}.tscn");
+                                    exporter.ExportScene(part_scene_file, transforms);
+                                    resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
+                                    node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
+
+                                    Vector3 scaled_position = object_part.Scale * object_part.Position / 100f;
+                                    GodotTransform part_transform = Translator.ToGodotTransform(object_part.Rotation, scaled_position);
+                                    part_transform.basis = part_transform.basis.Scaled(Translator.ToGodotVector3XZY(object_part.Scale));
+
+                                    node.AppendLine($"transform = {Translator.GodotTransform2String(part_transform)}");
+                                    node.AppendLine();
+                                    resource_idx++;
                                 }
-                                Objects.Add(new GodotObject(object_idx, obj, obj_parts.Parts));
+                                resource.AppendLine($"[node name=\"OBJECT_{object_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
+                                GodotTransform object_transform = Translator.ToGodotTransform(obj.Rotation, obj.Position / 100f).Scaled(GodotVector3.NegXScale);
+
+                                resource.AppendLine($"transform = {Translator.GodotTransform2String(object_transform)}");
+                                resource.AppendLine();
+                                resource.Append(node);
+
+                                string file_name = Path.Combine(ObjectsPath, $"OBJECT_{object_idx:00}_{map_col_id:00}_{map_row_id:00}.tscn");
+                                StreamWriter fileStream = new StreamWriter(file_name);
+                                fileStream.Write(resource.ToString());
+                                fileStream.Close();
                             }
                         }
 
@@ -518,45 +565,7 @@ namespace Rose2Godot
             }
             #endregion
 
-            GenerateBuildings();
-            GenerateObjects();
-
             GenerateTerrainMesh();
-        }
-
-        private void GenerateBuildings()
-        {
-            foreach (GodotObject building in Buildings)
-            {
-                if (string.IsNullOrWhiteSpace(building.MapBlock.Name))
-                {
-                    building.MapBlock.Name = $"Building_{building.MapBlock.ObjectID:000}";
-                }
-
-                //log.Info($"Name: {building.MapBlock.Name} Parts: {building.Part.Count:00} ID: {building.MapBlock.ObjectID:000} Position: {building.MapBlock.Position}");
-            }
-
-            //foreach (var item in buildings_mesh_files)
-            //{
-            //    log.Info($"{item.Key} {item.Value}");
-            //}
-        }
-
-        private void GenerateObjects()
-        {
-            foreach (GodotObject obj in Objects)
-            {
-                if (string.IsNullOrWhiteSpace(obj.MapBlock.Name))
-                {
-                    obj.MapBlock.Name = $"Object_{obj.MapBlock.ObjectID}";
-                }
-                //log.Info($"Name: {obj.MapBlock.Name} ID: {obj.MapBlock.ObjectID} Position: {obj.MapBlock.Position}");
-            }
-
-            //foreach (var item in objects_mesh_files)
-            //{
-            //    log.Info($"{item.Key} {item.Value}");
-            //}
         }
 
         private void GenerateTerrainMesh()
@@ -567,7 +576,7 @@ namespace Rose2Godot
                 for (int col = 0; col < him_row.Count; col++)
                 {
                     var him = him_row[col];
-                    var tile_mesh = GenerateTileMesh(him, row, col);
+                    GodotMapTileMesh tile_mesh = GenerateTileMesh(him, row, col);
 
                     string lmap_dir = Path.Combine(Path.GetDirectoryName(him.FilePath), Path.GetFileNameWithoutExtension(him.FilePath));
                     string lmap_file_dds = Path.Combine(lmap_dir, $"{Path.GetFileNameWithoutExtension(him.FilePath)}_PLANELIGHTINGMAP.DDS");
@@ -674,10 +683,11 @@ namespace Rose2Godot
                     int index_vc = tile_mesh.AppendVertex(vxc);
                     int index_vd = tile_mesh.AppendVertex(vxd);
 
-                    Vector2f uva = new Vector2f(x * factor, y * factor);
-                    Vector2f uvb = new Vector2f((x + 1) * factor, y * factor);
-                    Vector2f uvc = new Vector2f((x + 1) * factor, (y + 1) * factor);
-                    Vector2f uvd = new Vector2f(x * factor, (y + 1) * factor);
+                    // Generate and scale up UVs to hide the seams
+                    Vector2f uva = new Vector2f((x + 0.05) * factor, (y + 0.05) * factor);
+                    Vector2f uvb = new Vector2f((x + 0.95) * factor, (y + 0.05) * factor);
+                    Vector2f uvc = new Vector2f((x + 0.95) * factor, (y + 0.95) * factor);
+                    Vector2f uvd = new Vector2f((x + 0.05) * factor, (y + 0.95) * factor);
 
                     RotateUV(ref uva, 1.5708);
                     RotateUV(ref uvb, 1.5708);
