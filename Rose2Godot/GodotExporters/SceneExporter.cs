@@ -26,6 +26,7 @@ namespace Rose2Godot.GodotExporters
         private List<string> ZMSFiles;
         private List<string> ZMOFiles;
         private readonly string GodotMaterialFile;
+        private readonly string GDScriptFile;
 
         private void ProcessFileList(List<string> FileNameList)
         {
@@ -87,7 +88,7 @@ namespace Rose2Godot.GodotExporters
             }
         }
 
-        public SceneExporter(string objectName, string model_file_path, string godot_material_file = "")
+        public SceneExporter(string objectName, string model_file_path, string godot_material_file = "", string gd_script_path = null)
         {
             objName = objectName;
             ProcessFileList(new List<string>() { model_file_path });
@@ -95,6 +96,7 @@ namespace Rose2Godot.GodotExporters
             nodes = new List<string>();
             resources = new List<string>();
             GodotMaterialFile = godot_material_file;
+            GDScriptFile = gd_script_path;
 
             // should include num of external objects
             //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
@@ -103,6 +105,8 @@ namespace Rose2Godot.GodotExporters
 
             if (!string.IsNullOrWhiteSpace(GodotMaterialFile))
                 scene.AppendLine($"\n[ext_resource path=\"{GodotMaterialFile}\" type=\"Texture\" id=1]");
+            if (!string.IsNullOrWhiteSpace(GDScriptFile))
+                scene.AppendLine($"[ext_resource path=\"{GDScriptFile}\" type=\"Script\" id=2]");
         }
 
         public SceneExporter(string objectName, List<string> file_paths)
@@ -156,6 +160,8 @@ namespace Rose2Godot.GodotExporters
 
                 scene.AppendLine("; scene root node");
                 scene.AppendFormat("[node type=\"Spatial\" name=\"{0}\"]\n", objName);
+                if (!string.IsNullOrWhiteSpace(GDScriptFile))
+                    scene.AppendLine("script = ExtResource( 2 )");
                 scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
 
                 // skeleton

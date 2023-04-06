@@ -4,7 +4,6 @@ using Pfim;
 using Revise.HIM;
 using Revise.IFO;
 using Revise.IFO.Blocks;
-using Revise.ZMS;
 using Revise.ZON;
 using Revise.ZSC;
 using Rose2Godot.GodotExporters;
@@ -33,6 +32,9 @@ namespace Rose2Godot
         public DMesh3 mesh;
         public string name;
         public string lightmap_path;
+        public float[] heights;
+        public int row;
+        public int col;
 
         public override string ToString()
         {
@@ -40,9 +42,10 @@ namespace Rose2Godot
             StringBuilder resource = new StringBuilder();
             StringBuilder nodes = new StringBuilder();
 
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", 4);
+            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", 5);
 
             // Add texture external resource
+
             resource.AppendLine();
             resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=1]");
 
@@ -71,6 +74,7 @@ namespace Rose2Godot
             resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(normals, null));
 
             // tangents
+
             resource.AppendLine("\t\tnull, ; no tangents");
 
             // vertex colors
@@ -90,6 +94,7 @@ namespace Rose2Godot
             }
 
             // UV2
+
             //if (uvsBottom != null && uvsBottom.Any())
             //{
             //    resource.AppendFormat("\t\t; UV2: {0}\n", uvsBottom.Count);
@@ -115,78 +120,42 @@ namespace Rose2Godot
             resource.AppendLine("}"); // end of surface/0
             resource.AppendLine("");
 
-            // Add material refering external texture resource
-            resource.AppendLine("[sub_resource type=\"SpatialMaterial\" id=2]");
-            resource.AppendLine("flags_unshaded = true");
-            resource.AppendLine("flags_do_not_receive_shadows = true");
-            resource.AppendLine("albedo_texture = ExtResource( 1 )");
-
-            nodes.AppendLine($"\n[node name=\"Tile_{name}\" type=\"MeshInstance\" parent=\".:\"]");
-            nodes.AppendLine($"mesh = SubResource( 1 )");
-            nodes.AppendLine($"material/0 = SubResource( 2 )");
-            nodes.AppendLine("visible = true");
-            nodes.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-
             scene.Append(resource);
+
+            // Add material refering external texture resource
+            scene.AppendLine("[sub_resource type=\"SpatialMaterial\" id=2]");
+            scene.AppendLine("flags_unshaded = true");
+            scene.AppendLine("flags_do_not_receive_shadows = true");
+            scene.AppendLine("albedo_texture = ExtResource( 1 )");
+
+            // Heighmap collusion shape data
+            string pool_array = string.Join(", ", heights.Select(h => $"{h:0.#####}"));
+            scene.AppendLine();
+            scene.AppendLine("[sub_resource type=\"HeightMapShape\" id=3]");
+            scene.AppendLine("margin = 0.04"); // 0.004 default
+            scene.AppendLine("map_width = 65");
+            scene.AppendLine("map_depth = 65");
+            scene.AppendLine($"map_data = PoolRealArray( {pool_array} )");
             scene.AppendLine();
 
             scene.AppendLine("; scene root node");
             scene.AppendLine($"[node type=\"KinematicBody\" name=\"Map_{name}\"]");
             scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+            scene.AppendLine();
 
-            scene.Append(nodes);
+            scene.AppendLine($"[node name=\"Tile_{name}\" type=\"MeshInstance\" parent=\".\"]");
+            scene.AppendLine($"mesh = SubResource( 1 )");
+            scene.AppendLine($"material/0 = SubResource( 2 )");
+            scene.AppendLine("visible = true");
+            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+            scene.AppendLine();
 
-            return scene.ToString();
-        }
-    }
+            scene.AppendLine($"[node name=\"TileCollisionShape\" type=\"CollisionShape\" parent=\".\"]");
+            scene.AppendLine($"shape = SubResource( 3 )");
 
-    public class GodotObject
-    {
-        public int Id;
-        public MapBlock MapBlock { get; set; }
-        public string Name { get; private set; }
-        public List<ModelListPart> Part { get; private set; }
-
-        public GodotObject(int id, MapBlock map_block, List<ModelListPart> parts)
-        {
-            Id = id;
-            Part = parts;
-            Name = GenerateName();
-            MapBlock = map_block;
-        }
-
-        private string GenerateName()
-        {
-            int h = 917113; // random prime number
-            if (Part != null)
-            {
-                var hash = Part.Select(p => p.GetHashCode()).ToList();
-                foreach (var item in hash)
-                    h ^= item;
-            }
-            else
-            {
-                Random rnd = new Random(DateTime.UtcNow.Millisecond);
-                h ^= rnd.Next();
-            }
-            return $"Object_{h:X}";
-        }
-
-        public override string ToString()
-        {
-            StringBuilder scene = new StringBuilder();
-
-            int resource_index = 1;
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", Part.Count);
-
-            foreach (var part in Part)
-            {
-                string model_path = string.Empty;
-                string model_name = string.Empty;
-                //MeshExporter meshExporter = new MeshExporter(resource_index, model_path, model_name, false);
-                //resource_index = meshExporter.LastResourceIndex;
-                //scene.AppendLine(meshExporter.Resources);
-            }
+            float x_offset = 80f + row * 2.5f * 64f;
+            float y_offset = 80f + col * 2.5f * 64f;
+            scene.AppendLine($"transform = Transform( 2.5, 0, 0, 0, 1, 0, 0, 0, 2.5, { x_offset:0.######}, 0, {y_offset:0.######} )");
 
             return scene.ToString();
         }
@@ -461,10 +430,14 @@ namespace Rose2Godot
                                 {
                                     ModelListPart building_part = building_parts.Parts[part_idx];
 
+                                    string gd_script_collision_gen = string.Empty;
+                                    if (building_part.Collision != CollisionType.None)
+                                        gd_script_collision_gen = "res://scenes/gen.gd";
+
                                     string part = buildings_mesh_files[building_part.Model];
                                     string tex = buildings_material_files[building_part.Texture];
                                     string part_name = Path.GetFileNameWithoutExtension(part);
-                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex);
+                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex, gd_script_collision_gen);
                                     string part_scene_file = Path.Combine(BuildingsPath, $"{part_name}.tscn");
                                     exporter.ExportScene(part_scene_file, transforms);
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
@@ -520,7 +493,13 @@ namespace Rose2Godot
                                     string part = objects_mesh_files[object_part.Model];
                                     string tex = objects_material_files[object_part.Texture];
                                     string part_name = Path.GetFileNameWithoutExtension(part);
-                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex);
+
+
+                                    string gd_script_collision_gen = string.Empty;
+                                    if (object_part.Collision != CollisionType.None)
+                                        gd_script_collision_gen = "res://scenes/gen.gd";
+
+                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex, gd_script_collision_gen);
                                     string part_scene_file = Path.Combine(ObjectsPath, $"{part_name}.tscn");
                                     exporter.ExportScene(part_scene_file, transforms);
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
@@ -638,6 +617,17 @@ namespace Rose2Godot
             float x_offset = row * x_stride * (him_file.Width - 1);
             float y_offset = col * y_stride * (him_file.Height - 1);
 
+            float[] heights = new float[him_file.Width * him_file.Height];
+            int h_idx = 0;
+            for (int y = 0; y < him_file.Height; y++)
+            {
+                for (int x = 0; x < him_file.Width; x++)
+                {
+                    heights[h_idx] = him_file[y, x] * heightScaler;
+                    h_idx++;
+                }
+            }
+
             Quaterniond vrot = new Quaterniond(new Vector3d(0, 0, 1), -90);
 
             DMesh3 tile_mesh = new DMesh3(true, true, true);
@@ -655,6 +645,7 @@ namespace Rose2Godot
                     //          d *-----* c         
                     //
                     //  The triangles used are: bda and cdb
+
 
                     Vector3d vxa = new Vector3d(x, y, -him_file[x, y] * heightScaler);
                     Vector3d vxb = new Vector3d(x + 1, y, -him_file[x + 1, y] * heightScaler);
@@ -715,6 +706,9 @@ namespace Rose2Godot
             {
                 name = $"{Path.GetFileNameWithoutExtension(him_file.FilePath)}",
                 mesh = tile_mesh,
+                heights = heights,
+                row = row,
+                col = col,
             };
         }
 

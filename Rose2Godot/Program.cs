@@ -20,10 +20,23 @@ namespace Rose2Godot
             // 2   - Junon
             // 3   - Dolphin island
             // 10  - Adventure plains (EVO)
+            // 20  - Birth Island
+            // 21  - Valley of Luxem Tower
+            // 22  - Adventurers Plains
+            // 23  - Breezy Hills
+            // 24  - El Verloon Desert
+            // 25  - Anima Lake
+            // 26  - Forest of Wisdom
+            // 27  - Kenji Beach
+            // 28  - Gorge of Silence
             // 51  - Magic City of the Eucar
+            // 61  - Xita Refuge
+            // 62  - Shady Jungle
+            // 63  - Forest of Wandering
+            // 64  - Marsh of Ghosts
 
 
-            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
+            MapExporter mapExporter = new MapExporter(3, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
 
             /*
                 // ZSC
