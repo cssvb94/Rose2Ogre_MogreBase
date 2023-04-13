@@ -137,7 +137,8 @@ namespace Rose2Godot.GodotExporters
 
                 int external_material_id = string.IsNullOrWhiteSpace(GodotMaterialFile) ? -1 : 1;
 
-                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), transforms, external_material_id);
+                //MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), transforms, external_material_id);
+                MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), null, external_material_id);
 
                 resource_index = meshExporter.LastResourceIndex;
 
@@ -162,7 +163,17 @@ namespace Rose2Godot.GodotExporters
                 scene.AppendFormat("[node type=\"Spatial\" name=\"{0}\"]\n", objName);
                 if (!string.IsNullOrWhiteSpace(GDScriptFile))
                     scene.AppendLine("script = ExtResource( 2 )");
-                scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
+
+                if (transforms != null && transforms.Any())
+                {
+                    scene.AppendLine($"transform = {Translator.GodotTransform2String(transforms.First())}");
+                }
+                else
+                {
+                    scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+                }
+
+                //scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
 
                 // skeleton
 

@@ -93,17 +93,17 @@ namespace Rose2Godot
                 resource.AppendLine("\t\tnull, ; no UV1");
             }
 
-            // UV2
+            // UV2 same as UV1 - Used for Lightmapping
 
-            //if (uvsBottom != null && uvsBottom.Any())
-            //{
-            //    resource.AppendFormat("\t\t; UV2: {0}\n", uvsBottom.Count);
-            //    resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsBottom));
-            //}
-            //else
-            //{
-            resource.AppendLine("\t\tnull, ; no UV2");
-            //}
+            if (uvsTop != null && uvsTop.Any())
+            {
+                resource.AppendFormat("\t\t; UV2: {0} - same as UV1\n", uvsTop.Count);
+                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsTop));
+            }
+            else
+            {
+                resource.AppendLine("\t\tnull, ; no UV2");
+            }
 
             // no bones
 
@@ -238,7 +238,6 @@ namespace Rose2Godot
                         handle.Free();
                     }
                 }
-
             }
 
             string texture_name = Path.GetFileNameWithoutExtension(dds_texture_path);
@@ -385,8 +384,6 @@ namespace Rose2Godot
             List<MapDataFile> map_data_row;
             List<string> til_data_row;
 
-            //Vector3 NegX = new Vector3(-1f, 1f, 1f);
-
             List<GodotTransform> transforms = new List<GodotTransform>();
 
             // y
@@ -410,29 +407,37 @@ namespace Rose2Godot
                         {
                             for (int building_idx = 0; building_idx < ifo_file.Buildings.Count; building_idx++)
                             {
-                                log.Info($"Exporting Building: {building_idx} Tile: [{map_col_id}, {map_row_id}]");
+                                //log.Info($"Exporting Building: {building_idx} Tile: [{map_col_id}, {map_row_id}]");
                                 StringBuilder resource = new StringBuilder();
                                 StringBuilder node = new StringBuilder();
 
                                 resource.AppendLine("[gd_scene load_steps=2 format=2]\n");
 
                                 MapBuilding building = ifo_file.Buildings[building_idx];
-                                var building_parts = zsc_buildings.Objects[building.ObjectID];
+
+                                //log.Debug($"Building name: {building.Name} WarpID: {building.WarpID} EventID: {building.EventID} ObjectType: {building.ObjectType} ObjectID: {building.ObjectID} MapPosition: {building.MapPosition}");
+                                //log.Debug($"Position: {building.Position / 100f} Rotation: {building.Rotation} Scale: {building.Scale}");
+
+                                ModelListObject building_model = zsc_buildings.Objects[building.ObjectID];
 
                                 transforms.Clear();
-                                GodotTransform part_mesh_transform = GodotTransform.IDENTITY;
-                                part_mesh_transform = part_mesh_transform.Scaled(Translator.Rose2GodotScale(building.Scale));
-                                transforms.Add(part_mesh_transform);
+                                GodotTransform model_transform = GodotTransform.IDENTITY;
+
+                                model_transform = model_transform.Scaled(Translator.Rose2GodotScale(building.Scale));
+                                transforms.Add(model_transform);
 
                                 int resource_idx = 1;
 
-                                for (int part_idx = 0; part_idx < building_parts.Parts.Count; part_idx++)
+                                for (int part_idx = 0; part_idx < building_model.Parts.Count; part_idx++)
                                 {
-                                    ModelListPart building_part = building_parts.Parts[part_idx];
+                                    ModelListPart building_part = building_model.Parts[part_idx];
+
+                                    //log.Debug($"\tModelID: {building_part.Model} AxisRotation: {building_part.AxisRotation} Parent: {building_part.Parent} Collision: {building_part.Collision}");
+                                    //log.Debug($"\tPosition: {building_part.Position / 100f} Rotation: {building_part.Rotation} Scale: {building_part.Scale}");
 
                                     string gd_script_collision_gen = string.Empty;
                                     if (building_part.Collision != CollisionType.None)
-                                        gd_script_collision_gen = "res://scenes/gen.gd";
+                                        gd_script_collision_gen = "res://scenes/generate_collision_mesh.gd";
 
                                     string part = buildings_mesh_files[building_part.Model];
                                     string tex = buildings_material_files[building_part.Texture];
@@ -443,8 +448,8 @@ namespace Rose2Godot
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
                                     node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
 
-                                    Vector3 scaled_position = building_part.Scale * building_part.Position / 100f;
-                                    GodotTransform part_transform = Translator.ToGodotTransform(building_part.Rotation, scaled_position);
+                                    Vector3 part_scaled_position = building_part.Scale * building_part.Position / 100f;
+                                    GodotTransform part_transform = Translator.ToGodotTransform(building_part.Rotation, part_scaled_position); //.Scaled(GodotVector3.NegXScale);
 
                                     node.AppendLine($"transform = {Translator.GodotTransform2String(part_transform)}");
                                     node.AppendLine();
@@ -453,11 +458,14 @@ namespace Rose2Godot
 
                                 resource.AppendLine($"[node name=\"BUILDING_{building_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
 
-                                log.Info($"Scale: {building.Scale}");
-                                Vector3 building_scaled_position = (building.Position / 100f);
-                                GodotTransform building_transform = Translator.ToGodotTransform(building.Rotation, building_scaled_position).Scaled(GodotVector3.NegXScale); ;
+                                // ******************
+                                Vector3 building_scaled_position = building.Position / 100f;
+                                GodotTransform building_transform = Translator.ToGodotTransform(building.Rotation, building_scaled_position).Scaled(GodotVector3.NegXScale);
+                                building_transform.basis = building_transform.basis.Scaled(Translator.Rose2GodotScale(building.Scale));
+                                // ******************
 
                                 resource.AppendLine($"transform = {Translator.GodotTransform2String(building_transform)}");
+
                                 resource.AppendLine();
                                 resource.Append(node);
 
@@ -465,6 +473,9 @@ namespace Rose2Godot
                                 StreamWriter fileStream = new StreamWriter(file_name);
                                 fileStream.Write(resource.ToString());
                                 fileStream.Close();
+
+                                //log.Debug($"Exported: \"{file_name}\"");
+                                //log.Debug("**********************************************************************************************");
                             }
                         }
 
@@ -494,10 +505,9 @@ namespace Rose2Godot
                                     string tex = objects_material_files[object_part.Texture];
                                     string part_name = Path.GetFileNameWithoutExtension(part);
 
-
                                     string gd_script_collision_gen = string.Empty;
                                     if (object_part.Collision != CollisionType.None)
-                                        gd_script_collision_gen = "res://scenes/gen.gd";
+                                        gd_script_collision_gen = "res://scenes/generate_collision_mesh.gd";
 
                                     SceneExporter exporter = new SceneExporter($"{part_name}", part, tex, gd_script_collision_gen);
                                     string part_scene_file = Path.Combine(ObjectsPath, $"{part_name}.tscn");
@@ -505,7 +515,7 @@ namespace Rose2Godot
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
                                     node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
 
-                                    Vector3 scaled_position = object_part.Scale * object_part.Position / 100f;
+                                    Vector3 scaled_position = (object_part.Scale * object_part.Position) / 100f;
                                     GodotTransform part_transform = Translator.ToGodotTransform(object_part.Rotation, scaled_position);
                                     part_transform.basis = part_transform.basis.Scaled(Translator.ToGodotVector3XZY(object_part.Scale));
 
@@ -514,7 +524,10 @@ namespace Rose2Godot
                                     resource_idx++;
                                 }
                                 resource.AppendLine($"[node name=\"OBJECT_{object_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
-                                GodotTransform object_transform = Translator.ToGodotTransform(obj.Rotation, obj.Position / 100f).Scaled(GodotVector3.NegXScale);
+
+                                Vector3 object_scaled_position = obj.Position / 100f;
+                                GodotTransform object_transform = Translator.ToGodotTransform(obj.Rotation, object_scaled_position).Scaled(GodotVector3.NegXScale);
+                                object_transform.basis = object_transform.basis.Scaled(Translator.Rose2GodotScale(obj.Scale));
 
                                 resource.AppendLine($"transform = {Translator.GodotTransform2String(object_transform)}");
                                 resource.AppendLine();
