@@ -526,6 +526,15 @@ namespace Rose2Godot
                                     //log.Debug($"\tModelID: {building_part.Model} AxisRotation: {building_part.AxisRotation} Parent: {building_part.Parent} Collision: {building_part.Collision}");
                                     //log.Debug($"\tPosition: {building_part.Position / 100f} Rotation: {building_part.Rotation} Scale: {building_part.Scale}");
 
+                                    /*
+                                    tool
+                                    extends Node
+
+                                    func _ready():
+	                                    for child in get_node(".").get_children():
+		                                    child.create_trimesh_collision()
+                                    */
+
                                     string gd_script_collision_gen = string.Empty;
                                     if (building_part.Collision != CollisionType.None)
                                         gd_script_collision_gen = "res://scenes/generate_collision_mesh.gd";
