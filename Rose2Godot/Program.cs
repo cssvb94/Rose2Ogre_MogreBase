@@ -36,7 +36,7 @@ namespace Rose2Godot
             // 64  - Marsh of Ghosts
 
 
-            MapExporter mapExporter = new MapExporter(3, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
+            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
 
             /*
             // ZSC
