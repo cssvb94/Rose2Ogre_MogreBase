@@ -306,7 +306,6 @@
     <Compile Include="Revise\ZSC\ModelListPropertyType.cs" />
     <Compile Include="Revise\ZSC\TextureFile.cs" />
     <Compile Include="RoseMap.cs" />
-    <Compile Include="TextureAtlasser.cs" />
     <Compile Include="Tile.cs" />
   </ItemGroup>
   <ItemGroup>

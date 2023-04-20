@@ -30,13 +30,14 @@ namespace Rose2Godot
 
     public class GodotMapTileMesh
     {
-        public DMesh3 mesh;
-        public string name;
-        public string lightmap_path;
-        public float[] heights;
-        public int row;
-        public int col;
-
+        public DMesh3 Mesh { get; set; }
+        public string Name { get; set; }
+        public string LightmapPath { get; set; }
+        public string AtlasPath { get; set; }
+        public float[] Heights { get; set; }
+        public int Row { get; set; }
+        public int Col { get; set; }
+        public Vector2f[] TilesUV { get; set; }
         public override string ToString()
         {
             StringBuilder scene = new StringBuilder();
@@ -47,29 +48,58 @@ namespace Rose2Godot
 
             // Add texture external resource
 
+            /*
+            // res://shaders/lightmap.shader 
+            shader_type spatial;
+
+            // we are using a lightmap, we don't need realtime lighting
+            render_mode unshaded, cull_disabled;
+
+            // our input textures, a material texture, and the lightmap
+            uniform sampler2D texture_albedo : hint_albedo;
+            uniform sampler2D texture_lightmap : hint_albedo;
+
+            void fragment() {
+	            // lookup the colors at the uv location of our textures
+	            vec4 albedo_tex = texture(texture_albedo, UV);
+	            vec4 lightmap_tex = texture(texture_lightmap, UV);
+                // vec4 lightmap_tex = texture(texture_lightmap,UV2);
+  
+	            // you can optionally use a multiplier to allow lightening areas (the 2.0 here)
+	            ALBEDO = (albedo_tex * lightmap_tex).rgb * 2.0f;
+            }
+            
+            */
+
             resource.AppendLine();
-            resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=1]");
+            resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture\" id=1]");
+            resource.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture\" id=2]");
+            resource.AppendLine($"[ext_resource path=\"res://shaders/lightmap.shader\" type=\"Shader\" id=3]");
 
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);
-            resource.AppendFormat("resource_name = \"Tile_{0}\"\n", name);
+            resource.AppendFormat("resource_name = \"Tile_{0}\"\n", Name);
             resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
 
-            resource.AppendFormat("\t\t; vertices: {0}\n", mesh.Vertices().Count());
-            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(mesh.Vertices().ToList(), null));
+            resource.AppendFormat("\t\t; vertices: {0}\n", Mesh.Vertices().Count());
+            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(Mesh.Vertices().ToList(), null));
 
             // normals
 
-            resource.AppendFormat("\t\t; normals: {0}\n", mesh.Vertices().Count());
+            resource.AppendFormat("\t\t; normals: {0}\n", Mesh.Vertices().Count());
 
             List<Vector3> normals = new List<Vector3>();
             List<Vector2> uvsTop = new List<Vector2>();
+            List<Vector2f> uvsTiles = new List<Vector2f>();
 
-            for (int vidx = 0; vidx < mesh.VertexCount; vidx++)
+            for (int vidx = 0; vidx < Mesh.VertexCount; vidx++)
             {
-                var vnormal = mesh.GetVertexNormal(vidx);
-                var uv = mesh.GetVertexUV(vidx);
+                var vnormal = Mesh.GetVertexNormal(vidx);
+                var uv = Mesh.GetVertexUV(vidx);
                 normals.Add(new Vector3(vnormal.x, vnormal.y, vnormal.z));
                 uvsTop.Add(new Vector2(uv.x, uv.y));
+
+                var uv2 = TilesUV[vidx];
+                uvsTiles.Add(uv2);
             }
 
             resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(normals, null));
@@ -94,12 +124,12 @@ namespace Rose2Godot
                 resource.AppendLine("\t\tnull, ; no UV1");
             }
 
-            // UV2 same as UV1 - Used for Lightmapping
+            // UV2
 
             if (uvsTop != null && uvsTop.Any())
             {
-                resource.AppendFormat("\t\t; UV2: {0} - same as UV1\n", uvsTop.Count);
-                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsTop));
+                resource.AppendFormat("\t\t; UV2: {0} - same as UV1\n", uvsTiles.Count);
+                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsTiles));
             }
             else
             {
@@ -113,8 +143,8 @@ namespace Rose2Godot
 
             // face indices
 
-            resource.AppendFormat("\t\t; triangle faces: {0}\n", mesh.Triangles().Count());
-            resource.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(mesh.Triangles().ToList()));
+            resource.AppendFormat("\t\t; triangle faces: {0}\n", Mesh.Triangles().Count());
+            resource.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(Mesh.Triangles().ToList()));
 
             resource.AppendLine("\t],"); // end of mesh arrays
             resource.AppendLine("\t\"morph_arrays\":[]");
@@ -123,14 +153,14 @@ namespace Rose2Godot
 
             scene.Append(resource);
 
-            // Add material refering external texture resource
-            scene.AppendLine("[sub_resource type=\"SpatialMaterial\" id=2]");
-            scene.AppendLine("flags_unshaded = true");
-            scene.AppendLine("flags_do_not_receive_shadows = true");
-            scene.AppendLine("albedo_texture = ExtResource( 1 )");
+            // Shader material
+            scene.AppendLine("[sub_resource type=\"ShaderMaterial\" id=2]");
+            scene.AppendLine("shader = ExtResource( 3 )");
+            scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
+            scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
 
             // Heighmap collusion shape data
-            string pool_array = string.Join(", ", heights.Select(h => $"{h:0.#####}"));
+            string pool_array = string.Join(", ", Heights.Select(h => $"{h:0.#####}"));
             scene.AppendLine();
             scene.AppendLine("[sub_resource type=\"HeightMapShape\" id=3]");
             scene.AppendLine("margin = 0.04"); // 0.004 default
@@ -140,11 +170,11 @@ namespace Rose2Godot
             scene.AppendLine();
 
             scene.AppendLine("; scene root node");
-            scene.AppendLine($"[node type=\"KinematicBody\" name=\"Map_{name}\"]");
+            scene.AppendLine($"[node type=\"KinematicBody\" name=\"Map_{Name}\"]");
             scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
             scene.AppendLine();
 
-            scene.AppendLine($"[node name=\"Tile_{name}\" type=\"MeshInstance\" parent=\".\"]");
+            scene.AppendLine($"[node name=\"Tile_{Name}\" type=\"MeshInstance\" parent=\".\"]");
             scene.AppendLine($"mesh = SubResource( 1 )");
             scene.AppendLine($"material/0 = SubResource( 2 )");
             scene.AppendLine("visible = true");
@@ -154,8 +184,8 @@ namespace Rose2Godot
             scene.AppendLine($"[node name=\"TileCollisionShape\" type=\"CollisionShape\" parent=\".\"]");
             scene.AppendLine($"shape = SubResource( 3 )");
 
-            float x_offset = 80f + row * 2.5f * 64f;
-            float y_offset = 80f + col * 2.5f * 64f;
+            float x_offset = 80f + Row * 2.5f * 64f;
+            float y_offset = 80f + Col * 2.5f * 64f;
             scene.AppendLine($"transform = Transform( 2.5, 0, 0, 0, 1, 0, 0, 0, 2.5, { x_offset:0.######}, 0, {y_offset:0.######} )");
 
             return scene.ToString();
@@ -191,96 +221,13 @@ namespace Rose2Godot
         private string ObjectsPath;
         private string BuildingsPath;
         private string LightmapsPath;
+        private string AtlasPath;
         private Dictionary<int, string> buildings_mesh_files;
         private Dictionary<int, string> objects_mesh_files;
         private Dictionary<int, string> objects_material_files;
         private Dictionary<int, string> buildings_material_files;
-        private Dictionary<string, Rect> atlasRectHash;
-        Dictionary<string, Bitmap> atlasTexHash;
-        List<Bitmap> textures;
 
-        public RoseMap()
-        {
-            atlasRectHash = new Dictionary<string, Rect>();
-            atlasTexHash = new Dictionary<string, Bitmap>();
-            textures = new List<Bitmap>();
-        }
-
-        private Bitmap LoadDDSFile(string path)
-        {
-            Bitmap bitmap;
-            using (IImage image = Pfimage.FromFile(path))
-            {
-                PixelFormat format;
-                switch (image.Format)
-                {
-                    case Pfim.ImageFormat.Rgba32:
-                        format = PixelFormat.Format32bppArgb;
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-
-                GCHandle handle = GCHandle.Alloc(image.Data, GCHandleType.Pinned);
-
-                try
-                {
-                    var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
-                    bitmap = new Bitmap(new Bitmap(image.Width, image.Height, image.Stride, format, data));
-                }
-                catch (Exception x)
-                {
-                    log.Error(x);
-                    throw;
-                }
-                finally
-                {
-                    handle.Free();
-                }
-            }
-            return bitmap;
-        }
-
-        public void UpdateAtlas(TileFile til, ref Dictionary<string, Rect> atlasRectHash, ref Dictionary<string, Bitmap> atlasTexHash, ref List<Bitmap> textures)
-        {
-            for (int t_x = 0; t_x < til.Width; t_x++)
-            {
-                for (int t_y = 0; t_y < til.Height; t_y++)
-                {
-                    int tileID = til[t_x, t_y].Tile;
-
-                    string texPath1 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer1]);
-                    string texPath2 = Translator.FixPath(zon_file.Textures[zon_file.Tiles[tileID].Layer2]);
-
-                    Bitmap texture1 = LoadDDSFile(zon_file.Textures[zon_file.Tiles[tileID].Layer1]);
-                    Bitmap texture2 = LoadDDSFile(zon_file.Textures[zon_file.Tiles[tileID].Layer1]);
-
-                    try
-                    {
-                        if (!atlasRectHash.ContainsKey(texPath1))
-                            atlasRectHash.Add(texPath1, new Rect());
-
-                        if (!atlasTexHash.ContainsKey(texPath1))
-                            atlasTexHash.Add(texPath1, texture1);
-
-                        textures.Add(texture1);
-                    }
-                    catch { }
-
-                    try
-                    {
-                        if (!atlasRectHash.ContainsKey(texPath2))
-                            atlasRectHash.Add(texPath2, new Rect());
-
-                        if (!atlasTexHash.ContainsKey(texPath2))
-                            atlasTexHash.Add(texPath2, texture2);
-
-                        textures.Add(texture2);
-                    }
-                    catch { }
-                }
-            }
-        }
+        public RoseMap() { }
 
         private string ExportMaterial(TextureFile texture_file, string export_path)
         {
@@ -425,7 +372,7 @@ namespace Rose2Godot
             }
 
             // *********************************************************************************************************
-            return;
+            //return;
             // *********************************************************************************************************
 
             string zon_folder = Path.GetDirectoryName(ZONPath);
@@ -439,6 +386,17 @@ namespace Rose2Godot
             try
             {
                 Directory.CreateDirectory(LightmapsPath);
+            }
+            catch (Exception x)
+            {
+                log.Error(x);
+                throw;
+            }
+
+            AtlasPath = Path.Combine(GodotScenePath, "ATLAS");
+            try
+            {
+                Directory.CreateDirectory(AtlasPath);
             }
             catch (Exception x)
             {
@@ -683,7 +641,7 @@ namespace Rose2Godot
                         var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
                         Bitmap bitmap = new Bitmap(new Bitmap(image.Width, image.Height, image.Stride, format, data));
                         bitmaps.Add(index, bitmap);
-                        log.Debug($"[{index:00}] [{image.Width}x{image.Height}] px <- Add to dictionary: \"{path}\"");
+                        //log.Debug($"[{index:00}] [{image.Width}x{image.Height}] px <- Add to dictionary: \"{path}\"");
                     }
                     catch (Exception x)
                     {
@@ -698,16 +656,35 @@ namespace Rose2Godot
             }
         }
 
-        public void GenerateTileAtlas(TileFile til, int col, int row)
+        private Bitmap ResizeImage(Bitmap imgToResize, Size size)
+        {
+            try
+            {
+                Bitmap b = new Bitmap(size.Width, size.Height);
+                using (Graphics g = Graphics.FromImage((Image)b))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
+                }
+                return b;
+            }
+            catch
+            {
+                Console.WriteLine("Bitmap could not be resized");
+                return imgToResize;
+            }
+        }
+
+        public string GenerateTileAtlas(TileFile til)
         {
             int atlas_image_width = til.Width * 256;
             int atlas_image_height = til.Height * 256;
 
-            log.Debug($"Generating atlas image texture for \"{til.FilePath}\" Width: {til.Width} Height: {til.Height} Image: [{atlas_image_width}x{atlas_image_height} px]");
+            log.Debug($"Generating atlas image texture for \"{Path.GetFileName(til.FilePath)}\" Width: {til.Width} Height: {til.Height} Image: [{atlas_image_width}x{atlas_image_height} px]");
 
             Font font = new Font("Arial", 24, FontStyle.Regular, GraphicsUnit.Pixel);
 
-            Bitmap tile_atlas_bitmap = new Bitmap(atlas_image_width, atlas_image_height);
+            Bitmap tile_atlas_bitmap = new Bitmap(atlas_image_width, atlas_image_height, PixelFormat.Format32bppArgb);
 
             if (tile_atlas_bitmap is null)
                 throw new ArgumentNullException(nameof(tile_atlas_bitmap));
@@ -718,6 +695,19 @@ namespace Rose2Godot
 
             RotateFlipType bitmap_rotation = RotateFlipType.RotateNoneFlipNone;
 
+            #region arrow helper
+
+            Bitmap arrow_bitmap = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
+            Graphics arrow_graphic = Graphics.FromImage(arrow_bitmap);
+
+            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 1, 1, 30, 1);
+            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 30, 0, 20, 10);
+            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 20, 10, 20, 1);
+
+            arrow_graphic.DrawLine(new Pen(Brushes.Coral, 3f), 1, 1, 1, 30);
+
+            #endregion
+
             for (int y = 0; y < til.Height; y++)
             {
                 for (int x = 0; x < til.Width; x++)
@@ -725,6 +715,8 @@ namespace Rose2Godot
                     int tileID = til[til.Height - y - 1, x].Tile;
 
                     TileRotation rotation = zon_file.Tiles[tileID].Rotation;
+
+                    var arrow = (Bitmap)arrow_bitmap.Clone();
 
                     switch (rotation)
                     {
@@ -785,15 +777,11 @@ namespace Rose2Godot
 
                     try
                     {
-                        //log.Debug($"Bitmaps position: [{x_bitmap}, {y_bitmap}]");
-
-                        //bitmap2.RotateFlip(RotateFlipType.RotateNoneFlipY);
-                        bitmap2.RotateFlip(bitmap_rotation);
-                        atlas.DrawImage(bitmap2, x_bitmap, y_bitmap);
-
-                        //bitmap1.RotateFlip(RotateFlipType.RotateNoneFlipY);
-                        //bitmap1.RotateFlip(bitmap_rotation);
+                        // NOTE: Only bitmap2 is rotated!
+                        //bitmap2.RotateFlip(bitmap_rotation);
+                        bitmap1.RotateFlip(bitmap_rotation);
                         atlas.DrawImage(bitmap1, x_bitmap, y_bitmap);
+                        atlas.DrawImage(bitmap2, x_bitmap, y_bitmap);
                     }
                     catch (Exception dex)
                     {
@@ -801,27 +789,42 @@ namespace Rose2Godot
                         throw;
                     }
 
-                    atlas.DrawString($"[{x:00} {y:00}]", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 5);
-                    atlas.DrawString($"{rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 35);
-                    atlas.DrawString($"{bitmap_rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 65);
-                    atlas.DrawString($"{Path.GetFileNameWithoutExtension(texPath1)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95);
+                    //atlas.DrawString($"[{x:00} {y:00}]", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 5);
+
+                    arrow.RotateFlip(bitmap_rotation);
+                    atlas.DrawImage(arrow, x_bitmap + 5, y_bitmap + 95 + 35 + 35);
+
+                    if (rotation != TileRotation.None)
+                    {
+                        atlas.DrawString($"{rotation}", font, Brushes.Black, x_bitmap + 6, y_bitmap + 36);
+                        atlas.DrawString($"{rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 35);
+                        //atlas.DrawString($"{bitmap_rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 65);
+                    }
+
+                    //atlas.DrawString($"L1: {Path.GetFileNameWithoutExtension(texPath1)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95);
+                    //atlas.DrawString($"L2: {Path.GetFileNameWithoutExtension(texPath2)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95 + 35);
                 }
             }
 
-            log.Debug($"Total bitmaps in dictionary: {bitmaps.Count}");
+            //log.Debug($"Total bitmaps in dictionary: {bitmaps.Count}");
+
+            string atlas_file_name = $"ATLAS_{Path.GetFileNameWithoutExtension(til.FilePath)}.PNG";
+            string atlas_full_path = Path.Combine(AtlasPath, atlas_file_name);
 
             try
             {
                 //atlas.DrawRectangle(new Pen(Color.BlueViolet, 10), 0, 0, 100, 100);
-                string atlas_filename = $"ATLAS_{row}_{col}.PNG";
-                tile_atlas_bitmap.Save(Path.Combine(GodotScenePath, atlas_filename), System.Drawing.Imaging.ImageFormat.Png);
-                log.Debug($"Saved patch atlas: \"{atlas_filename}\"");
+                tile_atlas_bitmap = ResizeImage(tile_atlas_bitmap, new Size(2048, 2048));
+
+                tile_atlas_bitmap.Save(atlas_full_path, System.Drawing.Imaging.ImageFormat.Png);
+                log.Debug($"Saved patch atlas: \"ATLAS/{atlas_file_name}\"");
             }
             catch (Exception a)
             {
                 log.Error(a);
                 throw;
             }
+            return $"ATLAS/{atlas_file_name}";
         }
 
         private void GenerateTerrainMesh()
@@ -835,13 +838,13 @@ namespace Rose2Godot
                     var him = him_row[col];
                     string til_file_path = til_row[col];
 
-                    log.Debug($"Row: {row} Col: {col}");
+                    //log.Debug($"Row: {row} Col: {col}");
                     TileFile til = new TileFile();
+                    string atlas_filename;
                     try
                     {
                         til.Load(til_file_path);
-                        //UpdateAtlas(til, ref atlasRectHash, ref atlasTexHash, ref textures);
-                        GenerateTileAtlas(til, col, row);
+                        atlas_filename = GenerateTileAtlas(til);
                     }
                     catch (Exception x)
                     {
@@ -849,14 +852,14 @@ namespace Rose2Godot
                         throw;
                     }
 
-
                     GodotMapTileMesh tile_mesh = GenerateTileMesh(him, til, row, col);
+                    tile_mesh.AtlasPath = atlas_filename;
 
                     string lmap_dir = Path.Combine(Path.GetDirectoryName(him.FilePath), Path.GetFileNameWithoutExtension(him.FilePath));
                     string lmap_file_dds = Path.Combine(lmap_dir, $"{Path.GetFileNameWithoutExtension(him.FilePath)}_PLANELIGHTINGMAP.DDS");
                     string png_filename = Path.ChangeExtension(Path.GetFileName(lmap_file_dds), ".PNG");
                     string png_path = Path.Combine(LightmapsPath, png_filename);
-                    tile_mesh.lightmap_path = png_filename;
+                    tile_mesh.LightmapPath = png_filename;
 
                     if (!Directory.Exists(png_path))
                     {
@@ -902,6 +905,40 @@ namespace Rose2Godot
             }
         }
 
+        private Vector2f RotationToCoordinates(TileRotation rotation, Vector2f texCoord)
+        {
+            switch (rotation)
+            {
+                case TileRotation.FlipHorizontal:
+                    texCoord.x = 1.0f - texCoord.x;
+                    break;
+                case TileRotation.FlipVertical:
+                    texCoord.y = 1.0f - texCoord.y;
+                    break;
+                case TileRotation.Flip:
+                {
+                    texCoord.x = 1.0f - texCoord.x;
+                    texCoord.y = 1.0f - texCoord.y;
+                }
+                break;
+                case TileRotation.Clockwise90Degrees:
+                {
+                    float tempX = texCoord.x;
+                    texCoord.x = texCoord.y;
+                    texCoord.y = 1.0f - tempX;
+                }
+                break;
+                case TileRotation.CounterClockwise90Degrees:
+                {
+                    float tempX = texCoord.x;
+                    texCoord.x = texCoord.y;
+                    texCoord.y = tempX;
+                }
+                break;
+            }
+            return texCoord;
+        }
+
         private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, TileFile tile_file, int row, int col)
         {
             float x_stride = 2.5f;
@@ -923,7 +960,25 @@ namespace Rose2Godot
                 }
             }
 
-            // Textures
+            // UV Tiles
+
+            //  Uv mapping for tiles
+            //	x%5 =   0     1	     2	   3     4	 
+            //   	 (0,1) (.25,1)(.5,1)(.75,1)(1,1)
+            //		 	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //		    | /   | /   | /   | /   |
+            //  (0,.75)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //	(0,.5)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //	(0,.25)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //  (0,0)	*-----*-----*-----*-----*
+            //			   (.25,0)(.5,0)(.75,0)(1,0)
 
             int i_v = 0;
 
@@ -932,7 +987,7 @@ namespace Rose2Godot
             Vector2f[,] uvMatrixTB = new Vector2f[5, 5];
             Vector2f[,] uvMatrixLRTB = new Vector2f[5, 5];
             Vector2f[,] uvMatrixRotCW = new Vector2f[5, 5];  // rotated 90 deg clockwise
-            Vector2f[,] uvMatrixRotCCW = new Vector2f[5, 5];	// rotated 90 counter clockwise
+            Vector2f[,] uvMatrixRotCCW = new Vector2f[5, 5];    // rotated 90 counter clockwise
 
             for (int uv_x = 0; uv_x < 5; uv_x++)
             {
@@ -947,27 +1002,27 @@ namespace Rose2Godot
                 }
             }
 
-            var m_tiles = new List<Tile>();
+            int nVertices = (him_file.Width - 1) * (him_file.Height - 1) * 4;
+            Vector2f[] uvsTop = new Vector2f[nVertices];
+            Vector2f[] uvsBottom = new Vector2f[nVertices];
 
+            List<Tile> m_tiles = new List<Tile>();
+
+            // Populate tiles with texture references
             for (int t_x = 0; t_x < 16; t_x++)
             {
                 for (int t_y = 0; t_y < 16; t_y++)
                 {
-                    Tile tile = new Tile();
-                    int tileID = tile_file[t_y, t_x].Tile;
-                    string texPath1 = zon_file.Textures[zon_file.Tiles[tileID].Layer1];
-                    string texPath2 = zon_file.Textures[zon_file.Tiles[tileID].Layer2];
-                    tile.BottomTex = texPath1;
-                    tile.TopTex = texPath2;
+                    int tile_id = tile_file[t_y, t_x].Tile;
+                    int layer1 = zon_file.Tiles[tile_id].Layer1 + zon_file.Tiles[tile_id].Offset1;
+                    int layer2 = zon_file.Tiles[tile_id].Layer2 + zon_file.Tiles[tile_id].Offset2;
+                    Tile tile = new Tile(1, tile_id, layer1, layer2);
+                    string texture1_path = Translator.FixPath(zon_file.Textures[layer1]);
+                    string texture2_path = Translator.FixPath(zon_file.Textures[layer2]);
+                    tile.BottomTex = texture1_path;
+                    tile.TopTex = texture2_path;
                     m_tiles.Add(tile);
                 }
-            }
-
-            // copy rects to tiles
-            foreach (Tile tile in m_tiles)
-            {
-                tile.BottomRect = atlasRectHash[tile.BottomTex];
-                tile.TopRect = atlasRectHash[tile.TopTex];
             }
 
             // MESH ************************************************************************************************
@@ -979,6 +1034,53 @@ namespace Rose2Godot
             {
                 for (int x = 0; x < him_file.Width - 1; x++)
                 {
+
+                    int a = i_v++;
+                    int b = i_v++;
+                    int c = i_v++;
+                    int d = i_v++;
+
+                    int tileX = x / 4;
+                    int tileY = y / 4;
+                    int tileID = tileY * 16 + tileX;
+
+                    TileRotation rotation = zon_file.Tiles[tile_file[tileX, tileY].Tile].Rotation;
+                    Vector2f[,] rotMatrix;
+                    switch (rotation)
+                    {
+                        case TileRotation.None:
+                            rotMatrix = uvMatrix;
+                            break;
+                        case TileRotation.FlipHorizontal:
+                            rotMatrix = uvMatrixLR;
+                            break;
+                        case TileRotation.FlipVertical:
+                            rotMatrix = uvMatrixLRTB;
+                            break;
+                        case TileRotation.Clockwise90Degrees:
+                            rotMatrix = uvMatrixRotCW;
+                            break;
+                        case TileRotation.CounterClockwise90Degrees:
+                            rotMatrix = uvMatrixRotCCW;
+                            break;
+                        case TileRotation.Flip:
+                            rotMatrix = uvMatrixTB;
+                            break;
+                        default:
+                            rotMatrix = uvMatrix;
+                            break;
+                    }
+
+                    //uvsTop[a] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
+                    //uvsTop[b] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
+                    //uvsTop[c] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
+                    //uvsTop[d] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+
+                    //uvsBottom[a] = m_tiles[tileID].GetUVBottom(rotMatrix[x % 4, y % 4]);
+                    //uvsBottom[b] = m_tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, y % 4]);
+                    //uvsBottom[c] = m_tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
+                    //uvsBottom[d] = m_tiles[tileID].GetUVBottom(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+
                     //    Each quad will be split into two triangles:
                     //
                     //          a         b
@@ -1017,6 +1119,15 @@ namespace Rose2Godot
                     int index_vc = tile_mesh.AppendVertex(vxc);
                     int index_vd = tile_mesh.AppendVertex(vxd);
 
+                    // Tiles
+
+                    uvsTop[index_va] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
+                    uvsTop[index_vb] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
+                    uvsTop[index_vc] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
+                    uvsTop[index_vd] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
+
+                    //
+
                     // Generate and scale up UVs to hide the seams
                     Vector2f uva = new Vector2f((x + 0.01) * factor, (y + 0.01) * factor);
                     Vector2f uvb = new Vector2f((x + 0.99) * factor, (y + 0.01) * factor);
@@ -1047,11 +1158,12 @@ namespace Rose2Godot
 
             return new GodotMapTileMesh()
             {
-                name = $"{Path.GetFileNameWithoutExtension(him_file.FilePath)}",
-                mesh = tile_mesh,
-                heights = heights,
-                row = row,
-                col = col,
+                Name = $"{Path.GetFileNameWithoutExtension(him_file.FilePath)}",
+                Mesh = tile_mesh,
+                Heights = heights,
+                Row = row,
+                Col = col,
+                TilesUV = uvsTop,
             };
         }
 
