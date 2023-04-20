@@ -9,9 +9,19 @@ namespace Rose2Godot
         public Rect TopRect { get; set; }
         public string BottomTex { get; set; }
         public string TopTex { get; set; }
+        public int TileID { get; set; }
+        public int Layer1 { get; set; }
+        public int Layer2 { get; set; }
 
         public Tile()
         {
+        }
+
+        public Tile(int TilesSize, int TileID, int Layer1ID, int Layer2ID)
+        {
+            TopRect = new Rect(0, 0, TilesSize, TilesSize);
+            BottomRect = new Rect(0, 0, TilesSize, TilesSize);
+            this.TileID = TileID;
         }
 
         public void SetRects(Rect bot, Rect top)
