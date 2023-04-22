@@ -371,10 +371,6 @@ namespace Rose2Godot
                 throw;
             }
 
-            // *********************************************************************************************************
-            //return;
-            // *********************************************************************************************************
-
             string zon_folder = Path.GetDirectoryName(ZONPath);
             List<string> HIMFiles = new List<string>(Directory.GetFiles(zon_folder, "*.HIM"));
 
@@ -641,7 +637,6 @@ namespace Rose2Godot
                         var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
                         Bitmap bitmap = new Bitmap(new Bitmap(image.Width, image.Height, image.Stride, format, data));
                         bitmaps.Add(index, bitmap);
-                        //log.Debug($"[{index:00}] [{image.Width}x{image.Height}] px <- Add to dictionary: \"{path}\"");
                     }
                     catch (Exception x)
                     {
@@ -660,13 +655,13 @@ namespace Rose2Godot
         {
             try
             {
-                Bitmap b = new Bitmap(size.Width, size.Height);
-                using (Graphics g = Graphics.FromImage((Image)b))
+                Bitmap bitmap = new Bitmap(size.Width, size.Height);
+                using (Graphics graphics = Graphics.FromImage((Image)bitmap))
                 {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
+                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    graphics.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
                 }
-                return b;
+                return bitmap;
             }
             catch
             {
@@ -886,7 +881,7 @@ namespace Rose2Godot
                                 handle.Free();
                             }
                         }
-                    }// exists?
+                    } // exists?
 
                     string file_name = Path.Combine(GodotScenePath, Path.GetFileNameWithoutExtension(him.FilePath) + ".tscn");
 

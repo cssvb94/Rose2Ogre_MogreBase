@@ -2,6 +2,7 @@
 using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Rose2Godot
 {
@@ -35,8 +36,17 @@ namespace Rose2Godot
             // 63  - Forest of Wandering
             // 64  - Marsh of Ghosts
 
+            string godot_project_path = string.Empty;
 
-            MapExporter mapExporter = new MapExporter(1, @"C:\Applications\Godot\GodotProjects\ImportTest\scenes");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                godot_project_path = @"C:\Applications\Godot\GodotProjects\ImportTest\scenes";
+            }
+            else 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+                godot_project_path = "/home/user/Projects/GodotProjects/TestAssImp/scenes";
+            }
+
+            MapExporter mapExporter = new MapExporter(1, godot_project_path);
 
             /*
             // ZSC
