@@ -675,6 +675,16 @@ namespace Rose2Godot
             int atlas_image_width = til.Width * 256;
             int atlas_image_height = til.Height * 256;
 
+            string atlas_file_name = $"ATLAS_{Path.GetFileNameWithoutExtension(til.FilePath)}.PNG";
+            string atlas_full_path = Path.Combine(AtlasPath, atlas_file_name);
+
+            //
+
+            return $"ATLAS/{atlas_file_name}";
+
+            //
+
+
             log.Debug($"Generating atlas image texture for \"{Path.GetFileName(til.FilePath)}\" Width: {til.Width} Height: {til.Height} Image: [{atlas_image_width}x{atlas_image_height} px]");
 
             Font font = new Font("Arial", 24, FontStyle.Regular, GraphicsUnit.Pixel);
@@ -747,9 +757,9 @@ namespace Rose2Godot
                     AddBitmapTileToLookup(ref bitmaps, texPath1, image_offset1);
                     AddBitmapTileToLookup(ref bitmaps, texPath2, image_offset2);
 
-                    //log.Debug($"TileID: {tileID} [{x}, {y}] Rotation: [{rotation}] Offset1: {image_offset1} Offset2: {image_offset2}");
-                    //log.Debug($"\tTexture1: \"{texPath1}\"");
-                    //log.Debug($"\tTexture2: \"{texPath2}\"\n");
+                    // log.Debug($"TileID: {tileID} [{x}, {y}] Rotation: [{rotation}] Offset1: {image_offset1} Offset2: {image_offset2}");
+                    // log.Debug($"\tTexture1: \"{texPath1}\"");
+                    // log.Debug($"\tTexture2: \"{texPath2}\"\n");
 
                     int x_bitmap = x * 256;
                     int y_bitmap = y * 256;
@@ -793,18 +803,17 @@ namespace Rose2Godot
                     {
                         atlas.DrawString($"{rotation}", font, Brushes.Black, x_bitmap + 6, y_bitmap + 36);
                         atlas.DrawString($"{rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 35);
-                        //atlas.DrawString($"{bitmap_rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 65);
+                        // atlas.DrawString($"{bitmap_rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 65);
                     }
 
-                    //atlas.DrawString($"L1: {Path.GetFileNameWithoutExtension(texPath1)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95);
-                    //atlas.DrawString($"L2: {Path.GetFileNameWithoutExtension(texPath2)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95 + 35);
+                    atlas.DrawString($"L1: {Path.GetFileNameWithoutExtension(texPath1)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95);
+                    atlas.DrawString($"L2: {Path.GetFileNameWithoutExtension(texPath2)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95 + 35);
                 }
             }
 
             //log.Debug($"Total bitmaps in dictionary: {bitmaps.Count}");
 
-            string atlas_file_name = $"ATLAS_{Path.GetFileNameWithoutExtension(til.FilePath)}.PNG";
-            string atlas_full_path = Path.Combine(AtlasPath, atlas_file_name);
+
 
             try
             {
@@ -904,38 +913,164 @@ namespace Rose2Godot
         {
             switch (rotation)
             {
-                case TileRotation.FlipHorizontal:
+                case TileRotation.FlipHorizontal: // 2
                     texCoord.x = 1.0f - texCoord.x;
                     break;
-                case TileRotation.FlipVertical:
+                case TileRotation.FlipVertical: // 3
                     texCoord.y = 1.0f - texCoord.y;
                     break;
-                case TileRotation.Flip:
-                {
-                    texCoord.x = 1.0f - texCoord.x;
-                    texCoord.y = 1.0f - texCoord.y;
-                }
-                break;
-                case TileRotation.Clockwise90Degrees:
-                {
-                    float tempX = texCoord.x;
-                    texCoord.x = texCoord.y;
-                    texCoord.y = 1.0f - tempX;
-                }
-                break;
-                case TileRotation.CounterClockwise90Degrees:
-                {
-                    float tempX = texCoord.x;
-                    texCoord.x = texCoord.y;
-                    texCoord.y = tempX;
-                }
-                break;
+                case TileRotation.Flip: // 4
+                    {
+                        texCoord.x = 1.0f - texCoord.x;
+                        texCoord.y = 1.0f - texCoord.y;
+                    }
+                    break;
+                case TileRotation.Clockwise90Degrees: // 5
+                    {
+                        float tempX = texCoord.x;
+                        texCoord.x = texCoord.y;
+                        texCoord.y = 1.0f - tempX;
+                    }
+                    break;
+                case TileRotation.CounterClockwise90Degrees: // 6
+                    {
+                        float tempX = texCoord.x;
+                        texCoord.x = texCoord.y;
+                        texCoord.y = tempX;
+                    }
+                    break;
             }
             return texCoord;
         }
 
+        private string ExportChunk(List<Vector3f> verts, List<Vector3f> normals, List<Vector2f> uvs, List<int> indices)
+        {
+            StringBuilder scene = new StringBuilder();
+            StringBuilder nodes = new StringBuilder();
+
+            scene.AppendLine("[gd_scene format=2]\n");
+            scene.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
+            // scene.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture\" id=1]");
+            // scene.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture\" id=2]");
+
+            scene.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);
+            scene.AppendLine("resource_name = \"Tile\"");
+            scene.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
+            // vertices
+            scene.AppendFormat("\t\t; vertices: {0}\n", verts.Count);
+            scene.AppendFormat("\t\t{0},\n", Translator.Vector3fToArray(verts, null));
+            // normals
+            scene.AppendFormat("\t\t{0},\n", Translator.Vector3fToArray(normals, null));
+            scene.AppendLine("\t\tnull, ; no tangents");
+            scene.AppendLine("\t\tnull, ; no vertex colors");
+            scene.AppendFormat("\t\t; UV1: {0}\n", uvs.Count);
+            scene.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvs));
+            scene.AppendLine("\t\tnull, ; no UV2");
+            scene.AppendLine("\t\tnull, ; no bone indices");
+            scene.AppendLine("\t\tnull, ; no bone weights");
+            // face indices
+            scene.AppendFormat("\t\t; triangle faces: {0}\n", indices.Count);
+            scene.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(indices));
+
+            scene.AppendLine("\t],"); // end of mesh arrays
+            scene.AppendLine("\t\"morph_arrays\":[]");
+            scene.AppendLine("}"); // end of surface/0
+            scene.AppendLine("");
+            // Shader material
+            scene.AppendLine("[sub_resource type=\"ShaderMaterial\" id=2]");
+            scene.AppendLine("shader = ExtResource( 1 )");
+            // scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
+            // scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
+            scene.AppendLine();
+            
+            scene.AppendLine("; scene root node");
+            scene.AppendLine($"[node type=\"Spatial\" name=\"CHUNK\"]");
+            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+            scene.AppendLine();
+            
+            scene.AppendLine($"[node name=\"TileMesh\" type=\"MeshInstance\" parent=\".\"]");
+            scene.AppendLine($"mesh = SubResource( 1 )");
+            scene.AppendLine($"material/0 = SubResource( 2 )");
+            scene.AppendLine("visible = true");
+            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+            return scene.ToString();
+        }
+        
         private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, TileFile tile_file, int row, int col)
         {
+            // from godot zon_importer @ line 201
+
+            int tile_width = (him_file.Width - 1) / tile_file.Width + 1; // = 5
+            int tile_height = (him_file.Height - 1) / tile_file.Height + 1; // = 5
+
+            for (int h = 0; h < (him_file.Height - 1); h += (tile_file.Height - 1))
+            {
+                for (int w = 0; w < (him_file.Height - 1); w += (tile_file.Height - 1))
+                {
+                    List<Vector3f> tile_vertices = new List<Vector3f>();
+                    List<int> tile_indices = new List<int>();
+                    List<Vector2f> tile_uv = new List<Vector2f>();
+                    List<Vector3f> tile_normals = new List<Vector3f>();
+
+                    // arrays
+                    for (int y = 0; y < tile_height; y++)
+                    {
+                        for (int x = 0; x < tile_width; x++)
+                        {
+                            Vector3f vert = new Vector3f(w + x, him_file[h + y, w + x] / 100f, h + y);
+                            Vector2f uv = new Vector2f((float)x / tile_width, (float)y / tile_height);
+                            Vector3f normal = new Vector3f(0, 1f, 0);
+
+                            tile_vertices.Add(vert);
+                            tile_uv.Add(uv);
+                            tile_normals.Add(normal);
+                        }
+                    }
+
+                    for (int y = 0; y < tile_height - 1; y++)
+                    {
+                        for (int x = 0; x < tile_width - 1; x++)
+                        {
+                            var i = (y * tile_width) + x;
+                            tile_indices.Add(i);
+                            tile_indices.Add(i + 1);
+                            tile_indices.Add(i + tile_width);
+
+                            tile_indices.Add(i + 1);
+                            tile_indices.Add(i + tile_width + 1);
+                            tile_indices.Add(i + tile_width);
+                        }
+                    }
+
+                    var tile_x = (int)Math.Floor((double)(w / (tile_width - 1)));
+                    var tile_y = (int)Math.Floor((double)(h / (tile_height - 1)));
+                    var tile_index = tile_file[tile_y, tile_x].Tile;
+                    //var tile_material = tile_materials[tile_index];
+
+                    // Export to mesh!
+
+                    string chunk_filename = Path.Combine(GodotScenePath, $"CHUNK_{col:00}.{row:00}_{h:00}.{w:00}.tscn");
+
+                    try
+                    {
+                        StreamWriter sw = new StreamWriter(chunk_filename);
+                        sw.WriteLine(ExportChunk(tile_vertices, tile_normals, tile_uv, tile_indices));
+                        sw.Close();
+                    }
+                    catch (Exception x)
+                    {
+                        log.Error(x);
+                        throw;
+                    }
+                }
+            }
+
+            // Translate each tile mesh chunk
+            // ty = col
+            // tx = row
+            // chunk.translate(Vector3(tx * him_file.Width - 1, 0, ty * him_file.Height - 1))
+
+            // *******************************************
             float x_stride = 2.5f;
             float y_stride = 2.5f;
             float heightScaler = x_stride * 1.2f / 300.0f;
