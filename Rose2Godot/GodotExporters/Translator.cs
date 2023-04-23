@@ -69,6 +69,18 @@ namespace Rose2Godot.GodotExporters
             return $"Vector3Array({string.Join(",", vs.ToArray())})";
         }
 
+        public static string Vector3fToArray(List<Vector3f> vlist, float? scale)
+        {
+            List<string> vs = new List<string>();
+            for (int v_idx = 0; v_idx < vlist.Count; v_idx++)
+            {
+                Vector3f v = vlist[v_idx];
+                v.z *= scale ?? 1f;
+                vs.Add($"{v.x:0.###},{v.y:0.###},{v.z:0.###}");
+            }
+            return $"Vector3Array({string.Join(",", vs.ToArray())})";
+        }
+
         public static string Vector3ToArray(List<Vector3d> vlist, float? scale)
         {
             List<string> vs = new List<string>();
