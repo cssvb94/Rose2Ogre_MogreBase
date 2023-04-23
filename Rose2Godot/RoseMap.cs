@@ -943,18 +943,10 @@ namespace Rose2Godot
             return texCoord;
         }
 
-        private string ExportChunk(List<Vector3f> verts, List<Vector3f> normals, List<Vector2f> uvs, List<int> indices)
+        private string ExportChunk(List<Vector3f> verts, List<Vector3f> normals, List<Vector2f> uvs, List<int> indices, string tex1, string tex2, TileRotation rotation)
         {
             StringBuilder scene = new StringBuilder();
-            StringBuilder nodes = new StringBuilder();
 
-            scene.AppendLine("[gd_scene format=2]\n");
-            scene.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
-            // scene.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture\" id=1]");
-            // scene.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture\" id=2]");
-
-            scene.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);
-            scene.AppendLine("resource_name = \"Tile\"");
             scene.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
             // vertices
             scene.AppendFormat("\t\t; vertices: {0}\n", verts.Count);
@@ -976,36 +968,104 @@ namespace Rose2Godot
             scene.AppendLine("\t\"morph_arrays\":[]");
             scene.AppendLine("}"); // end of surface/0
             scene.AppendLine("");
-            // Shader material
-            scene.AppendLine("[sub_resource type=\"ShaderMaterial\" id=2]");
-            scene.AppendLine("shader = ExtResource( 1 )");
-            // scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
-            // scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
+            scene.AppendLine($"; {tex1}");
+            scene.AppendLine($"; {tex2}");
+            scene.AppendLine($"; {rotation}");
             scene.AppendLine();
-            
-            scene.AppendLine("; scene root node");
-            scene.AppendLine($"[node type=\"Spatial\" name=\"CHUNK\"]");
-            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-            scene.AppendLine();
-            
-            scene.AppendLine($"[node name=\"TileMesh\" type=\"MeshInstance\" parent=\".\"]");
-            scene.AppendLine($"mesh = SubResource( 1 )");
-            scene.AppendLine($"material/0 = SubResource( 2 )");
-            scene.AppendLine("visible = true");
-            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+
             return scene.ToString();
         }
-        
+
+        private string GenerateTilesMap(List<string> tile_scene, string translation)
+        {
+            StringBuilder scene = new StringBuilder();
+            StringBuilder node = new StringBuilder();
+            /*
+            // res://shaders/tile.shader
+            shader_type spatial;
+            render_mode unshaded, cull_disabled;
+
+            uniform sampler2D layer1;
+            uniform sampler2D layer2;
+            uniform int rotation = 0;
+
+            void fragment() {
+                vec2 rotated_uv2 = vec2(UV.x, UV.y);
+                
+                if (rotation == 2) { // Flip Horizontal
+                    rotated_uv2 = vec2(1.0 - UV2.x, UV2.y);
+                }
+                if (rotation == 3) { // Flip Vertical
+                    rotated_uv2 = vec2(rotated_uv2.x, 1.0 - rotated_uv2.y);
+                }
+                if (rotation == 4) { // Flip
+                    rotated_uv2 = vec2(1.0 - rotated_uv2.x, 1.0 - rotated_uv2.y);
+                }
+                if (rotation == 5) { // Clockwise 90
+                    rotated_uv2 = vec2(-rotated_uv2.y, rotated_uv2.x)
+                }
+                if (rotation == 6) { // CounterClockwise 90
+                    rotated_uv2 = vec2(rotated_uv2.y, -rotated_uv2.x)
+                }
+                
+                vec4 layer1_tex = texture(layer1, UV);
+                vec4 layer2_tex = texture(layer2, rotated_uv2);
+                
+                ALBEDO = mix(layer1_tex.rgba, layer2_tex.rgba, layer2_tex.a).rgb;
+                //ALBEDO = layer1_tex.rgb * layer2_tex.rgb;
+            }
+
+            */
+
+            scene.AppendLine("[gd_scene format=2]\n");
+            scene.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
+
+            int resource = 1;
+            for (int tile_id = 0; tile_id < tile_scene.Count; tile_id++)
+            {
+                scene.AppendLine($"\n[sub_resource id={resource} type=\"ArrayMesh\"]");
+                scene.AppendLine($"resource_name = \"Tile_{tile_id:00}\"");
+                scene.Append(tile_scene[tile_id]);
+
+                node.AppendLine($"[node name=\"TileMesh {tile_id:0000}\" type=\"MeshInstance\" parent=\".\"]");
+                node.AppendLine($"mesh = SubResource( {resource} )");
+                node.AppendLine($"material/0 = SubResource( {resource + 1} )");
+                node.AppendLine("visible = true");
+                node.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+                node.AppendLine();
+
+                resource++;
+                // Shader material
+                scene.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={resource}]");
+                scene.AppendLine("shader = ExtResource( 1 )");
+                // scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
+                // scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
+
+                scene.AppendLine();
+                resource++;
+            }
+
+            scene.AppendLine("; scene root node");
+            scene.AppendLine($"[node type=\"Spatial\" name=\"CHUNK\"]");
+            scene.AppendLine(translation);
+            scene.AppendLine();
+
+            scene.Append(node);
+
+            return scene.ToString();
+        }
         private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, TileFile tile_file, int row, int col)
         {
             // from godot zon_importer @ line 201
 
+            List<string> tile_scene = new List<string>();
+
             int tile_width = (him_file.Width - 1) / tile_file.Width + 1; // = 5
             int tile_height = (him_file.Height - 1) / tile_file.Height + 1; // = 5
 
-            for (int h = 0; h < (him_file.Height - 1); h += (tile_file.Height - 1))
+            for (int h = 0; h < (him_file.Height - 1); h += (tile_height - 1))
             {
-                for (int w = 0; w < (him_file.Height - 1); w += (tile_file.Height - 1))
+                for (int w = 0; w < (him_file.Height - 1); w += (tile_width - 1))
                 {
                     List<Vector3f> tile_vertices = new List<Vector3f>();
                     List<int> tile_indices = new List<int>();
@@ -1017,8 +1077,10 @@ namespace Rose2Godot
                     {
                         for (int x = 0; x < tile_width; x++)
                         {
-                            Vector3f vert = new Vector3f(w + x, him_file[h + y, w + x] / 100f, h + y);
-                            Vector2f uv = new Vector2f((float)x / tile_width, (float)y / tile_height);
+                            Vector3f vert = new Vector3f(w + x, him_file[h + y, w + x] / 300f, h + y);
+
+                            //FIXME: not calculated properly
+                            Vector2f uv = new Vector2f(x * 0.2f, y * 0.2f);
                             Vector3f normal = new Vector3f(0, 1f, 0);
 
                             tile_vertices.Add(vert);
@@ -1044,31 +1106,39 @@ namespace Rose2Godot
 
                     var tile_x = (int)Math.Floor((double)(w / (tile_width - 1)));
                     var tile_y = (int)Math.Floor((double)(h / (tile_height - 1)));
-                    var tile_index = tile_file[tile_y, tile_x].Tile;
-                    //var tile_material = tile_materials[tile_index];
+                    
+                    int tile_id = tile_file[tile_y, tile_x].Tile; // ??? reversed x y !!!!!
+                    int layer1 = zon_file.Tiles[tile_id].Layer1 + zon_file.Tiles[tile_id].Offset1;
+                    int layer2 = zon_file.Tiles[tile_id].Layer2 + zon_file.Tiles[tile_id].Offset2;
+                    Tile tile = new Tile(1, tile_id, layer1, layer2);
+                    string texture1_path = Translator.FixPath(zon_file.Textures[layer1]);
+                    string texture2_path = Translator.FixPath(zon_file.Textures[layer2]);
 
-                    // Export to mesh!
+                    TileRotation rotation = zon_file.Tiles[tile_id].Rotation;
 
-                    string chunk_filename = Path.Combine(GodotScenePath, $"CHUNK_{col:00}.{row:00}_{h:00}.{w:00}.tscn");
+                    tile_scene.Add(ExportChunk(tile_vertices, tile_normals, tile_uv, tile_indices, texture1_path, texture2_path, rotation));
 
-                    try
-                    {
-                        StreamWriter sw = new StreamWriter(chunk_filename);
-                        sw.WriteLine(ExportChunk(tile_vertices, tile_normals, tile_uv, tile_indices));
-                        sw.Close();
-                    }
-                    catch (Exception x)
-                    {
-                        log.Error(x);
-                        throw;
-                    }
                 }
             }
 
             // Translate each tile mesh chunk
-            // ty = col
-            // tx = row
-            // chunk.translate(Vector3(tx * him_file.Width - 1, 0, ty * him_file.Height - 1))
+            string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1):0.######}, 0, {col * (him_file.Height - 1):0.######} )";
+
+            string scene = GenerateTilesMap(tile_scene, chunk_transform);
+
+            string chunk_filename = Path.Combine(GodotScenePath, $"CHUNK_{col:00}.{row:00}.tscn");
+
+            try
+            {
+                StreamWriter sw = new StreamWriter(chunk_filename);
+                sw.WriteLine(scene);
+                sw.Close();
+            }
+            catch (Exception x)
+            {
+                log.Error(x);
+                throw;
+            }
 
             // *******************************************
             float x_stride = 2.5f;
