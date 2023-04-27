@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DDSImageParser.cs" />
     <Compile Include="GodotExporters\Animation.cs" />
     <Compile Include="GodotExporters\AnimationExporter.cs" />
     <Compile Include="GodotExporters\AnimationTrack.cs" />
@@ -71,6 +72,9 @@
     <Compile Include="GodotExporters\SceneExporter.cs" />
     <Compile Include="GodotExporters\TerrainExporter.cs" />
     <Compile Include="GodotExporters\Translator.cs" />
+    <Compile Include="GodotMapTileMesh.cs" />
+    <Compile Include="GodotTilePatch.cs" />
+    <Compile Include="MapType.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Revise\AIP\AbilityType.cs" />

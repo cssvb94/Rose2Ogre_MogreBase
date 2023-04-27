@@ -117,7 +117,7 @@ namespace Rose2Godot.GodotExporters
         {
             List<string> vs = new List<string>();
             foreach (Vector2 v in vlist)
-                vs.Add($"{v.X:0.####}, {v.Y:0.####}");
+                vs.Add($"{v.X:0.########}, {v.Y:0.########}");
             return $"Vector2Array({string.Join(", ", vs.ToArray())})";
         }
 
@@ -125,7 +125,7 @@ namespace Rose2Godot.GodotExporters
         {
             List<string> vs = new List<string>();
             foreach (Vector2f v in vlist)
-                vs.Add($"{v.x:0.####}, {v.x:0.####}");
+                vs.Add($"{v.x:0.########}, {v.y:0.########}");
             return $"Vector2Array({string.Join(", ", vs.ToArray())})";
         }
     }

@@ -1,9 +1,7 @@
 ﻿using Revise.STB;
-using Revise.TIL;
 using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 
 namespace Rose2Godot
@@ -65,26 +63,14 @@ namespace Rose2Godot
                 STLId = cell[27],
             };
 
-            Map.GodotScenePath = $"{Path.Combine(GodotProjectPah, cell[27])}";
+            Map.GodotProjectPath = GodotProjectPah;
+
+            Directory.CreateDirectory(Path.Combine(Map.GodotProjectPath, "TERRAIN/TILES"));
             Directory.CreateDirectory(Map.GodotScenePath);
 
-            Map.GenerateMapData();
+            log.Info($"Exporting \"{Map.LongName}\" map");
 
-            // **********************************************************
-          
-            //TileFile til = new TileFile();
-            //try
-            //{
-            //    til.Load(@"3DDATA/MAPS/JUNON/JDT01/31_30.TIL");
-            //    log.Info($"TIL: Width: {til.Width} Height: {til.Height}  \"{til.FilePath}\"");
-            //}
-            //catch (Exception x)
-            //{
-            //    log.Error(x);
-            //    throw;
-            //}
-            
-            //Map.GenerateTileAtlas(til, 0, 0);
+            Map.GenerateMapData();
         }
     }
 }

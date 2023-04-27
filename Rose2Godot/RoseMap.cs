@@ -1,6 +1,6 @@
 ﻿using g4;
 using Godot;
-using Pfim;
+//using Pfim;
 using Revise.HIM;
 using Revise.IFO;
 using Revise.IFO.Blocks;
@@ -8,190 +8,21 @@ using Revise.TIL;
 using Revise.ZON;
 using Revise.ZSC;
 using Rose2Godot.GodotExporters;
+using S16.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Directory = System.IO.Directory;
+using Path = System.IO.Path;
 
 namespace Rose2Godot
 {
-
-    public enum MapType
-    {
-        Outdoor = 0,
-        Underground = 1,
-        GameArena = 2,
-    }
-
-    public class GodotMapTileMesh
-    {
-        public DMesh3 Mesh { get; set; }
-        public string Name { get; set; }
-        public string LightmapPath { get; set; }
-        public string AtlasPath { get; set; }
-        public float[] Heights { get; set; }
-        public int Row { get; set; }
-        public int Col { get; set; }
-        public Vector2f[] TilesUV { get; set; }
-        public override string ToString()
-        {
-            StringBuilder scene = new StringBuilder();
-            StringBuilder resource = new StringBuilder();
-            StringBuilder nodes = new StringBuilder();
-
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", 5);
-
-            // Add texture external resource
-
-            /*
-            // res://shaders/lightmap.shader 
-            shader_type spatial;
-
-            // we are using a lightmap, we don't need realtime lighting
-            render_mode unshaded, cull_disabled;
-
-            // our input textures, a material texture, and the lightmap
-            uniform sampler2D texture_albedo : hint_albedo;
-            uniform sampler2D texture_lightmap : hint_albedo;
-
-            void fragment() {
-	            // lookup the colors at the uv location of our textures
-	            vec4 albedo_tex = texture(texture_albedo, UV);
-	            vec4 lightmap_tex = texture(texture_lightmap, UV);
-                // vec4 lightmap_tex = texture(texture_lightmap,UV2);
-  
-	            // you can optionally use a multiplier to allow lightening areas (the 2.0 here)
-	            ALBEDO = (albedo_tex * lightmap_tex).rgb * 2.0f;
-            }
-            
-            */
-
-            resource.AppendLine();
-            resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture\" id=1]");
-            resource.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture\" id=2]");
-            resource.AppendLine($"[ext_resource path=\"res://shaders/lightmap.shader\" type=\"Shader\" id=3]");
-
-            resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);
-            resource.AppendFormat("resource_name = \"Tile_{0}\"\n", Name);
-            resource.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
-
-            resource.AppendFormat("\t\t; vertices: {0}\n", Mesh.Vertices().Count());
-            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(Mesh.Vertices().ToList(), null));
-
-            // normals
-
-            resource.AppendFormat("\t\t; normals: {0}\n", Mesh.Vertices().Count());
-
-            List<Vector3> normals = new List<Vector3>();
-            List<Vector2> uvsTop = new List<Vector2>();
-            List<Vector2f> uvsTiles = new List<Vector2f>();
-
-            for (int vidx = 0; vidx < Mesh.VertexCount; vidx++)
-            {
-                var vnormal = Mesh.GetVertexNormal(vidx);
-                var uv = Mesh.GetVertexUV(vidx);
-                normals.Add(new Vector3(vnormal.x, vnormal.y, vnormal.z));
-                uvsTop.Add(new Vector2(uv.x, uv.y));
-
-                var uv2 = TilesUV[vidx];
-                uvsTiles.Add(uv2);
-            }
-
-            resource.AppendFormat("\t\t{0},\n", Translator.Vector3ToArray(normals, null));
-
-            // tangents
-
-            resource.AppendLine("\t\tnull, ; no tangents");
-
-            // vertex colors
-
-            resource.AppendLine("\t\tnull, ; no vertex colors");
-
-            // UV1
-
-            if (uvsTop != null && uvsTop.Any())
-            {
-                resource.AppendFormat("\t\t; UV1: {0}\n", uvsTop.Count);
-                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsTop));
-            }
-            else
-            {
-                resource.AppendLine("\t\tnull, ; no UV1");
-            }
-
-            // UV2
-
-            if (uvsTop != null && uvsTop.Any())
-            {
-                resource.AppendFormat("\t\t; UV2: {0} - same as UV1\n", uvsTiles.Count);
-                resource.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvsTiles));
-            }
-            else
-            {
-                resource.AppendLine("\t\tnull, ; no UV2");
-            }
-
-            // no bones
-
-            resource.AppendLine("\t\tnull, ; no bone indices");
-            resource.AppendLine("\t\tnull, ; no bone weights");
-
-            // face indices
-
-            resource.AppendFormat("\t\t; triangle faces: {0}\n", Mesh.Triangles().Count());
-            resource.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(Mesh.Triangles().ToList()));
-
-            resource.AppendLine("\t],"); // end of mesh arrays
-            resource.AppendLine("\t\"morph_arrays\":[]");
-            resource.AppendLine("}"); // end of surface/0
-            resource.AppendLine("");
-
-            scene.Append(resource);
-
-            // Shader material
-            scene.AppendLine("[sub_resource type=\"ShaderMaterial\" id=2]");
-            scene.AppendLine("shader = ExtResource( 3 )");
-            scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
-            scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
-
-            // Heighmap collusion shape data
-            string pool_array = string.Join(", ", Heights.Select(h => $"{h:0.#####}"));
-            scene.AppendLine();
-            scene.AppendLine("[sub_resource type=\"HeightMapShape\" id=3]");
-            scene.AppendLine("margin = 0.04"); // 0.004 default
-            scene.AppendLine("map_width = 65");
-            scene.AppendLine("map_depth = 65");
-            scene.AppendLine($"map_data = PoolRealArray( {pool_array} )");
-            scene.AppendLine();
-
-            scene.AppendLine("; scene root node");
-            scene.AppendLine($"[node type=\"KinematicBody\" name=\"Map_{Name}\"]");
-            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-            scene.AppendLine();
-
-            scene.AppendLine($"[node name=\"Tile_{Name}\" type=\"MeshInstance\" parent=\".\"]");
-            scene.AppendLine($"mesh = SubResource( 1 )");
-            scene.AppendLine($"material/0 = SubResource( 2 )");
-            scene.AppendLine("visible = true");
-            scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-            scene.AppendLine();
-
-            scene.AppendLine($"[node name=\"TileCollisionShape\" type=\"CollisionShape\" parent=\".\"]");
-            scene.AppendLine($"shape = SubResource( 3 )");
-
-            float x_offset = 80f + Row * 2.5f * 64f;
-            float y_offset = 80f + Col * 2.5f * 64f;
-            scene.AppendLine($"transform = Transform( 2.5, 0, 0, 0, 1, 0, 0, 0, 2.5, { x_offset:0.######}, 0, {y_offset:0.######} )");
-
-            return scene.ToString();
-        }
-    }
-
     public class RoseMap
     {
         private static readonly NLog.Logger log = NLog.LogManager.GetLogger("RoseMap");
@@ -213,7 +44,9 @@ namespace Rose2Godot
         public List<List<string>> TILDataGrid { get; private set; }
         public int TilesX { get; private set; }
         public int TilesY { get; private set; }
-        public string GodotScenePath { get; set; }
+        public string GodotProjectPath { get; set; }
+        public string GodotScenePath => Path.Combine(GodotProjectPath, LongName);
+        public string GodotTilesPath => Path.Combine(GodotProjectPath, "TERRAIN/TILES");
 
         private ModelListFile zsc_objects;
         private ModelListFile zsc_buildings;
@@ -245,7 +78,19 @@ namespace Rose2Godot
             if (!File.Exists(full_godot_png_path))
             {
                 log.Info($"Exporting to \"{full_godot_png_path}\"");
-                using (var image = Pfimage.FromFile(dds_texture_path))
+
+                //FileStream stream = new FileStream(dds_texture_path, FileMode.Open);
+                //try
+                //{
+                //    DDSImage dds = new DDSImage(stream);
+                //    dds.BitmapImage.Save(full_godot_png_path, ImageFormat.Png);
+                //}
+                //finally
+                //{
+                //    stream.Close();
+                //}
+
+                using (var image = Pfim.Pfimage.FromFile(dds_texture_path))
                 {
                     PixelFormat format;
                     switch (image.Format)
@@ -261,7 +106,7 @@ namespace Rose2Godot
                     {
                         IntPtr data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
                         Bitmap bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
-                        bitmap.Save(full_godot_png_path, System.Drawing.Imaging.ImageFormat.Png);
+                        bitmap.Save(full_godot_png_path, ImageFormat.Png);
                     }
                     catch (Exception x)
                     {
@@ -502,7 +347,7 @@ namespace Rose2Godot
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
                                     node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
 
-                                    Vector3 part_scaled_position = building_part.Scale * building_part.Position / 100f;
+                                    System.Numerics.Vector3 part_scaled_position = building_part.Scale * building_part.Position / 100f;
                                     GodotTransform part_transform = Translator.ToGodotTransform(building_part.Rotation, part_scaled_position); //.Scaled(GodotVector3.NegXScale);
 
                                     node.AppendLine($"transform = {Translator.GodotTransform2String(part_transform)}");
@@ -513,7 +358,7 @@ namespace Rose2Godot
                                 resource.AppendLine($"[node name=\"BUILDING_{building_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
 
                                 // ******************
-                                Vector3 building_scaled_position = building.Position / 100f;
+                                System.Numerics.Vector3 building_scaled_position = building.Position / 100f;
                                 GodotTransform building_transform = Translator.ToGodotTransform(building.Rotation, building_scaled_position).Scaled(GodotVector3.NegXScale);
                                 building_transform.basis = building_transform.basis.Scaled(Translator.Rose2GodotScale(building.Scale));
                                 // ******************
@@ -569,7 +414,7 @@ namespace Rose2Godot
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
                                     node.AppendLine($"[node name=\"{part_name}_{part_idx:00}\" parent=\".\" instance=ExtResource( {resource_idx} )]");
 
-                                    Vector3 scaled_position = object_part.Scale * object_part.Position / 100f;
+                                    System.Numerics.Vector3 scaled_position = object_part.Scale * object_part.Position / 100f;
                                     GodotTransform part_transform = Translator.ToGodotTransform(object_part.Rotation, scaled_position);
                                     part_transform.basis = part_transform.basis.Scaled(Translator.ToGodotVector3XZY(object_part.Scale));
 
@@ -579,7 +424,7 @@ namespace Rose2Godot
                                 }
                                 resource.AppendLine($"[node name=\"OBJECT_{object_idx:00}_{map_col_id:00}_{map_row_id:00}\" type=\"Spatial\"]");
 
-                                Vector3 object_scaled_position = obj.Position / 100f;
+                                System.Numerics.Vector3 object_scaled_position = obj.Position / 100f;
                                 GodotTransform object_transform = Translator.ToGodotTransform(obj.Rotation, object_scaled_position).Scaled(GodotVector3.NegXScale);
                                 object_transform.basis = object_transform.basis.Scaled(Translator.Rose2GodotScale(obj.Scale));
 
@@ -614,223 +459,6 @@ namespace Rose2Godot
             GenerateTerrainMesh();
         }
 
-        private void AddBitmapTileToLookup(ref Dictionary<int, Bitmap> bitmaps, string path, int index)
-        {
-            if (!bitmaps.ContainsKey(index))
-            {
-                using (IImage image = Pfimage.FromFile(path))
-                {
-                    PixelFormat format;
-                    switch (image.Format)
-                    {
-                        case Pfim.ImageFormat.Rgba32:
-                            format = PixelFormat.Format32bppArgb;
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                    GCHandle handle = GCHandle.Alloc(image.Data, GCHandleType.Pinned);
-
-                    try
-                    {
-                        var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
-                        Bitmap bitmap = new Bitmap(new Bitmap(image.Width, image.Height, image.Stride, format, data));
-                        bitmaps.Add(index, bitmap);
-                    }
-                    catch (Exception x)
-                    {
-                        log.Error(x);
-                        throw;
-                    }
-                    finally
-                    {
-                        handle.Free();
-                    }
-                }
-            }
-        }
-
-        private Bitmap ResizeImage(Bitmap imgToResize, Size size)
-        {
-            try
-            {
-                Bitmap bitmap = new Bitmap(size.Width, size.Height);
-                using (Graphics graphics = Graphics.FromImage((Image)bitmap))
-                {
-                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    graphics.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
-                }
-                return bitmap;
-            }
-            catch
-            {
-                Console.WriteLine("Bitmap could not be resized");
-                return imgToResize;
-            }
-        }
-
-        public string GenerateTileAtlas(TileFile til)
-        {
-            int atlas_image_width = til.Width * 256;
-            int atlas_image_height = til.Height * 256;
-
-            string atlas_file_name = $"ATLAS_{Path.GetFileNameWithoutExtension(til.FilePath)}.PNG";
-            string atlas_full_path = Path.Combine(AtlasPath, atlas_file_name);
-
-            //
-
-            return $"ATLAS/{atlas_file_name}";
-
-            //
-
-
-            log.Debug($"Generating atlas image texture for \"{Path.GetFileName(til.FilePath)}\" Width: {til.Width} Height: {til.Height} Image: [{atlas_image_width}x{atlas_image_height} px]");
-
-            Font font = new Font("Arial", 24, FontStyle.Regular, GraphicsUnit.Pixel);
-
-            Bitmap tile_atlas_bitmap = new Bitmap(atlas_image_width, atlas_image_height, PixelFormat.Format32bppArgb);
-
-            if (tile_atlas_bitmap is null)
-                throw new ArgumentNullException(nameof(tile_atlas_bitmap));
-
-            Graphics atlas = Graphics.FromImage(tile_atlas_bitmap);
-
-            Dictionary<int, Bitmap> bitmaps = new Dictionary<int, Bitmap>();
-
-            RotateFlipType bitmap_rotation = RotateFlipType.RotateNoneFlipNone;
-
-            #region arrow helper
-
-            Bitmap arrow_bitmap = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
-            Graphics arrow_graphic = Graphics.FromImage(arrow_bitmap);
-
-            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 1, 1, 30, 1);
-            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 30, 0, 20, 10);
-            arrow_graphic.DrawLine(new Pen(Brushes.LightBlue, 3f), 20, 10, 20, 1);
-
-            arrow_graphic.DrawLine(new Pen(Brushes.Coral, 3f), 1, 1, 1, 30);
-
-            #endregion
-
-            for (int y = 0; y < til.Height; y++)
-            {
-                for (int x = 0; x < til.Width; x++)
-                {
-                    int tileID = til[til.Height - y - 1, x].Tile;
-
-                    TileRotation rotation = zon_file.Tiles[tileID].Rotation;
-
-                    var arrow = (Bitmap)arrow_bitmap.Clone();
-
-                    switch (rotation)
-                    {
-                        case TileRotation.FlipHorizontal:
-                            bitmap_rotation = RotateFlipType.RotateNoneFlipX;
-                            break;
-                        case TileRotation.FlipVertical:
-                            bitmap_rotation = RotateFlipType.RotateNoneFlipY;
-                            break;
-                        case TileRotation.Flip:
-                            bitmap_rotation = RotateFlipType.RotateNoneFlipXY;
-                            break;
-                        case TileRotation.Clockwise90Degrees:
-                            bitmap_rotation = RotateFlipType.Rotate90FlipNone;
-                            break;
-                        case TileRotation.CounterClockwise90Degrees:
-                            bitmap_rotation = RotateFlipType.Rotate270FlipNone;
-                            break;
-                        case TileRotation.None:
-                            bitmap_rotation = RotateFlipType.RotateNoneFlipNone;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    ZoneTile tile = zon_file.Tiles[tileID];
-                    int image_offset1 = tile.Layer1 + tile.Offset1;
-                    int image_offset2 = tile.Layer2 + tile.Offset2;
-
-                    string texPath1 = Translator.FixPath(zon_file.Textures[image_offset1]);
-                    string texPath2 = Translator.FixPath(zon_file.Textures[image_offset2]);
-
-                    AddBitmapTileToLookup(ref bitmaps, texPath1, image_offset1);
-                    AddBitmapTileToLookup(ref bitmaps, texPath2, image_offset2);
-
-                    // log.Debug($"TileID: {tileID} [{x}, {y}] Rotation: [{rotation}] Offset1: {image_offset1} Offset2: {image_offset2}");
-                    // log.Debug($"\tTexture1: \"{texPath1}\"");
-                    // log.Debug($"\tTexture2: \"{texPath2}\"\n");
-
-                    int x_bitmap = x * 256;
-                    int y_bitmap = y * 256;
-
-                    if (!bitmaps.TryGetValue(image_offset1, out Bitmap bitmap1))
-                    {
-                        throw new Exception($"Index: {image_offset1} not in dictionary!");
-                    }
-
-                    if (bitmap1 is null)
-                        throw new ArgumentNullException(nameof(bitmap1));
-
-                    if (!bitmaps.TryGetValue(image_offset2, out Bitmap bitmap2))
-                    {
-                        throw new Exception($"Index: {image_offset2} not in dictionary!");
-                    }
-
-                    if (bitmap2 is null)
-                        throw new ArgumentNullException(nameof(bitmap2));
-
-                    try
-                    {
-                        // NOTE: Only bitmap2 is rotated!
-                        //bitmap2.RotateFlip(bitmap_rotation);
-                        bitmap1.RotateFlip(bitmap_rotation);
-                        atlas.DrawImage(bitmap1, x_bitmap, y_bitmap);
-                        atlas.DrawImage(bitmap2, x_bitmap, y_bitmap);
-                    }
-                    catch (Exception dex)
-                    {
-                        log.Error(dex);
-                        throw;
-                    }
-
-                    //atlas.DrawString($"[{x:00} {y:00}]", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 5);
-
-                    arrow.RotateFlip(bitmap_rotation);
-                    atlas.DrawImage(arrow, x_bitmap + 5, y_bitmap + 95 + 35 + 35);
-
-                    if (rotation != TileRotation.None)
-                    {
-                        atlas.DrawString($"{rotation}", font, Brushes.Black, x_bitmap + 6, y_bitmap + 36);
-                        atlas.DrawString($"{rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 35);
-                        // atlas.DrawString($"{bitmap_rotation}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 65);
-                    }
-
-                    atlas.DrawString($"L1: {Path.GetFileNameWithoutExtension(texPath1)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95);
-                    atlas.DrawString($"L2: {Path.GetFileNameWithoutExtension(texPath2)}", font, Brushes.FloralWhite, x_bitmap + 5, y_bitmap + 95 + 35);
-                }
-            }
-
-            //log.Debug($"Total bitmaps in dictionary: {bitmaps.Count}");
-
-
-
-            try
-            {
-                //atlas.DrawRectangle(new Pen(Color.BlueViolet, 10), 0, 0, 100, 100);
-                tile_atlas_bitmap = ResizeImage(tile_atlas_bitmap, new Size(2048, 2048));
-
-                tile_atlas_bitmap.Save(atlas_full_path, System.Drawing.Imaging.ImageFormat.Png);
-                log.Debug($"Saved patch atlas: \"ATLAS/{atlas_file_name}\"");
-            }
-            catch (Exception a)
-            {
-                log.Error(a);
-                throw;
-            }
-            return $"ATLAS/{atlas_file_name}";
-        }
-
         private void GenerateTerrainMesh()
         {
             for (int row = 0; row < HIMHeightsGrid.Count; row++)
@@ -844,11 +472,11 @@ namespace Rose2Godot
 
                     //log.Debug($"Row: {row} Col: {col}");
                     TileFile til = new TileFile();
-                    string atlas_filename;
+                    //string atlas_filename;
                     try
                     {
                         til.Load(til_file_path);
-                        atlas_filename = GenerateTileAtlas(til);
+                        //atlas_filename = GenerateTileAtlas(til);
                     }
                     catch (Exception x)
                     {
@@ -856,18 +484,19 @@ namespace Rose2Godot
                         throw;
                     }
 
-                    GodotMapTileMesh tile_mesh = GenerateTileMesh(him, til, row, col);
-                    tile_mesh.AtlasPath = atlas_filename;
+
+                    //GodotMapTileMesh tile_mesh = GenerateTileMesh(him, til, row, col);
+                    //tile_mesh.AtlasPath = atlas_filename;
 
                     string lmap_dir = Path.Combine(Path.GetDirectoryName(him.FilePath), Path.GetFileNameWithoutExtension(him.FilePath));
                     string lmap_file_dds = Path.Combine(lmap_dir, $"{Path.GetFileNameWithoutExtension(him.FilePath)}_PLANELIGHTINGMAP.DDS");
                     string png_filename = Path.ChangeExtension(Path.GetFileName(lmap_file_dds), ".PNG");
                     string png_path = Path.Combine(LightmapsPath, png_filename);
-                    tile_mesh.LightmapPath = png_filename;
+                    //tile_mesh.LightmapPath = png_filename;
 
                     if (!Directory.Exists(png_path))
                     {
-                        using (var image = Pfimage.FromFile(lmap_file_dds))
+                        using (var image = Pfim.Pfimage.FromFile(lmap_file_dds))
                         {
                             PixelFormat format;
                             switch (image.Format)
@@ -883,7 +512,7 @@ namespace Rose2Godot
                             {
                                 var data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
                                 var bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
-                                bitmap.Save(png_path, System.Drawing.Imaging.ImageFormat.Png);
+                                bitmap.Save(png_path, ImageFormat.Png);
                             }
                             finally
                             {
@@ -892,93 +521,31 @@ namespace Rose2Godot
                         }
                     } // exists?
 
-                    string file_name = Path.Combine(GodotScenePath, Path.GetFileNameWithoutExtension(him.FilePath) + ".tscn");
+                    GenerateChunkMesh(him, til, row, col, png_filename);
 
-                    try
-                    {
-                        StreamWriter sw = new StreamWriter(file_name);
-                        sw.WriteLine(tile_mesh.ToString());
-                        sw.Close();
-                    }
-                    catch (Exception x)
-                    {
-                        log.Error(x);
-                        throw;
-                    }
+                    //string file_name = Path.Combine(GodotScenePath, Path.GetFileNameWithoutExtension(him.FilePath) + ".tscn");
+
+                    //try
+                    //{
+                    //    StreamWriter sw = new StreamWriter(file_name);
+                    //    sw.WriteLine(tile_mesh.ToString());
+                    //    sw.Close();
+                    //}
+                    //catch (Exception x)
+                    //{
+                    //    log.Error(x);
+                    //    throw;
+                    //}
+
                 }
             }
         }
 
-        private Vector2f RotationToCoordinates(TileRotation rotation, Vector2f texCoord)
+        private string GenerateTilesMap(List<GodotTilePatch> tile_scene, string translation, ref Dictionary<int, string> tiles_paths, string lightmap_path)
         {
-            switch (rotation)
-            {
-                case TileRotation.FlipHorizontal: // 2
-                    texCoord.x = 1.0f - texCoord.x;
-                    break;
-                case TileRotation.FlipVertical: // 3
-                    texCoord.y = 1.0f - texCoord.y;
-                    break;
-                case TileRotation.Flip: // 4
-                    {
-                        texCoord.x = 1.0f - texCoord.x;
-                        texCoord.y = 1.0f - texCoord.y;
-                    }
-                    break;
-                case TileRotation.Clockwise90Degrees: // 5
-                    {
-                        float tempX = texCoord.x;
-                        texCoord.x = texCoord.y;
-                        texCoord.y = 1.0f - tempX;
-                    }
-                    break;
-                case TileRotation.CounterClockwise90Degrees: // 6
-                    {
-                        float tempX = texCoord.x;
-                        texCoord.x = texCoord.y;
-                        texCoord.y = tempX;
-                    }
-                    break;
-            }
-            return texCoord;
-        }
-
-        private string ExportChunk(List<Vector3f> verts, List<Vector3f> normals, List<Vector2f> uvs, List<int> indices, string tex1, string tex2, TileRotation rotation)
-        {
+            StringBuilder root = new StringBuilder();
             StringBuilder scene = new StringBuilder();
-
-            scene.AppendLine("surfaces/0 = {\n\t\"primitive\":4,\n\t\"arrays\":[");
-            // vertices
-            scene.AppendFormat("\t\t; vertices: {0}\n", verts.Count);
-            scene.AppendFormat("\t\t{0},\n", Translator.Vector3fToArray(verts, null));
-            // normals
-            scene.AppendFormat("\t\t{0},\n", Translator.Vector3fToArray(normals, null));
-            scene.AppendLine("\t\tnull, ; no tangents");
-            scene.AppendLine("\t\tnull, ; no vertex colors");
-            scene.AppendFormat("\t\t; UV1: {0}\n", uvs.Count);
-            scene.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(uvs));
-            scene.AppendLine("\t\tnull, ; no UV2");
-            scene.AppendLine("\t\tnull, ; no bone indices");
-            scene.AppendLine("\t\tnull, ; no bone weights");
-            // face indices
-            scene.AppendFormat("\t\t; triangle faces: {0}\n", indices.Count);
-            scene.AppendFormat("\t\t{0}\n", Translator.TriangleIndices(indices));
-
-            scene.AppendLine("\t],"); // end of mesh arrays
-            scene.AppendLine("\t\"morph_arrays\":[]");
-            scene.AppendLine("}"); // end of surface/0
-            scene.AppendLine("");
-            scene.AppendLine($"; {tex1}");
-            scene.AppendLine($"; {tex2}");
-            scene.AppendLine($"; {rotation}");
-            scene.AppendLine();
-
-            return scene.ToString();
-        }
-
-        private string GenerateTilesMap(List<string> tile_scene, string translation)
-        {
-            StringBuilder scene = new StringBuilder();
+            StringBuilder external_resources = new StringBuilder();
             StringBuilder node = new StringBuilder();
             /*
             // res://shaders/tile.shader
@@ -987,42 +554,70 @@ namespace Rose2Godot
 
             uniform sampler2D layer1;
             uniform sampler2D layer2;
-            uniform int rotation = 0;
+            uniform sampler2D lightmap;
+            uniform int rotation : hint_range(1, 7, 1) = 1;
 
             void fragment() {
-                vec2 rotated_uv2 = vec2(UV.x, UV.y);
-                
+                vec2 uv = vec2(UV);
+	            vec2 rotated_uv = vec2(uv);
+    
                 if (rotation == 2) { // Flip Horizontal
-                    rotated_uv2 = vec2(1.0 - UV2.x, UV2.y);
+                    rotated_uv = vec2(1.0 - uv.x, uv.y);
                 }
                 if (rotation == 3) { // Flip Vertical
-                    rotated_uv2 = vec2(rotated_uv2.x, 1.0 - rotated_uv2.y);
+                    rotated_uv = vec2(uv.x, 1.0 - uv.y);
                 }
                 if (rotation == 4) { // Flip
-                    rotated_uv2 = vec2(1.0 - rotated_uv2.x, 1.0 - rotated_uv2.y);
+                    rotated_uv = vec2(1.0 - uv.x, 1.0 - uv.y);
                 }
                 if (rotation == 5) { // Clockwise 90
-                    rotated_uv2 = vec2(-rotated_uv2.y, rotated_uv2.x)
+                    rotated_uv = vec2(-uv.y, uv.x);
                 }
                 if (rotation == 6) { // CounterClockwise 90
-                    rotated_uv2 = vec2(rotated_uv2.y, -rotated_uv2.x)
+                    rotated_uv = vec2(uv.y, -uv.x);
                 }
-                
-                vec4 layer1_tex = texture(layer1, UV);
-                vec4 layer2_tex = texture(layer2, rotated_uv2);
-                
-                ALBEDO = mix(layer1_tex.rgba, layer2_tex.rgba, layer2_tex.a).rgb;
-                //ALBEDO = layer1_tex.rgb * layer2_tex.rgb;
+    
+                vec4 layer1_tex = texture(layer1, uv);
+                vec4 layer2_tex = texture(layer2, rotated_uv);
+	            vec4 lmap_tex = texture(lightmap, UV2);
+	
+	            ALBEDO = mix(layer1_tex , layer2_tex,  layer2_tex.a).rgb * lmap_tex.rgb;
             }
-
             */
 
-            scene.AppendLine("[gd_scene format=2]\n");
-            scene.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
+            root.AppendLine("[gd_scene format=2]\n");
+            root.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
+            root.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=2]");
+            root.AppendLine("[ext_resource path=\"res://scenes/generate_collision_mesh.gd\" type=\"Script\" id=3]");
+            root.AppendLine();
+            int ext_resource = 4; // 1 is the tile_shader, 2nd lightmap, 3d script
+
+            Dictionary<int, int> used_resources = new Dictionary<int, int>();
 
             int resource = 1;
             for (int tile_id = 0; tile_id < tile_scene.Count; tile_id++)
             {
+                int texture_id = tile_scene[tile_id].layer1;
+
+                if (!used_resources.ContainsKey(texture_id))
+                {
+                    used_resources.Add(texture_id, ext_resource);
+                    string texture_path = tiles_paths[texture_id];
+                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
+                    ext_resource++;
+                }
+                int shader_param_id1 = used_resources[texture_id];
+
+                texture_id = tile_scene[tile_id].layer2;
+                if (!used_resources.ContainsKey(texture_id))
+                {
+                    used_resources.Add(texture_id, ext_resource);
+                    string texture_path = tiles_paths[texture_id];
+                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
+                    ext_resource++;
+                }
+                int shader_param_id2 = used_resources[texture_id];
+
                 scene.AppendLine($"\n[sub_resource id={resource} type=\"ArrayMesh\"]");
                 scene.AppendLine($"resource_name = \"Tile_{tile_id:00}\"");
                 scene.Append(tile_scene[tile_id]);
@@ -1038,38 +633,111 @@ namespace Rose2Godot
                 // Shader material
                 scene.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={resource}]");
                 scene.AppendLine("shader = ExtResource( 1 )");
-                // scene.AppendLine("shader_param/texture_albedo = ExtResource( 2 )");
-                // scene.AppendLine("shader_param/texture_lightmap = ExtResource( 1 )");
-
+                scene.AppendLine($"shader_param/lightmap = ExtResource( 2 )");
+                scene.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} )");
+                scene.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} )");
+                scene.AppendLine($"shader_param/rotation = {(int)tile_scene[tile_id].rotation} ; {tile_scene[tile_id].rotation}");
                 scene.AppendLine();
+
                 resource++;
             }
 
             scene.AppendLine("; scene root node");
             scene.AppendLine($"[node type=\"Spatial\" name=\"CHUNK\"]");
+            scene.AppendLine("script = ExtResource( 3 )"); // add generate_collision_mesh.gd
             scene.AppendLine(translation);
             scene.AppendLine();
 
+            root.Append(external_resources);
             scene.Append(node);
+            root.Append(scene);
 
-            return scene.ToString();
+            return root.ToString();
         }
-        private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, TileFile tile_file, int row, int col)
+
+        private void AddTileToLookup(ref Dictionary<int, string> tiles_paths, string path, int index)
         {
+            string png_path = path.Replace("3DDATA/", string.Empty);
+            png_path = Translator.FixPath(Path.ChangeExtension(png_path, ".PNG"));
+            string absolute_png_path = Translator.FixPath(Path.Combine(GodotProjectPath, png_path));
+
+            string folder = Path.GetDirectoryName(absolute_png_path);
+            try
+            {
+                if (!Directory.Exists(folder))
+                {
+                    log.Info($"Creating folder: \"{absolute_png_path}\"");
+                    Directory.CreateDirectory(folder);
+                }
+            }
+            catch (Exception dx)
+            {
+                log.Fatal(dx);
+                throw;
+            }
+
+            if (!tiles_paths.ContainsKey(index))
+            {
+                tiles_paths.Add(index, png_path);
+                if (!File.Exists(absolute_png_path))
+                {
+
+                    FileStream stream = new FileStream(path, FileMode.Open);
+                    try
+                    {
+                        DDSImage dds = new DDSImage(stream);
+                        dds.BitmapImage.Save(absolute_png_path, ImageFormat.Png);
+                    }
+                    finally
+                    {
+                        stream.Close();
+                    }
+                } // exists
+            }
+        }
+
+        private void GenerateChunkMesh(HeightmapFile him_file, TileFile tile_file, int row, int col, string lightmap_path)
+        {
+            //  UV mapping for tiles
+            //	x%5 =   0     1	     2	   3     4	 
+            //   	 (0,1) (.25,1)(.5,1)(.75,1)(1,1)
+            //		 	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //		    | /   | /   | /   | /   |
+            //  (0,.75)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //	(0,.5)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //	(0,.25)	*-----*-----*-----*-----*
+            //			|   / |   / |   / |   / |
+            //			| /   | /   | /   | /   |
+            //  (0,0)	*-----*-----*-----*-----*
+            //			(.25,0)(.5,0)(.75,0)(1,0)
+
             // from godot zon_importer @ line 201
 
-            List<string> tile_scene = new List<string>();
+            Dictionary<int, string> tiles_paths = new Dictionary<int, string>();
+
+            List<GodotTilePatch> tile_scene = new List<GodotTilePatch>();
 
             int tile_width = (him_file.Width - 1) / tile_file.Width + 1; // = 5
             int tile_height = (him_file.Height - 1) / tile_file.Height + 1; // = 5
+            const float height_scale = 1f / 300f; //
+            const float factor = 1f / 64f;
 
-            for (int h = 0; h < (him_file.Height - 1); h += (tile_height - 1))
+            const float scale_factor = 2.5f;
+            Vector3f scale_vector = new Vector3f(scale_factor, 3f, scale_factor);
+
+            for (int h = 0; h < (him_file.Height - 1); h += tile_height - 1)
             {
-                for (int w = 0; w < (him_file.Height - 1); w += (tile_width - 1))
+                for (int w = 0; w < (him_file.Width - 1); w += tile_width - 1)
                 {
                     List<Vector3f> tile_vertices = new List<Vector3f>();
                     List<int> tile_indices = new List<int>();
                     List<Vector2f> tile_uv = new List<Vector2f>();
+                    List<Vector2f> lightmap_uv = new List<Vector2f>();
                     List<Vector3f> tile_normals = new List<Vector3f>();
 
                     // arrays
@@ -1077,18 +745,35 @@ namespace Rose2Godot
                     {
                         for (int x = 0; x < tile_width; x++)
                         {
-                            Vector3f vert = new Vector3f(w + x, him_file[h + y, w + x] / 300f, h + y);
+                            Vector3f vertex = new Vector3f(w + x, him_file[h + y, w + x] * height_scale, h + y);
+                            Vector2f uv = new Vector2f(x * 0.25f, y * 0.25f);
 
-                            //FIXME: not calculated properly
-                            Vector2f uv = new Vector2f(x * 0.2f, y * 0.2f);
+                            // Hide seams
+                            if (uv.x == 0f)
+                                uv.x = 0.01f;
+                            if (uv.y == 0f)
+                                uv.y = 0.01f;
+
+                            if (uv.x >= 0.99f)
+                                uv.x = 0.99f;
+                            if (uv.y >= 0.99f)
+                                uv.y = 0.99f;
+
+                            float lm_x = ((w + x) * factor);
+                            float lm_y = ((h + y) * factor);
+
+                            Vector2f lmap_uv = new Vector2f(lm_x, lm_y);
                             Vector3f normal = new Vector3f(0, 1f, 0);
 
-                            tile_vertices.Add(vert);
+                            tile_vertices.Add(vertex * scale_vector);
                             tile_uv.Add(uv);
                             tile_normals.Add(normal);
+
+                            lightmap_uv.Add(lmap_uv);
                         }
                     }
 
+                    // build triangle indices
                     for (int y = 0; y < tile_height - 1; y++)
                     {
                         for (int x = 0; x < tile_width - 1; x++)
@@ -1104,27 +789,45 @@ namespace Rose2Godot
                         }
                     }
 
-                    var tile_x = (int)Math.Floor((double)(w / (tile_width - 1)));
-                    var tile_y = (int)Math.Floor((double)(h / (tile_height - 1)));
-                    
-                    int tile_id = tile_file[tile_y, tile_x].Tile; // ??? reversed x y !!!!!
-                    int layer1 = zon_file.Tiles[tile_id].Layer1 + zon_file.Tiles[tile_id].Offset1;
-                    int layer2 = zon_file.Tiles[tile_id].Layer2 + zon_file.Tiles[tile_id].Offset2;
-                    Tile tile = new Tile(1, tile_id, layer1, layer2);
-                    string texture1_path = Translator.FixPath(zon_file.Textures[layer1]);
-                    string texture2_path = Translator.FixPath(zon_file.Textures[layer2]);
+                    //var tile_x = (int)Math.Floor((double)(w / (tile_width - 1)));
+                    //var tile_y = (int)Math.Floor((double)(h / (tile_height - 1)));
 
-                    TileRotation rotation = zon_file.Tiles[tile_id].Rotation;
+                    int tile_x = w / 4;
+                    int tile_y = (him_file.Height - 1) / 4 - h / 4 - 1;
+                    int tile_id = tile_file[tile_y, tile_x].Tile;
 
-                    tile_scene.Add(ExportChunk(tile_vertices, tile_normals, tile_uv, tile_indices, texture1_path, texture2_path, rotation));
+                    ZoneTile tile = zon_file.Tiles[tile_id];
+                    int layer1 = tile.Layer1 + tile.Offset1; // is the bottom image
+                    int layer2 = tile.Layer2 + tile.Offset2; // is the top image
 
+                    string texture1_path = Translator.FixPath(zon_file.Textures[layer1]); // bottom
+                    string texture2_path = Translator.FixPath(zon_file.Textures[layer2]); // top
+
+                    TileRotation rotation = tile.Rotation;
+
+                    AddTileToLookup(ref tiles_paths, texture1_path, layer1);
+                    AddTileToLookup(ref tiles_paths, texture2_path, layer2);
+
+                    GodotTilePatch patch = new GodotTilePatch()
+                    {
+                        layer1 = layer1,
+                        layer2 = layer2,
+                        vertices = tile_vertices,
+                        indices = tile_indices,
+                        uvs = tile_uv,
+                        normals = tile_normals,
+                        rotation = rotation,
+                        lightmap_uvs = lightmap_uv,
+                    };
+
+                    tile_scene.Add(patch);
                 }
             }
 
             // Translate each tile mesh chunk
-            string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1):0.######}, 0, {col * (him_file.Height - 1):0.######} )";
+            string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1) * 2.5f:0.######}, 0, {col * (him_file.Height - 1) * 2.5f:0.######} )";
 
-            string scene = GenerateTilesMap(tile_scene, chunk_transform);
+            string scene = GenerateTilesMap(tile_scene, chunk_transform, ref tiles_paths, lightmap_path);
 
             string chunk_filename = Path.Combine(GodotScenePath, $"CHUNK_{col:00}.{row:00}.tscn");
 
@@ -1139,11 +842,14 @@ namespace Rose2Godot
                 log.Error(x);
                 throw;
             }
+        }
 
-            // *******************************************
+        /*
+        private GodotMapTileMesh GenerateTileMesh(HeightmapFile him_file, TileFile tile_file, int row, int col)
+        {
             float x_stride = 2.5f;
             float y_stride = 2.5f;
-            float heightScaler = x_stride * 1.2f / 300.0f;
+            float heightScaler = x_stride * 1.2f / 300.0f; // = 100f
             const float factor = 1f / 64f;
 
             float x_offset = row * x_stride * (him_file.Width - 1);
@@ -1160,71 +866,6 @@ namespace Rose2Godot
                 }
             }
 
-            // UV Tiles
-
-            //  Uv mapping for tiles
-            //	x%5 =   0     1	     2	   3     4	 
-            //   	 (0,1) (.25,1)(.5,1)(.75,1)(1,1)
-            //		 	*-----*-----*-----*-----*
-            //			|   / |   / |   / |   / |
-            //		    | /   | /   | /   | /   |
-            //  (0,.75)	*-----*-----*-----*-----*
-            //			|   / |   / |   / |   / |
-            //			| /   | /   | /   | /   |
-            //	(0,.5)	*-----*-----*-----*-----*
-            //			|   / |   / |   / |   / |
-            //			| /   | /   | /   | /   |
-            //	(0,.25)	*-----*-----*-----*-----*
-            //			|   / |   / |   / |   / |
-            //			| /   | /   | /   | /   |
-            //  (0,0)	*-----*-----*-----*-----*
-            //			   (.25,0)(.5,0)(.75,0)(1,0)
-
-            int i_v = 0;
-
-            Vector2f[,] uvMatrix = new Vector2f[5, 5];
-            Vector2f[,] uvMatrixLR = new Vector2f[5, 5];
-            Vector2f[,] uvMatrixTB = new Vector2f[5, 5];
-            Vector2f[,] uvMatrixLRTB = new Vector2f[5, 5];
-            Vector2f[,] uvMatrixRotCW = new Vector2f[5, 5];  // rotated 90 deg clockwise
-            Vector2f[,] uvMatrixRotCCW = new Vector2f[5, 5];    // rotated 90 counter clockwise
-
-            for (int uv_x = 0; uv_x < 5; uv_x++)
-            {
-                for (int uv_y = 0; uv_y < 5; uv_y++)
-                {
-                    uvMatrix[uv_y, uv_x] = new Vector2f(0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixLR[uv_y, uv_x] = new Vector2f(1.0f - 0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixTB[uv_y, uv_x] = new Vector2f(0.25f * uv_x, 0.25f * uv_y);
-                    uvMatrixLRTB[uv_y, uv_x] = new Vector2f(1.0f - 0.25f * uv_x, 0.25f * uv_y);
-                    uvMatrixRotCCW[uv_x, uv_y] = new Vector2f(0.25f * uv_x, 1.0f - 0.25f * uv_y);
-                    uvMatrixRotCW[uv_x, uv_y] = new Vector2f(0.25f * uv_y, 1.0f - 0.25f * uv_x);
-                }
-            }
-
-            int nVertices = (him_file.Width - 1) * (him_file.Height - 1) * 4;
-            Vector2f[] uvsTop = new Vector2f[nVertices];
-            Vector2f[] uvsBottom = new Vector2f[nVertices];
-
-            List<Tile> m_tiles = new List<Tile>();
-
-            // Populate tiles with texture references
-            for (int t_x = 0; t_x < 16; t_x++)
-            {
-                for (int t_y = 0; t_y < 16; t_y++)
-                {
-                    int tile_id = tile_file[t_y, t_x].Tile;
-                    int layer1 = zon_file.Tiles[tile_id].Layer1 + zon_file.Tiles[tile_id].Offset1;
-                    int layer2 = zon_file.Tiles[tile_id].Layer2 + zon_file.Tiles[tile_id].Offset2;
-                    Tile tile = new Tile(1, tile_id, layer1, layer2);
-                    string texture1_path = Translator.FixPath(zon_file.Textures[layer1]);
-                    string texture2_path = Translator.FixPath(zon_file.Textures[layer2]);
-                    tile.BottomTex = texture1_path;
-                    tile.TopTex = texture2_path;
-                    m_tiles.Add(tile);
-                }
-            }
-
             // MESH ************************************************************************************************
 
             Quaterniond vrot = new Quaterniond(new Vector3d(0, 0, 1), -90);
@@ -1234,53 +875,6 @@ namespace Rose2Godot
             {
                 for (int x = 0; x < him_file.Width - 1; x++)
                 {
-
-                    int a = i_v++;
-                    int b = i_v++;
-                    int c = i_v++;
-                    int d = i_v++;
-
-                    int tileX = x / 4;
-                    int tileY = y / 4;
-                    int tileID = tileY * 16 + tileX;
-
-                    TileRotation rotation = zon_file.Tiles[tile_file[tileX, tileY].Tile].Rotation;
-                    Vector2f[,] rotMatrix;
-                    switch (rotation)
-                    {
-                        case TileRotation.None:
-                            rotMatrix = uvMatrix;
-                            break;
-                        case TileRotation.FlipHorizontal:
-                            rotMatrix = uvMatrixLR;
-                            break;
-                        case TileRotation.FlipVertical:
-                            rotMatrix = uvMatrixLRTB;
-                            break;
-                        case TileRotation.Clockwise90Degrees:
-                            rotMatrix = uvMatrixRotCW;
-                            break;
-                        case TileRotation.CounterClockwise90Degrees:
-                            rotMatrix = uvMatrixRotCCW;
-                            break;
-                        case TileRotation.Flip:
-                            rotMatrix = uvMatrixTB;
-                            break;
-                        default:
-                            rotMatrix = uvMatrix;
-                            break;
-                    }
-
-                    //uvsTop[a] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
-                    //uvsTop[b] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    //uvsTop[c] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    //uvsTop[d] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
-
-                    //uvsBottom[a] = m_tiles[tileID].GetUVBottom(rotMatrix[x % 4, y % 4]);
-                    //uvsBottom[b] = m_tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    //uvsBottom[c] = m_tiles[tileID].GetUVBottom(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    //uvsBottom[d] = m_tiles[tileID].GetUVBottom(rotMatrix[x % 4, (y % 4 + 1) % 5]);
-
                     //    Each quad will be split into two triangles:
                     //
                     //          a         b
@@ -1319,15 +913,6 @@ namespace Rose2Godot
                     int index_vc = tile_mesh.AppendVertex(vxc);
                     int index_vd = tile_mesh.AppendVertex(vxd);
 
-                    // Tiles
-
-                    uvsTop[index_va] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, y % 4]);
-                    uvsTop[index_vb] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, y % 4]);
-                    uvsTop[index_vc] = m_tiles[tileID].GetUVTop(rotMatrix[(x % 4 + 1) % 5, (y % 4 + 1) % 5]);
-                    uvsTop[index_vd] = m_tiles[tileID].GetUVTop(rotMatrix[x % 4, (y % 4 + 1) % 5]);
-
-                    //
-
                     // Generate and scale up UVs to hide the seams
                     Vector2f uva = new Vector2f((x + 0.01) * factor, (y + 0.01) * factor);
                     Vector2f uvb = new Vector2f((x + 0.99) * factor, (y + 0.01) * factor);
@@ -1363,7 +948,7 @@ namespace Rose2Godot
                 Heights = heights,
                 Row = row,
                 Col = col,
-                TilesUV = uvsTop,
+                //TilesUV = uvsTop,
             };
         }
 
@@ -1386,5 +971,6 @@ namespace Rose2Godot
             // Switch back coordinates to be relative to edge
             uv += halfVector;
         }
+        */
     }
 }
