@@ -12,14 +12,11 @@ using S16.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using Directory = System.IO.Directory;
-using Path = System.IO.Path;
 
 namespace Rose2Godot
 {
@@ -585,6 +582,16 @@ namespace Rose2Godot
             }
             */
 
+            /*
+            // res://scenes/generate_collision_mesh.gd
+            tool
+            extends Node
+
+            func _ready():
+	            for child in get_node(".").get_children():
+		            child.create_trimesh_collision()
+            */
+
             root.AppendLine("[gd_scene format=2]\n");
             root.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
             root.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=2]");
@@ -597,26 +604,26 @@ namespace Rose2Godot
             int resource = 1;
             for (int tile_id = 0; tile_id < tile_scene.Count; tile_id++)
             {
-                int texture_id = tile_scene[tile_id].layer1;
+                int texture_id1 = tile_scene[tile_id].layer1;
 
-                if (!used_resources.ContainsKey(texture_id))
+                if (!used_resources.ContainsKey(texture_id1))
                 {
-                    used_resources.Add(texture_id, ext_resource);
-                    string texture_path = tiles_paths[texture_id];
+                    used_resources.Add(texture_id1, ext_resource);
+                    string texture_path = tiles_paths[texture_id1];
                     external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
                     ext_resource++;
                 }
-                int shader_param_id1 = used_resources[texture_id];
+                int shader_param_id1 = used_resources[texture_id1];
 
-                texture_id = tile_scene[tile_id].layer2;
-                if (!used_resources.ContainsKey(texture_id))
+                int texture_id2 = tile_scene[tile_id].layer2;
+                if (!used_resources.ContainsKey(texture_id2))
                 {
-                    used_resources.Add(texture_id, ext_resource);
-                    string texture_path = tiles_paths[texture_id];
+                    used_resources.Add(texture_id2, ext_resource);
+                    string texture_path = tiles_paths[texture_id2];
                     external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
                     ext_resource++;
                 }
-                int shader_param_id2 = used_resources[texture_id];
+                int shader_param_id2 = used_resources[texture_id2];
 
                 scene.AppendLine($"\n[sub_resource id={resource} type=\"ArrayMesh\"]");
                 scene.AppendLine($"resource_name = \"Tile_{tile_id:00}\"");
@@ -634,8 +641,8 @@ namespace Rose2Godot
                 scene.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={resource}]");
                 scene.AppendLine("shader = ExtResource( 1 )");
                 scene.AppendLine($"shader_param/lightmap = ExtResource( 2 )");
-                scene.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} )");
-                scene.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} )");
+                scene.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} ) ; {tiles_paths[texture_id1]}");
+                scene.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} ) ; {tiles_paths[texture_id2]}");
                 scene.AppendLine($"shader_param/rotation = {(int)tile_scene[tile_id].rotation} ; {tile_scene[tile_id].rotation}");
                 scene.AppendLine();
 
