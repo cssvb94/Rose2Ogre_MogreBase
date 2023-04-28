@@ -70,17 +70,17 @@ namespace Rose2Godot.GodotExporters
                         if (!track.ContainsKey(track_time))
                         {
                             GodotQuat channel_rotation = GodotQuat.Identity;
-                            //GodotVector3 channel_position = Translator.Rose2GodotPosition(bone.Translation / 1000f);
-                            GodotVector3 channel_position = new GodotVector3(bone.Translation.Z / 1000f, bone.Translation.X / 1000f, bone.Translation.Y / 1000f);
+                            //GodotVector3 channel_position = new GodotVector3(bone.Translation.Z / 1000f, bone.Translation.X / 1000f, bone.Translation.Y / 1000f);
+                            GodotVector3 channel_position = GodotVector3.Zero;
 
                             track.Add(track_time, new AnimationTrack(
-                                                        track_time,
-                                                        1f,
-                                                        channel_position,
-                                                        channel_rotation,
-                                                        GodotVector3.One,
-                                                        channel.Index,
-                                                        bone_name));
+                                                         track_time,
+                                                         1f,
+                                                         channel_position,
+                                                         channel_rotation,
+                                                         GodotVector3.One,
+                                                         channel.Index,
+                                                         bone_name));
 
                         }
 
@@ -102,6 +102,7 @@ namespace Rose2Godot.GodotExporters
                             PositionChannel pchannel = channel as PositionChannel;
                             Vector3 position = pchannel.Frames[frame_idx] / 100f;
                             GodotVector3 channel_position = new GodotVector3(position.Z, position.X / 1000f, -position.Y);
+                            //GodotVector3 channel_position = new GodotVector3(position.Z, position.X, position.Y / 1000f);
                             anim_track.Translation = channel_position;
                         }
 
