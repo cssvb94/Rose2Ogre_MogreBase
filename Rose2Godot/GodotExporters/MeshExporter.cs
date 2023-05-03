@@ -169,7 +169,7 @@ namespace Rose2Godot.GodotExporters
                 }
 
                 string bone_indices = $"\t\tIntArray({string.Join(", ", bone_indices_list.ToArray())}),";
-                string bone_weights = $"\t\tFloatArray({string.Join(", ", bone_weights_list.Select(w => $"{w:0.####}").ToArray())}),";
+                string bone_weights = $"\t\tFloatArray({string.Join(", ", bone_weights_list.Select(w => $"{w:0.######}").ToArray())}),";
 
                 resource.AppendFormat("\t\t; bone weights: {0} \n", bone_weights_list.Count);
                 resource.AppendLine(bone_indices);
@@ -190,7 +190,7 @@ namespace Rose2Godot.GodotExporters
             resource.AppendLine("}"); // end of surface/0
 
             if (exportWithBones)
-                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\"Armature\"]\n", mesh_data_name);
+                nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\"Skeleton\"]\n", mesh_data_name);
             else
                 nodes.AppendFormat("\n[node name=\"{0}\" type=\"MeshInstance\" parent=\".\"]\n", mesh_data_name);
 

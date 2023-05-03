@@ -214,6 +214,13 @@ namespace Godot
             this.z = z;
         }
 
+        public GodotVector3(float value)
+        {
+            x = value;
+            y = value;
+            z = value;
+        }
+
         public static GodotVector3 operator +(GodotVector3 left, GodotVector3 right)
         {
             left.x += right.x;

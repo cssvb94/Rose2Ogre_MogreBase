@@ -27,8 +27,7 @@ namespace Rose2Godot.GodotExporters
             resource = new StringBuilder();
             last_resource_index = resource_index;
 
-            nodes.AppendLine($"[node name=\"AnimationPlayer\" type=\"AnimationPlayer\" parent=\"Armature\"]");
-            nodes.AppendLine("autoplay = \"\"");
+            nodes.AppendLine($"[node name=\"AnimationPlayer\" type=\"AnimationPlayer\" parent=\"Skeleton\"]");
             nodes.AppendLine("playback_process_mode = 1");
             nodes.AppendLine("playback_default_blend_time = 0.0");
             nodes.AppendLine("playback_speed = 1.0");
@@ -69,44 +68,99 @@ namespace Rose2Godot.GodotExporters
                         float track_time = frame_idx / animation.FPS;
                         if (!track.ContainsKey(track_time))
                         {
-                            GodotQuat channel_rotation = GodotQuat.Identity;
-                            //GodotVector3 channel_position = new GodotVector3(bone.Translation.Z / 1000f, bone.Translation.X / 1000f, bone.Translation.Y / 1000f);
-                            GodotVector3 channel_position = GodotVector3.Zero;
-
                             track.Add(track_time, new AnimationTrack(
                                                          track_time,
-                                                         1f,
-                                                         channel_position,
-                                                         channel_rotation,
-                                                         GodotVector3.One,
+                                                         1f,                 // transition
+                                                         GodotVector3.Zero,  // position
+                                                         GodotQuat.Identity, // rotation
+                                                         GodotVector3.One,   // scale
                                                          channel.Index,
                                                          bone_name));
-
                         }
 
                         AnimationTrack anim_track = track[track_time];
 
-                        if (channel.Type == ChannelType.Rotation)
-                        {
-                            RotationChannel rchannel = channel as RotationChannel;
-                            GodotQuat bone_rotation = Translator.Rose2GodotRotation(bone.Rotation);
-                            GodotQuat inverted_rotation = bone_rotation.UnitInverse();
-                            GodotQuat frame_rotation = Translator.Rose2GodotRotation(rchannel.Frames[frame_idx]);
-                            GodotQuat channel_rotation = inverted_rotation * frame_rotation;
-                            anim_track.Rotation = channel_rotation.Normalized();
-
-                        }
-
                         if (channel.Type == ChannelType.Position)
                         {
                             PositionChannel pchannel = channel as PositionChannel;
-                            Vector3 position = pchannel.Frames[frame_idx] / 100f;
-                            GodotVector3 channel_position = new GodotVector3(position.Z, position.X / 1000f, -position.Y);
-                            //GodotVector3 channel_position = new GodotVector3(position.Z, position.X, position.Y / 1000f);
+                            Vector3 position = pchannel.Frames[frame_idx] * 0.01f;
+                            GodotVector3 channel_position = new GodotVector3(position.Z, position.X, -position.Y);
+                            //GodotVector3 channel_position = new GodotVector3(position.Z, position.X / 1000f, -position.Y);
                             anim_track.Translation = channel_position;
+                            track[track_time] = anim_track;
+                            continue;
                         }
 
-                        track[track_time] = anim_track;
+                        if (channel.Type == ChannelType.Rotation)
+                        {
+                            RotationChannel rotation_channel = channel as RotationChannel;
+                            GodotQuat bone_rotation = Translator.Rose2GodotRotation(bone.Rotation);
+                            GodotQuat inverted_rotation = bone_rotation.UnitInverse();
+                            GodotQuat frame_rotation = Translator.Rose2GodotRotation(rotation_channel.Frames[frame_idx]);
+                            GodotQuat channel_rotation = inverted_rotation * frame_rotation;
+                            anim_track.Rotation = channel_rotation.Normalized();
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+ 
+                        if (channel.Type == ChannelType.Scale) // float
+                        {
+                            //ScaleChannel scale_channel = channel as ScaleChannel;
+                            //float scale = scale_channel.Frames[frame_idx];
+                            //anim_track.Scale = new GodotVector3(scale);
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.Alpha) // float
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.TextureAnimation) // float
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.Normal) // Vector3
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.TextureCoordinate1) // Vector2
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.TextureCoordinate2) // Vector2
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.TextureCoordinate3) // Vector2
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+
+                        if (channel.Type == ChannelType.TextureCoordinate4) // Vector2
+                        {
+                            // to be implemented
+                            track[track_time] = anim_track;
+                            continue;
+                        }
+                        
                     }
                 }
                 animations.Add(animation);
@@ -135,7 +189,13 @@ namespace Rose2Godot.GodotExporters
 
                     resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
                     resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, bone_name);
-                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
+
+                    /*
+                    0 (constant)
+                    1 (linear)
+                    2 (cubic)
+                     */
+                    resource.AppendFormat("tracks/{0}/interp = 2\n", bone_id);
                     resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/imported = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);

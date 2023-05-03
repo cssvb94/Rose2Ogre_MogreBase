@@ -251,13 +251,13 @@ namespace Godot
 
         public GodotVector3 Xform(GodotVector3 v)
         {
-            GodotVector3 vector3 = this[0];
-            float num1 = vector3.Dot(v);
-            vector3 = this[1];
-            float num2 = vector3.Dot(v);
-            vector3 = this[2];
-            float num3 = vector3.Dot(v);
-            return new GodotVector3(num1, num2, num3);
+            GodotVector3 vector = this[0];
+            float x = vector.Dot(v);
+            vector = this[1];
+            float y = vector.Dot(v);
+            vector = this[2];
+            float z = vector.Dot(v);
+            return new GodotVector3(x, y, z);
         }
 
         public GodotVector3 XformInv(GodotVector3 v)

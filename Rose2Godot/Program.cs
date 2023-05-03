@@ -2,7 +2,6 @@
 using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Rose2Godot
 {
@@ -59,21 +58,16 @@ namespace Rose2Godot
                             @"3DDATA\AVATAR\BODY\BODY1_00300.ZMS",
                             @"3DDATA\AVATAR\BODY\BODY1_00310.ZMS",
                             @"3DDATA\AVATAR\FOOT\FOOT1_00300.ZMS",
-                            @"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
-                            @"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
+                       
+                            //@"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
+                            //@"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
                             @"3DDATA\AVATAR\MALE.ZMD",
                             @"3DDATA\MOTION\AVATAR\EMPTY_RUN_M1.ZMO",
                             @"3DDATA\MOTION\AVATAR\EMPTY_WALK_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\EMPTY_STAND_M1.ZMO",
                             @"3DDATA\MOTION\AVATAR\EMPTY_STOP1_M1.ZMO",
                             @"3DDATA\MOTION\AVATAR\EMPTY_STOP2_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\DANCE_WALTZ_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\EMOTION_GREETING_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\EMPTY_SIT_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\DANCE_GANGNAMSTYLE_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\EMPTY_STAND_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\SKILL_MAGIC01_M1.ZMO",
-                            //@"3DDATA\MOTION\AVATAR\SKILL_UPPERCUT_01.ZMO",
+                            @"3DDATA\MOTION\AVATAR\SKILL_MAGIC01_M1.ZMO",
+                            @"3DDATA\MOTION\AVATAR\SKILL_UPPERCUT_01.ZMO",
                         });
             sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_male.tscn");
 
@@ -84,8 +78,8 @@ namespace Rose2Godot
                             @"3DDATA\AVATAR\BODY\BODY2_00110.ZMS",
                             @"3DDATA\AVATAR\FOOT\FOOT2_05700.ZMS",
                             @"3DDATA\AVATAR\FOOT\FOOT2_05710.ZMS",
-                            @"3DDATA\AVATAR\FACE\FACE2_00800.ZMS",
-                            @"3DDATA\AVATAR\HAIR\HAIR02_00200.ZMS",
+                            //@"3DDATA\AVATAR\FACE\FACE2_00800.ZMS",
+                            //@"3DDATA\AVATAR\HAIR\HAIR02_00200.ZMS",
                             @"3DDATA\AVATAR\FEMALE.ZMD",
                             @"3DDATA\MOTION\AVATAR\EMPTY_RUN_F1.ZMO",
                             @"3DDATA\MOTION\AVATAR\EMPTY_WALK_F1.ZMO",

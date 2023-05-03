@@ -10,14 +10,14 @@ namespace Rose2Godot.GodotExporters
         public int last_resource_index { get; private set; }
 
         private readonly StringBuilder bone_node;
-        private readonly StringBuilder dummy_bone_attachment_node;
+        private readonly StringBuilder bone_attachment_node;
 
         private void AppendGodotBone(ref int index, Bone bone)
         {
-            bone.Translation /= 100f; // scale down
+            bone.Translation *= 0.01f; // scale down
             GodotQuat rotation = new GodotQuat(bone.Rotation.X, bone.Rotation.Z, bone.Rotation.Y, bone.Rotation.W).Inverse().Normalized();
             GodotVector3 position = Translator.ToGodotVector3XZY(bone.Translation);
-           
+
             GodotTransform transform = new GodotTransform(rotation, position);
 
             bone_node.AppendFormat("bones/{0}/name = \"{1}\"\n", index, bone.Name);
@@ -31,15 +31,16 @@ namespace Rose2Godot.GodotExporters
         public BoneExporter(int resource_index, BoneFile zmd)
         {
             bone_node = new StringBuilder();
-            dummy_bone_attachment_node = new StringBuilder();
+            bone_attachment_node = new StringBuilder();
             bone_node.Append("; skeleton node - mesh nodes parent\n");
-            bone_node.AppendLine("[node name=\"Armature\" type=\"Skeleton\" parent=\".\"]");
+            bone_node.AppendLine("[node name=\"Skeleton\" type=\"Skeleton\" parent=\".\"]");
             bone_node.AppendLine("bones_in_world_transform = true");
             bone_node.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
 
             int idx = 0;
             foreach (Bone bone in zmd.Bones)
             {
+                bone_attachment_node.Append(MakeBoneAttachment(bone));
                 AppendGodotBone(ref idx, bone);
             }
 
@@ -48,21 +49,20 @@ namespace Rose2Godot.GodotExporters
                 bone_node.Append("; dummy bones\n");
                 foreach (Bone dummy in zmd.DummyBones)
                 {
-                    // Add BoneAttachment node for each dummy bone
-                    dummy_bone_attachment_node.Append(MakeBoneAttachment(dummy));
+                    bone_attachment_node.Append(MakeBoneAttachment(dummy));
                     AppendGodotBone(ref idx, dummy);
                 }
             }
             last_resource_index += resource_index;
 
             bone_node.AppendLine();
-            bone_node.AppendLine(dummy_bone_attachment_node.ToString());
+            bone_node.AppendLine(bone_attachment_node.ToString());
         }
 
         private string MakeBoneAttachment(Bone bone)
         {
             StringBuilder attachment = new StringBuilder();
-            attachment.AppendLine($"[node name=\"{bone.Name}\" type=\"BoneAttachment\" parent=\"Armature\"]");
+            attachment.AppendLine($"[node name=\"{bone.Name}\" type=\"BoneAttachment\" parent=\"Skeleton\"]");
             attachment.AppendLine($"bone_name = \"{bone.Name}\"\n");
 
             return attachment.ToString();

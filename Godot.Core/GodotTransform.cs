@@ -52,47 +52,47 @@ namespace Godot
             GodotBasis basis = this.basis;
             ref GodotVector3 local1 = ref this.origin;
             ref GodotVector3 local2 = ref local1;
-            double num1 = local1[0];
-            double num2 = this.basis[0].Dot(ofs);
-            double num3;
+            float num1 = local1[0];
+            float num2 = this.basis[0].Dot(ofs);
+            float num3;
             float num4 = (float)(num3 = num1 + num2);
             local2[0] = (float)num3;
-            double num5 = num4;
+            float num5 = num4;
             ref GodotVector3 local3 = ref this.origin;
             ref GodotVector3 local4 = ref local3;
-            double num6 = local3[1];
-            double num7 = this.basis[1].Dot(ofs);
-            double num8;
+            float num6 = local3[1];
+            float num7 = this.basis[1].Dot(ofs);
+            float num8;
             float num9 = (float)(num8 = num6 + num7);
             local4[1] = (float)num8;
-            double num10 = num9;
+            float num10 = num9;
             ref GodotVector3 local5 = ref this.origin;
             ref GodotVector3 local6 = ref local5;
-            double num11 = local5[2];
-            double num12 = this.basis[2].Dot(ofs);
-            double num13;
+            float num11 = local5[2];
+            float num12 = this.basis[2].Dot(ofs);
+            float num13;
             float num14 = (float)(num13 = num11 + num12);
             local6[2] = (float)num13;
-            double num15 = num14;
+            float num15 = num14;
             GodotVector3 origin = new GodotVector3((float)num5, (float)num10, (float)num15);
             return new GodotTransform(basis, origin);
         }
 
         public GodotVector3 Xform(GodotVector3 v)
         {
-            GodotVector3 basi = basis[0];
-            double num1 = basi.Dot(v) + (double)origin.x;
-            basi = basis[1];
-            double num2 = basi.Dot(v) + (double)origin.y;
-            basi = basis[2];
-            double num3 = basi.Dot(v) + (double)origin.z;
-            return new GodotVector3((float)num1, (float)num2, (float)num3);
+            GodotVector3 basis_vector = basis[0];
+            float xform_x = basis_vector.Dot(v) + origin.x;
+            basis_vector = basis[1];
+            float xform_y2 = basis_vector.Dot(v) + origin.y;
+            basis_vector = basis[2];
+            float xform_z = basis_vector.Dot(v) + origin.z;
+            return new GodotVector3(xform_x, xform_y2, xform_z);
         }
 
         public GodotVector3 XformInv(GodotVector3 v)
         {
-            GodotVector3 vector3 = v - origin;
-            return new GodotVector3((basis[0, 0] * vector3.x) + (basis[1, 0] * vector3.y) + (basis[2, 0] * vector3.z), (basis[0, 1] * vector3.x) + (basis[1, 1] * vector3.y) + (basis[2, 1] * vector3.z), (basis[0, 2] * vector3.x) + (basis[1, 2] * vector3.y) + (basis[2, 2] * vector3.z));
+            GodotVector3 vector = v - origin;
+            return new GodotVector3((basis[0, 0] * vector.x) + (basis[1, 0] * vector.y) + (basis[2, 0] * vector.z), (basis[0, 1] * vector.x) + (basis[1, 1] * vector.y) + (basis[2, 1] * vector.z), (basis[0, 2] * vector.x) + (basis[1, 2] * vector.y) + (basis[2, 2] * vector.z));
         }
 
         public GodotTransform(

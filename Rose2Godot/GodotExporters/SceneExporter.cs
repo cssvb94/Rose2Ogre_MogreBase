@@ -173,8 +173,6 @@ namespace Rose2Godot.GodotExporters
                     scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
                 }
 
-                //scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
-
                 // skeleton
 
                 if (zmd.Bones.Any())

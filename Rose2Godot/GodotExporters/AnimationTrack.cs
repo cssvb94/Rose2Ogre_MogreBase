@@ -25,11 +25,10 @@ namespace Rose2Godot.GodotExporters
 
         public override string ToString()
         {
-            string vector3_translation = $"{Translation.x:0.00000}, {Translation.y:0.00000}, {Translation.z:0.00000}";
-            string quad_rotation = $"{Rotation.x:0.00000}, {Rotation.y:0.00000}, {Rotation.z:0.00000}, {Rotation.w:0.00000}";
-            string vector3_scale = $"{Scale.x:0.00000}, {Scale.y:0.00000}, {Scale.z:0.00000}";
-
-            return $"{TimeStamp:0.00000}, {Transition:0.00000}, {vector3_translation}, {quad_rotation}, {vector3_scale}";
+            string vector3_translation = $"{Translation.x:0.#####}, {Translation.y:0.#####}, {Translation.z:0.#####}";
+            string quad_rotation = $"{Rotation.x:0.#####}, {Rotation.y:0.#####}, {Rotation.z:0.#####}, {Rotation.w:0.#####}";
+            string vector3_scale = $"{Scale.x:0.#####}, {Scale.y:0.#####}, {Scale.z:0.#####}";
+            return $"{TimeStamp:0.#####}, {Transition:0.#####}, {vector3_translation}, {quad_rotation}, {vector3_scale}";
 
         }
     }
