@@ -328,7 +328,8 @@ namespace Rose2Godot
 
                                     func _ready():
 	                                    for child in get_node(".").get_children():
-		                                    child.create_trimesh_collision()
+		                                    if(child is MeshInstance):
+			                                    child.create_trimesh_collision()
                                     */
 
                                     string gd_script_collision_gen = string.Empty;
@@ -467,13 +468,10 @@ namespace Rose2Godot
                     var him = him_row[col];
                     string til_file_path = til_row[col];
 
-                    //log.Debug($"Row: {row} Col: {col}");
                     TileFile til = new TileFile();
-                    //string atlas_filename;
                     try
                     {
                         til.Load(til_file_path);
-                        //atlas_filename = GenerateTileAtlas(til);
                     }
                     catch (Exception x)
                     {
@@ -481,15 +479,10 @@ namespace Rose2Godot
                         throw;
                     }
 
-
-                    //GodotMapTileMesh tile_mesh = GenerateTileMesh(him, til, row, col);
-                    //tile_mesh.AtlasPath = atlas_filename;
-
                     string lmap_dir = Path.Combine(Path.GetDirectoryName(him.FilePath), Path.GetFileNameWithoutExtension(him.FilePath));
                     string lmap_file_dds = Path.Combine(lmap_dir, $"{Path.GetFileNameWithoutExtension(him.FilePath)}_PLANELIGHTINGMAP.DDS");
                     string png_filename = Path.ChangeExtension(Path.GetFileName(lmap_file_dds), ".PNG");
                     string png_path = Path.Combine(LightmapsPath, png_filename);
-                    //tile_mesh.LightmapPath = png_filename;
 
                     if (!Directory.Exists(png_path))
                     {
@@ -519,31 +512,16 @@ namespace Rose2Godot
                     } // exists?
 
                     GenerateChunkMesh(him, til, row, col, png_filename);
-
-                    //string file_name = Path.Combine(GodotScenePath, Path.GetFileNameWithoutExtension(him.FilePath) + ".tscn");
-
-                    //try
-                    //{
-                    //    StreamWriter sw = new StreamWriter(file_name);
-                    //    sw.WriteLine(tile_mesh.ToString());
-                    //    sw.Close();
-                    //}
-                    //catch (Exception x)
-                    //{
-                    //    log.Error(x);
-                    //    throw;
-                    //}
-
                 }
             }
         }
 
-        private string GenerateTilesMap(List<GodotTilePatch> tile_scene, string translation, ref Dictionary<int, string> tiles_paths, string lightmap_path)
+        private string GenerateTilesMap(List<GodotTilePatch> TilePatches, string translation, ref Dictionary<int, string> tiles_paths, string lightmap_path)
         {
             StringBuilder root = new StringBuilder();
             StringBuilder scene = new StringBuilder();
             StringBuilder external_resources = new StringBuilder();
-            StringBuilder node = new StringBuilder();
+            StringBuilder materials = new StringBuilder();
             /*
             // res://shaders/tile.shader
             shader_type spatial;
@@ -601,10 +579,13 @@ namespace Rose2Godot
 
             Dictionary<int, int> used_resources = new Dictionary<int, int>();
 
-            int resource = 1;
-            for (int tile_id = 0; tile_id < tile_scene.Count; tile_id++)
+            scene.AppendLine($"\n[sub_resource id={TilePatches.Count + 1} type=\"ArrayMesh\"]");
+            scene.AppendLine($"resource_name = \"Tiles\"");
+
+            //int resource = 1;
+            for (int tile_id = 0; tile_id < TilePatches.Count; tile_id++)
             {
-                int texture_id1 = tile_scene[tile_id].layer1;
+                int texture_id1 = TilePatches[tile_id].Layer1;
 
                 if (!used_resources.ContainsKey(texture_id1))
                 {
@@ -615,7 +596,7 @@ namespace Rose2Godot
                 }
                 int shader_param_id1 = used_resources[texture_id1];
 
-                int texture_id2 = tile_scene[tile_id].layer2;
+                int texture_id2 = TilePatches[tile_id].Layer2;
                 if (!used_resources.ContainsKey(texture_id2))
                 {
                     used_resources.Add(texture_id2, ext_resource);
@@ -625,38 +606,33 @@ namespace Rose2Godot
                 }
                 int shader_param_id2 = used_resources[texture_id2];
 
-                scene.AppendLine($"\n[sub_resource id={resource} type=\"ArrayMesh\"]");
-                scene.AppendLine($"resource_name = \"Tile_{tile_id:00}\"");
-                scene.Append(tile_scene[tile_id]);
+                TilePatches[tile_id].MaterialID = tile_id + 1;
+                scene.Append(TilePatches[tile_id]);
 
-                node.AppendLine($"[node name=\"TileMesh {tile_id:0000}\" type=\"MeshInstance\" parent=\".\"]");
-                node.AppendLine($"mesh = SubResource( {resource} )");
-                node.AppendLine($"material/0 = SubResource( {resource + 1} )");
-                node.AppendLine("visible = true");
-                node.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-                node.AppendLine();
-
-                resource++;
                 // Shader material
-                scene.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={resource}]");
-                scene.AppendLine("shader = ExtResource( 1 )");
-                scene.AppendLine($"shader_param/lightmap = ExtResource( 2 )");
-                scene.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} ) ; {tiles_paths[texture_id1]}");
-                scene.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} ) ; {tiles_paths[texture_id2]}");
-                scene.AppendLine($"shader_param/rotation = {(int)tile_scene[tile_id].rotation} ; {tile_scene[tile_id].rotation}");
-                scene.AppendLine();
+                materials.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={tile_id + 1}]");
+                materials.AppendLine("shader = ExtResource( 1 )");
+                materials.AppendLine($"shader_param/lightmap = ExtResource( 2 )");
+                materials.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} ) ; {tiles_paths[texture_id1]}");
+                materials.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} ) ; {tiles_paths[texture_id2]}");
+                materials.AppendLine($"shader_param/rotation = {(int)TilePatches[tile_id].Rotation} ; {TilePatches[tile_id].Rotation}");
+                materials.AppendLine();
 
-                resource++;
+                //resource++;
             }
 
             scene.AppendLine("; scene root node");
-            scene.AppendLine($"[node type=\"Spatial\" name=\"CHUNK\"]");
+            scene.AppendLine($"[node type=\"Spatial\" name=\"Terrain\"]");
             scene.AppendLine("script = ExtResource( 3 )"); // add generate_collision_mesh.gd
             scene.AppendLine(translation);
             scene.AppendLine();
 
+            scene.AppendLine($"[node name=\"TileMesh\" type=\"MeshInstance\" parent=\".\"]");
+            scene.AppendLine($"mesh = SubResource( {TilePatches.Count + 1} )");
+
             root.Append(external_resources);
-            scene.Append(node);
+            root.AppendLine();
+            root.Append(materials);
             root.Append(scene);
 
             return root.ToString();
@@ -727,7 +703,8 @@ namespace Rose2Godot
 
             Dictionary<int, string> tiles_paths = new Dictionary<int, string>();
 
-            List<GodotTilePatch> tile_scene = new List<GodotTilePatch>();
+            int tile_patch_idx = 0;
+            List<GodotTilePatch> TilePatches = new List<GodotTilePatch>();
 
             int tile_width = (him_file.Width - 1) / tile_file.Width + 1; // = 5
             int tile_height = (him_file.Height - 1) / tile_file.Height + 1; // = 5
@@ -796,9 +773,6 @@ namespace Rose2Godot
                         }
                     }
 
-                    //var tile_x = (int)Math.Floor((double)(w / (tile_width - 1)));
-                    //var tile_y = (int)Math.Floor((double)(h / (tile_height - 1)));
-
                     int tile_x = w / 4;
                     int tile_y = (him_file.Height - 1) / 4 - h / 4 - 1;
                     int tile_id = tile_file[tile_y, tile_x].Tile;
@@ -817,24 +791,26 @@ namespace Rose2Godot
 
                     GodotTilePatch patch = new GodotTilePatch()
                     {
-                        layer1 = layer1,
-                        layer2 = layer2,
-                        vertices = tile_vertices,
-                        indices = tile_indices,
-                        uvs = tile_uv,
-                        normals = tile_normals,
-                        rotation = rotation,
-                        lightmap_uvs = lightmap_uv,
+                        SurfaceID = tile_patch_idx,
+                        Layer1 = layer1,
+                        Layer2 = layer2,
+                        Vertices = tile_vertices,
+                        Indices = tile_indices,
+                        UVs = tile_uv,
+                        Normals = tile_normals,
+                        Rotation = rotation,
+                        LightmapUVs = lightmap_uv,
                     };
 
-                    tile_scene.Add(patch);
+                    TilePatches.Add(patch);
+                    tile_patch_idx++;
                 }
             }
 
             // Translate each tile mesh chunk
             string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1) * 2.5f:0.######}, 0, {col * (him_file.Height - 1) * 2.5f:0.######} )";
 
-            string scene = GenerateTilesMap(tile_scene, chunk_transform, ref tiles_paths, lightmap_path);
+            string scene = GenerateTilesMap(TilePatches, chunk_transform, ref tiles_paths, lightmap_path);
 
             string chunk_filename = Path.Combine(GodotScenePath, $"CHUNK_{col:00}.{row:00}.tscn");
 

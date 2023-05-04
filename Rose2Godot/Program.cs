@@ -34,22 +34,22 @@ namespace Rose2Godot
             // 62  - Shady Jungle
             // 63  - Forest of Wandering
             // 64  - Marsh of Ghosts
-/*
+  
             string godot_project_path = string.Empty;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 godot_project_path = @"C:\Applications\Godot\GodotProjects\ImportTest\scenes";
             }
             else
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 godot_project_path = "/home/user/Projects/GodotProjects/TestAssImp/scenes";
             }
 
             MapExporter mapExporter = new MapExporter(1, godot_project_path);
-*/
 
+/*
             // Avatar
 
             sceneExporter = new SceneExporter("Avatar_male", new List<string>()
@@ -87,11 +87,11 @@ namespace Rose2Godot
                             @"3DDATA\MOTION\AVATAR\EMPTY_STOP2_F1.ZMO",
                         });
             sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_female.tscn");
+*/
 
             /*
             
 
-            /*
             // Akines
 
             ZMSFiles.Clear();

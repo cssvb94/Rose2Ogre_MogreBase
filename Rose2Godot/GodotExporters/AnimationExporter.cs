@@ -195,7 +195,7 @@ namespace Rose2Godot.GodotExporters
                     1 (linear)
                     2 (cubic)
                      */
-                    resource.AppendFormat("tracks/{0}/interp = 2\n", bone_id);
+                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
                     resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/imported = true\n", bone_id);
                     resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
