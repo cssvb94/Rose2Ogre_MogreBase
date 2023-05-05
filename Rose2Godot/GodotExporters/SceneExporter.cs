@@ -51,7 +51,6 @@ namespace Rose2Godot.GodotExporters
                 if (zmds.Any())
                 {
                     ZMDFile = zmds.First();
-                    //log.Info($"Loading ZMD: {ZMDFile}");
                     zmd.Load(ZMDFile);
                 }
 
@@ -61,7 +60,6 @@ namespace Rose2Godot.GodotExporters
                     ZMSFiles = ZMSFiles.Distinct().ToList();
                     foreach (string zms_filename in ZMSFiles)
                     {
-                        //log.Info($"Loading ZMS: {zms_filename}");
                         ModelFile zms_file = new ModelFile();
                         zms_file.Load(zms_filename);
                         zms.Add(zms_file);
@@ -74,7 +72,6 @@ namespace Rose2Godot.GodotExporters
                     ZMOFiles = ZMOFiles.Distinct().ToList();
                     foreach (string zmo_filename in ZMOFiles)
                     {
-                        //log.Info($"Loading ZMO: {zmo_filename}");
                         MotionFile zmo_file = new MotionFile();
                         zmo_file.Load(zmo_filename);
                         zmo.Add(zmo_file);
@@ -168,10 +165,10 @@ namespace Rose2Godot.GodotExporters
                 {
                     scene.AppendLine($"transform = {Translator.GodotTransform2String(transforms.First())}");
                 }
-                else
-                {
-                    scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-                }
+                //else
+                //{
+                //    scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
+                //}
 
                 // skeleton
 

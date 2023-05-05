@@ -11,7 +11,7 @@ namespace Rose2Godot.GodotExporters
         public static GodotVector3 ToGodotVector3XYZ(Vector3 v) => new GodotVector3(v.X, v.Y, v.Z);
         public static GodotVector3 ToGodotVector3ZXY(Vector3 v) => new GodotVector3(v.Z, v.X, v.Y);
         public static GodotVector3 ToGodotVector3XZY(Vector3 v) => new GodotVector3(v.X, v.Z, v.Y); // Converts from ROSE (Z-up) to Godot (Y-up)
-        public static GodotTransform ToGodotTransform(Quaternion q, Vector3 v) => new GodotTransform(Rose2GodotRotation(q), ToGodotVector3XZY(v));
+        public static GodotTransform ToGodotTransform(Quaternion q, Vector3 v) => new GodotTransform(Rose2GodotRotationXZYnW(q), ToGodotVector3XZY(v));
         public static string GodotTransform2String(GodotTransform t) => $"Transform({t.basis.ToStringNoBrackets()}, {t.origin.ToStringNoBrackets()})";
         public static GodotVector3 Convert(Vector3 vec) => new GodotVector3()
         {
@@ -33,9 +33,9 @@ namespace Rose2Godot.GodotExporters
         };
         public static ShortVector3 Rose2GodotTriangleIndices(ShortVector3 idx) => new ShortVector3(idx.X, idx.Z, idx.Y);
         // Converts from ROSE to Godot
-        public static GodotQuat Rose2GodotRotation(Quaternion rot) => new GodotQuat(rot.X, rot.Z, rot.Y, -rot.W);
+        public static GodotQuat Rose2GodotRotationXZYnW(Quaternion rot) => new GodotQuat(rot.X, rot.Z, rot.Y, -rot.W);
         // Converts from ROSE to Godot
-        public static GodotVector3 Rose2GodotScale(Vector3 scale) => new GodotVector3(scale.X, scale.Z, scale.Y);
+        public static GodotVector3 Rose2GodotScaleXZY(Vector3 scale) => new GodotVector3(scale.X, scale.Z, scale.Y);
 
         public static string FixPath(string path)
         {

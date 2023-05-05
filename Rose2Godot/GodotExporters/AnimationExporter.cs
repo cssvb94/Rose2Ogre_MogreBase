@@ -94,9 +94,9 @@ namespace Rose2Godot.GodotExporters
                         if (channel.Type == ChannelType.Rotation)
                         {
                             RotationChannel rotation_channel = channel as RotationChannel;
-                            GodotQuat bone_rotation = Translator.Rose2GodotRotation(bone.Rotation);
+                            GodotQuat bone_rotation = Translator.Rose2GodotRotationXZYnW(bone.Rotation);
                             GodotQuat inverted_rotation = bone_rotation.UnitInverse();
-                            GodotQuat frame_rotation = Translator.Rose2GodotRotation(rotation_channel.Frames[frame_idx]);
+                            GodotQuat frame_rotation = Translator.Rose2GodotRotationXZYnW(rotation_channel.Frames[frame_idx]);
                             GodotQuat channel_rotation = inverted_rotation * frame_rotation;
                             anim_track.Rotation = channel_rotation.Normalized();
                             track[track_time] = anim_track;

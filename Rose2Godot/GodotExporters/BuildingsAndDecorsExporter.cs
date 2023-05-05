@@ -168,7 +168,7 @@ namespace Rose2Godot.GodotExporters
 
                     foreach (ModelListPart part in obj.Parts)
                     {
-                        GodotTransform part_transform = new GodotTransform(Translator.Rose2GodotRotation(part.Rotation), new GodotVector3(part.Position.Z / 10f, part.Position.Y / 100f, part.Position.X / 10f));
+                        GodotTransform part_transform = new GodotTransform(Translator.Rose2GodotRotationXZYnW(part.Rotation), new GodotVector3(part.Position.Z / 10f, part.Position.Y / 100f, part.Position.X / 10f));
                         log.Info($"{part.Position} \"{zsc.ModelFiles[part.Model]}\"");
                         model_transforms.Add(part_transform);
 
