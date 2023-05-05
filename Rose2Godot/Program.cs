@@ -47,7 +47,7 @@ namespace Rose2Godot
                 godot_project_path = "/home/user/Projects/GodotProjects/TestAssImp/scenes";
             }
 
-            MapExporter mapExporter = new MapExporter(23, godot_project_path);
+            MapExporter mapExporter = new MapExporter(1, godot_project_path);
 
 /*
             // Avatar
