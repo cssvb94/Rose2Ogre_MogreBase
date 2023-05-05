@@ -11,7 +11,9 @@ namespace Rose2Godot.GodotExporters
 {
     public class MeshExporter
     {
+#if DEBUG
         private static readonly NLog.Logger log = NLog.LogManager.GetLogger("MeshExporter");
+#endif
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
         private readonly string name;
@@ -205,10 +207,10 @@ namespace Rose2Godot.GodotExporters
             {
                 nodes.AppendLine($"transform = {Translator.GodotTransform2String(transforms[transform_idx])}");
             }
-            else
-            {
-                nodes.AppendFormat("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
-            }
+            //else
+            //{
+            //    nodes.AppendFormat("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)\n");
+            //}
         }
 
         public override string ToString() => $"{resource}{nodes}";

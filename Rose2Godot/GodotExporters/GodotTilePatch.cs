@@ -1,10 +1,9 @@
 using g4;
 using Revise.ZON;
-using Rose2Godot.GodotExporters;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Rose2Godot
+namespace Rose2Godot.GodotExporters
 {
     public class GodotTilePatch
     {
@@ -18,7 +17,6 @@ namespace Rose2Godot
         public TileRotation Rotation { get; set; }
         public int SurfaceID { get; set; }
         public int MaterialID { get; set; }
-
         public GodotTilePatch() : this(1) { }
         public GodotTilePatch(int surface_id) => SurfaceID = surface_id;
 
@@ -35,12 +33,14 @@ namespace Rose2Godot
             scene_fragment.AppendFormat("\t\t{0},\n", Translator.Vector3fToArray(Normals, null));
             scene_fragment.AppendLine("\t\tnull, ; no tangents");
             scene_fragment.AppendLine("\t\tnull, ; no vertex colors");
+
+            // tile UV
             scene_fragment.AppendFormat("\t\t; UV1: {0}\n", UVs.Count);
             scene_fragment.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(UVs));
-
+            // lightmap UV
             scene_fragment.AppendFormat("\t\t; UV2: {0}\n", LightmapUVs.Count);
             scene_fragment.AppendFormat("\t\t{0},\n", Translator.Vector2fToArray(LightmapUVs));
-            //scene_fragment.AppendLine("\t\tnull, ; no UV2");
+            // terrain mesh has no bone data
             scene_fragment.AppendLine("\t\tnull, ; no bone indices");
             scene_fragment.AppendLine("\t\tnull, ; no bone weights");
             // face indices

@@ -1,10 +1,9 @@
 ﻿using Revise.STB;
-using Rose2Godot.GodotExporters;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Rose2Godot
+namespace Rose2Godot.GodotExporters
 {
     public class MapExporter
     {
@@ -70,7 +69,7 @@ namespace Rose2Godot
 
             log.Info($"Exporting \"{Map.LongName}\" map");
 
-            Map.GenerateMapData();
+            Map.GenerateMap();
         }
     }
 }

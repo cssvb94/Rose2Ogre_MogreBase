@@ -1,4 +1,4 @@
-﻿namespace Rose2Godot
+﻿namespace Rose2Godot.GodotExporters
 {
     public enum MapType
     {

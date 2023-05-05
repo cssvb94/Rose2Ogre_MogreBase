@@ -26,7 +26,7 @@ namespace S16.Drawing
 
                 using (BinaryReader reader = new BinaryReader(stream))
                 {
-                    this.Parse(reader);
+                    Parse(reader);
                 }
             }
         }
@@ -38,13 +38,13 @@ namespace S16.Drawing
 
             using (BinaryReader reader = new BinaryReader(ddsImage))
             {
-                this.Parse(reader);
+                Parse(reader);
             }
         }
 
         private DDSImage(System.Drawing.Bitmap bitmap)
         {
-            this.m_bitmap = bitmap;
+            m_bitmap = bitmap;
         }
         #endregion
 
@@ -55,40 +55,36 @@ namespace S16.Drawing
         private void Parse(BinaryReader reader)
         {
             DDSStruct header = new DDSStruct();
-            PixelFormat pixelFormat = PixelFormat.UNKNOWN;
-            byte[] data = null;
-
-            if (this.ReadHeader(reader, ref header))
+            if (ReadHeader(reader, ref header))
             {
-                this.m_isValid = true;
+                m_isValid = true;
                 // patches for stuff
                 if (header.depth == 0) header.depth = 1;
 
                 uint blocksize = 0;
-                pixelFormat = this.GetFormat(header, ref blocksize);
+                PixelFormat pixelFormat = GetFormat(header, ref blocksize);
                 if (pixelFormat == PixelFormat.UNKNOWN)
                 {
                     throw new InvalidFileHeaderException();
                 }
 
-                data = this.ReadData(reader, header);
+                byte[] data = ReadData(reader, header);
                 if (data != null)
                 {
-                    byte[] rawData = this.DecompressData(header, data, pixelFormat);
-                    this.m_bitmap = this.CreateBitmap((int)header.width, (int)header.height, rawData);
+                    byte[] rawData = DecompressData(header, data, pixelFormat);
+                    m_bitmap = CreateBitmap((int)header.width, (int)header.height, rawData);
                 }
             }
         }
 
         private byte[] ReadData(BinaryReader reader, DDSStruct header)
         {
-            byte[] compdata = null;
-            uint compsize = 0;
-
+            byte[] compdata;
+            uint compsize;
             if ((header.flags & DDSD_LINEARSIZE) > 1)
             {
                 compdata = reader.ReadBytes((int)header.sizeorpitch);
-                compsize = (uint)compdata.Length;
+                _ = (uint)compdata.Length;
             }
             else
             {
@@ -120,8 +116,7 @@ namespace S16.Drawing
         {
             System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
-            BitmapData data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height)
-                , ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            BitmapData data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             IntPtr scan = data.Scan0;
             int size = bitmap.Width * bitmap.Height * 4;
 
@@ -164,10 +159,7 @@ namespace S16.Drawing
             header.alphabitdepth = reader.ReadUInt32();
 
             header.reserved = new uint[10];
-            for (int i = 0; i < 10; i++)
-            {
-                header.reserved[i] = reader.ReadUInt32();
-            }
+            for (int i = 0; i < 10; i++) header.reserved[i] = reader.ReadUInt32();
 
             //pixelfromat
             header.pixelformat.size = reader.ReadUInt32();
@@ -191,7 +183,7 @@ namespace S16.Drawing
 
         private PixelFormat GetFormat(DDSStruct header, ref uint blocksize)
         {
-            PixelFormat format = PixelFormat.UNKNOWN;
+            PixelFormat format;
             if ((header.pixelformat.flags & DDPF_FOURCC) == DDPF_FOURCC)
             {
                 blocksize = ((header.width + 3) / 4) * ((header.height + 3) / 4) * header.depth;
@@ -623,48 +615,48 @@ namespace S16.Drawing
             switch (pixelFormat)
             {
                 case PixelFormat.RGBA:
-                    rawData = this.DecompressRGBA(header, data, pixelFormat);
+                    rawData = DecompressRGBA(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.RGB:
-                    rawData = this.DecompressRGB(header, data, pixelFormat);
+                    rawData = DecompressRGB(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.LUMINANCE:
                 case PixelFormat.LUMINANCE_ALPHA:
-                    rawData = this.DecompressLum(header, data, pixelFormat);
+                    rawData = DecompressLum(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.DXT1:
-                    rawData = this.DecompressDXT1(header, data, pixelFormat);
+                    rawData = DecompressDXT1(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.DXT2:
-                    rawData = this.DecompressDXT2(header, data, pixelFormat);
+                    rawData = DecompressDXT2(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.DXT3:
-                    rawData = this.DecompressDXT3(header, data, pixelFormat);
+                    rawData = DecompressDXT3(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.DXT4:
-                    rawData = this.DecompressDXT4(header, data, pixelFormat);
+                    rawData = DecompressDXT4(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.DXT5:
-                    rawData = this.DecompressDXT5(header, data, pixelFormat);
+                    rawData = DecompressDXT5(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.THREEDC:
-                    rawData = this.Decompress3Dc(header, data, pixelFormat);
+                    rawData = Decompress3Dc(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.ATI1N:
-                    rawData = this.DecompressAti1n(header, data, pixelFormat);
+                    rawData = DecompressAti1n(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.RXGB:
-                    rawData = this.DecompressRXGB(header, data, pixelFormat);
+                    rawData = DecompressRXGB(header, data, pixelFormat);
                     break;
 
                 case PixelFormat.R16F:
@@ -673,7 +665,7 @@ namespace S16.Drawing
                 case PixelFormat.R32F:
                 case PixelFormat.G32R32F:
                 case PixelFormat.A32B32G32R32F:
-                    rawData = this.DecompressFloat(header, data, pixelFormat);
+                    rawData = DecompressFloat(header, data, pixelFormat);
                     break;
 
                 default:
@@ -1028,8 +1020,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressRGB(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1071,8 +1063,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressRGBA(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1119,8 +1111,8 @@ namespace S16.Drawing
         private unsafe byte[] Decompress3Dc(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1227,8 +1219,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressAti1n(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1299,8 +1291,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressLum(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1332,8 +1324,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressRXGB(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1478,8 +1470,8 @@ namespace S16.Drawing
         private unsafe byte[] DecompressFloat(DDSStruct header, byte[] data, PixelFormat pixelFormat)
         {
             // allocate bitmap
-            int bpp = (int)(this.PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
-            int bps = (int)(header.width * bpp * this.PixelFormatToBpc(pixelFormat));
+            int bpp = (int)(PixelFormatToBpp(pixelFormat, header.pixelformat.rgbbitcount));
+            int bps = (int)(header.width * bpp * PixelFormatToBpc(pixelFormat));
             int sizeofplane = (int)(bps * header.height);
             int width = (int)header.width;
             int height = (int)header.height;
@@ -1751,10 +1743,10 @@ namespace S16.Drawing
         #region Public Methods
         public void Dispose()
         {
-            if (this.m_bitmap != null)
+            if (m_bitmap != null)
             {
-                this.m_bitmap.Dispose();
-                this.m_bitmap = null;
+                m_bitmap.Dispose();
+                m_bitmap = null;
             }
         }
         #endregion
@@ -1765,7 +1757,7 @@ namespace S16.Drawing
         /// </summary>
         public System.Drawing.Bitmap BitmapImage
         {
-            get { return this.m_bitmap; }
+            get { return m_bitmap; }
         }
 
         /// <summary>
@@ -1773,7 +1765,7 @@ namespace S16.Drawing
         /// </summary>
         public bool IsValid
         {
-            get { return this.m_isValid; }
+            get { return m_isValid; }
         }
         #endregion
 
