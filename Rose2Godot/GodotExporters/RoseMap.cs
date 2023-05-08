@@ -573,7 +573,7 @@ namespace Rose2Godot.GodotExporters
             StringBuilder external_resources = new StringBuilder();
             StringBuilder materials = new StringBuilder();
             /*
-            // res://shaders/tile.shader
+            // res://shaders/tile.gdshader
             shader_type spatial;
             render_mode unshaded, cull_disabled;
 
@@ -613,17 +613,17 @@ namespace Rose2Godot.GodotExporters
 
             /*
             // res://scenes/generate_collision_mesh.gd
-            tool
+            @tool
             extends Node
 
             func _ready():
 	            for child in get_node(".").get_children():
-                    if child is MeshInstance:
+                    if child is MeshInstance3D:
 		                child.create_trimesh_collision()
             */
 
             root.AppendLine("[gd_scene format=2]\n");
-            root.AppendLine($"[ext_resource path=\"res://shaders/tile.shader\" type=\"Shader\" id=1]");
+            root.AppendLine($"[ext_resource path=\"res://shaders/tile.gdshader\" type=\"Shader\" id=1]");
             root.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=2]");
             root.AppendLine("[ext_resource path=\"res://scenes/generate_collision_mesh.gd\" type=\"Script\" id=3]");
             root.AppendLine();
@@ -851,7 +851,7 @@ namespace Rose2Godot.GodotExporters
 
             string scene = GenerateTilesMap(TilePatches, chunk_transform, ref tiles_paths, lightmap_path);
 
-            string scene_file_name = $"CHUNK_{col:00}.{row:00}.tscn";
+            string scene_file_name = $"CHUNK_{col:00}-{row:00}.tscn";
             string chunk_filename = Path.Combine(GodotScenePath, scene_file_name);
 
             try

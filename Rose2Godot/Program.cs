@@ -39,7 +39,7 @@ namespace Rose2Godot
 
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
-                godot_project_path = @"C:\Applications\Godot\GodotProjects\ImportTest\scenes";
+                godot_project_path = @"C:\Applications\Godot\GodotProjects\TestAssImp\scenes"; // Godot v4 project
             }
             else
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
