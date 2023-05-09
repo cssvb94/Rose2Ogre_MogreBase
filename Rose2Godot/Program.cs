@@ -59,8 +59,8 @@ namespace Rose2Godot
                             @"3DDATA\AVATAR\BODY\BODY1_00310.ZMS",
                             @"3DDATA\AVATAR\FOOT\FOOT1_00300.ZMS",
                        
-                            //@"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
-                            //@"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
+                            @"3DDATA\AVATAR\FACE\FACE1_00200.ZMS",
+                            @"3DDATA\AVATAR\HAIR\HAIR01_00100.ZMS",
                             @"3DDATA\AVATAR\MALE.ZMD",
                             @"3DDATA\MOTION\AVATAR\EMPTY_RUN_M1.ZMO",
                             @"3DDATA\MOTION\AVATAR\EMPTY_WALK_M1.ZMO",
@@ -69,25 +69,26 @@ namespace Rose2Godot
                             @"3DDATA\MOTION\AVATAR\SKILL_MAGIC01_M1.ZMO",
                             @"3DDATA\MOTION\AVATAR\SKILL_UPPERCUT_01.ZMO",
                         });
-            sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_male.tscn");
+            sceneExporter.ExportScene($"{godot_project_path}\\Avatar_male.tscn");
 
-            sceneExporter = new SceneExporter("Avatar_female", new List<string>()
-                        {
-                            @"3DDATA\AVATAR\ARMS\ARM2_00100.ZMS",
-                            @"3DDATA\AVATAR\BODY\BODY2_00100.ZMS",
-                            @"3DDATA\AVATAR\BODY\BODY2_00110.ZMS",
-                            @"3DDATA\AVATAR\FOOT\FOOT2_05700.ZMS",
-                            @"3DDATA\AVATAR\FOOT\FOOT2_05710.ZMS",
-                            //@"3DDATA\AVATAR\FACE\FACE2_00800.ZMS",
-                            //@"3DDATA\AVATAR\HAIR\HAIR02_00200.ZMS",
-                            @"3DDATA\AVATAR\FEMALE.ZMD",
-                            @"3DDATA\MOTION\AVATAR\EMPTY_RUN_F1.ZMO",
-                            @"3DDATA\MOTION\AVATAR\EMPTY_WALK_F1.ZMO",
-                            @"3DDATA\MOTION\AVATAR\EMPTY_STOP1_F1.ZMO",
-                            @"3DDATA\MOTION\AVATAR\EMPTY_STOP2_F1.ZMO",
-                        });
-            sceneExporter.ExportScene(@"C:\Applications\Godot\GodotProjects\ImportTest\scenes\Avatar_female.tscn");
-*/
+            
+                sceneExporter = new SceneExporter("Avatar_female", new List<string>()
+                            {
+                                @"3DDATA\AVATAR\ARMS\ARM2_00100.ZMS",
+                                @"3DDATA\AVATAR\BODY\BODY2_00100.ZMS",
+                                @"3DDATA\AVATAR\BODY\BODY2_00110.ZMS",
+                                @"3DDATA\AVATAR\FOOT\FOOT2_05700.ZMS",
+                                @"3DDATA\AVATAR\FOOT\FOOT2_05710.ZMS",
+                                @"3DDATA\AVATAR\FACE\FACE2_00800.ZMS",
+                                @"3DDATA\AVATAR\HAIR\HAIR02_00200.ZMS",
+                                @"3DDATA\AVATAR\FEMALE.ZMD",
+                                @"3DDATA\MOTION\AVATAR\EMPTY_RUN_F1.ZMO",
+                                @"3DDATA\MOTION\AVATAR\EMPTY_WALK_F1.ZMO",
+                                @"3DDATA\MOTION\AVATAR\EMPTY_STOP1_F1.ZMO",
+                                @"3DDATA\MOTION\AVATAR\EMPTY_STOP2_F1.ZMO",
+                            });
+                sceneExporter.ExportScene($"{godot_project_path}\\Avatar_female.tscn");
+*/            
 
             /*
             
