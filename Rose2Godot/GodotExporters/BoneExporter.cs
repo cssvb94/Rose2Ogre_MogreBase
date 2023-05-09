@@ -20,11 +20,13 @@ namespace Rose2Godot.GodotExporters
 
             GodotTransform transform = new GodotTransform(rotation, position);
 
-            bone_node.AppendFormat("bones/{0}/name = \"{1}\"\n", index, bone.Name);
-            bone_node.AppendFormat("bones/{0}/parent = {1}\n", index, index == 0 ? -1 : bone.Parent);
-            bone_node.AppendFormat("bones/{0}/rest = {1}\n", index, Translator.GodotTransform2String(transform));
-            bone_node.AppendFormat("bones/{0}/enabled = true\n", index);
-            bone_node.AppendFormat("bones/{0}/bound_children = [ ]\n", index);
+            bone_node.AppendFormat($"bones/{index}/name = \"{bone.Name}\"\n");
+            bone_node.AppendFormat($"bones/{index}/parent = {(index == 0 ? -1 : bone.Parent)}\n");
+            bone_node.AppendFormat($"bones/{index}/rest = {Translator.GodotTransform2String(transform)}\n");
+            bone_node.AppendFormat($"bones/{index}/position = Vector3{position}\n");
+            bone_node.AppendFormat($"bones/{index}/rotation = Quaternion{rotation}\n");
+            bone_node.AppendFormat($"bones/{index}/scale = Vector3{GodotVector3.One}\n");
+            bone_node.AppendFormat($"bones/{index}/enabled = true\n");
             index++;
         }
 

@@ -1,9 +1,11 @@
 ﻿using Godot;
+using NLog;
 using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMO.Channels;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -11,6 +13,7 @@ namespace Rose2Godot.GodotExporters
 {
     public class AnimationExporter
     {
+        private static readonly Logger log = LogManager.GetLogger("AnimationExporter");
         public int last_resource_index { get; private set; }
         private readonly StringBuilder resource;
         private readonly StringBuilder nodes;
@@ -74,6 +77,7 @@ namespace Rose2Godot.GodotExporters
                                                          GodotVector3.Zero,  // position
                                                          GodotQuat.Identity, // rotation
                                                          GodotVector3.One,   // scale
+                                                         TrackType.None,
                                                          channel.Index,
                                                          bone_name));
                         }
@@ -85,8 +89,8 @@ namespace Rose2Godot.GodotExporters
                             PositionChannel pchannel = channel as PositionChannel;
                             Vector3 position = pchannel.Frames[frame_idx] * 0.01f;
                             GodotVector3 channel_position = new GodotVector3(position.Z, position.X, -position.Y);
-                            //GodotVector3 channel_position = new GodotVector3(position.Z, position.X / 1000f, -position.Y);
-                            anim_track.Translation = channel_position;
+                            anim_track.Position = channel_position;
+                            anim_track.TrackType |= TrackType.Position;
                             track[track_time] = anim_track;
                             continue;
                         }
@@ -97,12 +101,14 @@ namespace Rose2Godot.GodotExporters
                             GodotQuat bone_rotation = Translator.Rose2GodotRotationXZYnW(bone.Rotation);
                             GodotQuat inverted_rotation = bone_rotation.UnitInverse();
                             GodotQuat frame_rotation = Translator.Rose2GodotRotationXZYnW(rotation_channel.Frames[frame_idx]);
-                            GodotQuat channel_rotation = inverted_rotation * frame_rotation;
+                            //GodotQuat channel_rotation = inverted_rotation * frame_rotation; //ONLY in Godot 3!
+                            GodotQuat channel_rotation = frame_rotation; // Only in Godot 4!
                             anim_track.Rotation = channel_rotation.Normalized();
+                            anim_track.TrackType |= TrackType.Rotation;
                             track[track_time] = anim_track;
                             continue;
                         }
- 
+
                         if (channel.Type == ChannelType.Scale) // float
                         {
                             //ScaleChannel scale_channel = channel as ScaleChannel;
@@ -160,7 +166,7 @@ namespace Rose2Godot.GodotExporters
                             track[track_time] = anim_track;
                             continue;
                         }
-                        
+
                     }
                 }
                 animations.Add(animation);
@@ -168,6 +174,7 @@ namespace Rose2Godot.GodotExporters
 
             foreach (Animation anim in animations)
             {
+                int track_idx = 0;
                 nodes.AppendFormat("anims/{0} = SubResource({1})\n", anim.Name, animation_resource_idx);
                 resource.AppendFormat("[sub_resource id={0} type=\"Animation\"]\n", animation_resource_idx);
 
@@ -177,36 +184,70 @@ namespace Rose2Godot.GodotExporters
                 resource.AppendFormat("resource_name = \"{0}\"\n", anim.Name);
                 resource.AppendFormat("length = {0:0.#####}\n", anim.FramesCount / anim.FPS);
                 resource.AppendLine($"step = {1f / anim.FPS:0.#####}");
-                resource.AppendLine("loop = true");
+                resource.AppendLine("loop_mode = 1");
 
                 foreach (var bone_tracks in anim.Tracks)
                 {
                     List<string> transforms = new List<string>();
-                    int track_num = 0;
-                    var track_value = bone_tracks.Value;
+                    var tracks = bone_tracks.Value;
                     string bone_name = bone_tracks.Key;
-                    int bone_id = track_value[0].BoneId;
 
-                    resource.AppendFormat("tracks/{0}/type = \"transform\"\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", bone_id, bone_name);
-
-                    /*
-                    0 (constant)
-                    1 (linear)
-                    2 (cubic)
-                     */
-                    resource.AppendFormat("tracks/{0}/interp = 1\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/loop_wrap = true\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/imported = true\n", bone_id);
-                    resource.AppendFormat("tracks/{0}/enabled = true\n", bone_id);
-
-                    foreach (var time_track in track_value)
+                    var rotation_tracks = tracks.Where(t => (t.Value.TrackType & TrackType.Rotation) > 0);
+                    if (rotation_tracks.Any())
                     {
-                        AnimationTrack track = time_track.Value;
-                        transforms.Add(track.ToString());
-                        track_num++;
+                        resource.AppendFormat($"tracks/{track_idx}/type = \"rotation_3d\"\n"); // Godot 4
+                        resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", track_idx, bone_name);
+                        resource.AppendFormat("tracks/{0}/interp = 1\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/loop_wrap = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/imported = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/enabled = true\n", track_idx);
+
+                        foreach (var track in rotation_tracks)
+                        {
+                            AnimationTrack local_track = track.Value;
+                            transforms.Add(local_track.ToRotation3D()); // Godot 4
+                        }
+                        resource.AppendFormat($"tracks/{track_idx}/keys = PackedFloat32Array({string.Join(", ", transforms.ToArray())})\n"); // Godot 4
+                        track_idx++;
                     }
-                    resource.AppendFormat("tracks/{0}/keys = PoolRealArray({1})\n", bone_id, string.Join(", ", transforms.ToArray()));
+
+                    var position_tracks = tracks.Where(t => (t.Value.TrackType & TrackType.Position) > 0);
+                    if (position_tracks.Any())
+                    {
+                        resource.AppendFormat($"tracks/{track_idx}/type = \"position_3d\"\n"); // Godot 4
+                        resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", track_idx, bone_name);
+                        resource.AppendFormat("tracks/{0}/interp = 1\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/loop_wrap = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/imported = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/enabled = true\n", track_idx);
+
+                        foreach (var track in position_tracks)
+                        {
+                            AnimationTrack local_track = track.Value;
+                            transforms.Add(local_track.ToRotation3D()); // Godot 4
+                        }
+                        resource.AppendFormat($"tracks/{track_idx}/keys = PackedFloat32Array({string.Join(", ", transforms.ToArray())})\n"); // Godot 4
+                        track_idx++;
+                    }
+
+                    var scale_tracks = tracks.Where(t => t.Value.TrackType == TrackType.Scale);
+                    if (scale_tracks.Any())
+                    {
+                        resource.AppendFormat($"tracks/{track_idx}/type = \"scale_3d\"\n"); // Godot 4
+                        resource.AppendFormat("tracks/{0}/path = NodePath(\".:{1}\")\n", track_idx, bone_name);
+                        resource.AppendFormat("tracks/{0}/interp = 1\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/loop_wrap = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/imported = true\n", track_idx);
+                        resource.AppendFormat("tracks/{0}/enabled = true\n", track_idx);
+
+                        foreach (var track in scale_tracks)
+                        {
+                            AnimationTrack local_track = track.Value;
+                            transforms.Add(local_track.ToScale3D()); // Godot 4
+                        }
+                        resource.AppendFormat($"tracks/{track_idx}/keys = PackedFloat32Array({string.Join(", ", transforms.ToArray())})\n"); // Godot 4
+                        track_idx++;
+                    }
                 }
                 animation_resource_idx++;
                 resource.AppendLine();
