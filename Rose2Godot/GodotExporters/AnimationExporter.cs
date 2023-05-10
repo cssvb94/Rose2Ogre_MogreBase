@@ -111,9 +111,10 @@ namespace Rose2Godot.GodotExporters
 
                         if (channel.Type == ChannelType.Scale) // float
                         {
-                            //ScaleChannel scale_channel = channel as ScaleChannel;
-                            //float scale = scale_channel.Frames[frame_idx];
-                            //anim_track.Scale = new GodotVector3(scale);
+                            ScaleChannel scale_channel = channel as ScaleChannel;
+                            float scale = scale_channel.Frames[frame_idx];
+                            anim_track.Scale = new GodotVector3(scale);
+                            anim_track.TrackType |= TrackType.Scale;
                             track[track_time] = anim_track;
                             continue;
                         }
@@ -230,7 +231,7 @@ namespace Rose2Godot.GodotExporters
                         track_idx++;
                     }
 
-                    var scale_tracks = tracks.Where(t => t.Value.TrackType == TrackType.Scale);
+                    var scale_tracks = tracks.Where(t => (t.Value.TrackType & TrackType.Scale) > 0);
                     if (scale_tracks.Any())
                     {
                         resource.AppendFormat($"tracks/{track_idx}/type = \"scale_3d\"\n"); // Godot 4

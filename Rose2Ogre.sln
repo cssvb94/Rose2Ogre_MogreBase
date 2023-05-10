@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rose2Godot", "Rose2Godot\Ro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Godot.Core", "Godot.Core\Godot.Core.csproj", "{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZSCViewer", "ZSCViewer\ZSCViewer.csproj", "{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Revise", "Revise\Revise.csproj", "{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,22 @@ Global
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|x86.ActiveCfg = Release|Any CPU
 		{62A5C1B4-A63F-423C-9BD1-1CF5FF967978}.Release|x86.Build.0 = Release|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Debug|x86.Build.0 = Debug|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Release|x86.ActiveCfg = Release|Any CPU
+		{4C38D4A1-7207-4CB0-9FAD-7BB969A025BC}.Release|x86.Build.0 = Release|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Debug|x86.Build.0 = Debug|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Release|x86.ActiveCfg = Release|Any CPU
+		{A45AC27B-4D0D-4A7B-A3B7-76759AEEFCA3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
