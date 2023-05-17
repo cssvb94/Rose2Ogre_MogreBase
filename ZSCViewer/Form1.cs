@@ -19,11 +19,6 @@ namespace ZSCViewer
             InitializeComponent();
         }
 
-        private void open_zsc_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void objects_view_RowEnter(object sender, DataGridViewCellEventArgs e)
         {
             var row_idx = e.RowIndex;
@@ -48,15 +43,9 @@ namespace ZSCViewer
                 effects_view.DataSource = zsc.Objects[row_idx].Effects
                     .Select(eff => new
                     {
-                        Effect = eff.Effect
+                        eff.Effect
                     }).ToList();
             }
-
-        }
-
-        private void open_stb_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void openZSCToolStripMenuItem_Click(object sender, EventArgs e)
@@ -99,7 +88,6 @@ namespace ZSCViewer
                 }
                 catch (Exception)
                 {
-
                     throw;
                 }
                 stb_view.DataSource = null;
@@ -124,7 +112,7 @@ namespace ZSCViewer
 
         private void openZONToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(open_zon_dialog.ShowDialog() == DialogResult.OK)
+            if (open_zon_dialog.ShowDialog() == DialogResult.OK)
             {
                 zon = new ZoneFile();
                 try

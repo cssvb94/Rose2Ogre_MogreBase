@@ -51,8 +51,8 @@ namespace Rose2Godot.GodotExporters
             */
 
             resource.AppendLine();
-            resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture\" id=1]");
-            resource.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture\" id=2]");
+            resource.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", LightmapPath)}\" type=\"Texture2D\" id=1]");
+            resource.AppendLine($"[ext_resource path=\"{AtlasPath}\" type=\"Texture2D\" id=2]");
             resource.AppendLine($"[ext_resource path=\"res://shaders/lightmap.shader\" type=\"Shader\" id=3]");
 
             resource.AppendFormat("\n[sub_resource id={0} type=\"ArrayMesh\"]\n", 1);

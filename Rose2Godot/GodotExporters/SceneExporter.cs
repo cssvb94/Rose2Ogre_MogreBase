@@ -66,7 +66,8 @@ namespace Rose2Godot.GodotExporters
                     }
                 }
 
-                if (zmos.Any() && zmds.Any())
+                // TODO: Handle non-bone animation!
+                if (zmos.Any() && zmds.Any()) 
                 {
                     ZMOFiles.AddRange(zmos.ToList());
                     ZMOFiles = ZMOFiles.Distinct().ToList();
@@ -85,10 +86,16 @@ namespace Rose2Godot.GodotExporters
             }
         }
 
-        public SceneExporter(string objectName, string model_file_path, string godot_material_file = "", string gd_script_path = null)
+        public SceneExporter(string objectName, string model_file_path, string animation_path = "", string godot_material_file = "", string gd_script_path = null)
         {
             objName = objectName;
-            ProcessFileList(new List<string>() { model_file_path });
+            List<string> files = new List<string>();
+            files.Add(model_file_path);
+
+            if (!string.IsNullOrEmpty(animation_path))
+                files.Add(animation_path);
+
+            ProcessFileList(files);
             scene = new StringBuilder();
             nodes = new List<string>();
             resources = new List<string>();
@@ -98,10 +105,10 @@ namespace Rose2Godot.GodotExporters
             // should include num of external objects
             //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
             num_resources = zms.Count;
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
+            scene.AppendLine("[gd_scene format=2]");
 
             if (!string.IsNullOrWhiteSpace(GodotMaterialFile))
-                scene.AppendLine($"\n[ext_resource path=\"{GodotMaterialFile}\" type=\"Texture\" id=1]");
+                scene.AppendLine($"\n[ext_resource path=\"{GodotMaterialFile}\" type=\"Texture2D\" id=1]");
             if (!string.IsNullOrWhiteSpace(GDScriptFile))
                 scene.AppendLine($"[ext_resource path=\"{GDScriptFile}\" type=\"Script\" id=2]");
         }
@@ -114,10 +121,8 @@ namespace Rose2Godot.GodotExporters
             nodes = new List<string>();
             resources = new List<string>();
 
-            // should include num of external objects
-            //num_resources = (uint)(zms.Count + zms.Count + zmo.Count);
             num_resources = zms.Count;
-            scene.AppendFormat("[gd_scene load_steps={0} format=2]\n", num_resources);
+            scene.AppendLine("[gd_scene format=2]");
         }
 
         public bool ExportScene(string output_file_name, List<GodotTransform> transforms = null)
@@ -134,7 +139,6 @@ namespace Rose2Godot.GodotExporters
 
                 int external_material_id = string.IsNullOrWhiteSpace(GodotMaterialFile) ? -1 : 1;
 
-                //MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), transforms, external_material_id);
                 MeshExporter meshExporter = new MeshExporter(resource_index, zms, model_name, zmd.Bones.Any(), null, external_material_id);
 
                 resource_index = meshExporter.LastResourceIndex;
@@ -165,11 +169,7 @@ namespace Rose2Godot.GodotExporters
                 {
                     scene.AppendLine($"transform = {Translator.GodotTransform2String(transforms.First())}");
                 }
-                //else
-                //{
-                //    scene.AppendLine("transform = Transform(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)");
-                //}
-
+               
                 // skeleton
 
                 if (zmd.Bones.Any())

@@ -67,40 +67,19 @@ namespace Rose2Godot.GodotExporters
             string parent_folder = parent_info.Name;
             string full_godot_texture_path = Path.Combine(export_path, parent_folder);
             Directory.CreateDirectory(full_godot_texture_path);
-            string png_filename = Path.ChangeExtension(Path.GetFileName(dds_texture_path), ".PNG");
-            string full_godot_png_path = Path.Combine(full_godot_texture_path, png_filename);
+            string dds_filename = Path.GetFileName(dds_texture_path);
+            string full_godot_dds_path = Path.Combine(full_godot_texture_path, dds_filename);
 
-            if (!File.Exists(full_godot_png_path))
+            if (!File.Exists(full_godot_dds_path))
             {
-#if DEBUG
-                log.Info($"Exporting to \"{full_godot_png_path}\"");
-#endif
-                using (var image = Pfim.Pfimage.FromFile(dds_texture_path))
+                try
                 {
-                    PixelFormat format;
-                    switch (image.Format)
-                    {
-                        case Pfim.ImageFormat.Rgba32:
-                            format = PixelFormat.Format32bppArgb;
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                    var handle = GCHandle.Alloc(image.Data, GCHandleType.Pinned);
-                    try
-                    {
-                        IntPtr data = Marshal.UnsafeAddrOfPinnedArrayElement(image.Data, 0);
-                        Bitmap bitmap = new Bitmap(image.Width, image.Height, image.Stride, format, data);
-                        bitmap.Save(full_godot_png_path, ImageFormat.Png);
-                    }
-                    catch (Exception x)
-                    {
-                        log.Error(x);
-                    }
-                    finally
-                    {
-                        handle.Free();
-                    }
+                    File.Copy(dds_texture_path, full_godot_dds_path, true);
+                }
+                catch (Exception x)
+                {
+                    log.Error(x);
+                    throw;
                 }
             }
 
@@ -108,7 +87,7 @@ namespace Rose2Godot.GodotExporters
             string output_file_name_path = $"{Path.Combine(export_path, texture_name)}.tres";
 
             material_content.AppendLine("[gd_resource type=\"SpatialMaterial\" load_steps=2 format=2]\n");
-            material_content.AppendLine($"[ext_resource path=\"{parent_folder}/{png_filename}\" type=\"Texture\" id=1]\n");
+            material_content.AppendLine($"[ext_resource path=\"{parent_folder}/{dds_filename}\" type=\"Texture2D\" id=1]\n");
             material_content.AppendLine("[resource]");
             material_content.AppendLine("flags_unshaded = true");
             if (texture_file.TwoSided)
@@ -277,7 +256,7 @@ namespace Rose2Godot.GodotExporters
                                 StringBuilder resource = new StringBuilder();
                                 StringBuilder node = new StringBuilder();
 
-                                resource.AppendLine("[gd_scene load_steps=2 format=2]\n");
+                                resource.AppendLine("[gd_scene format=2]\n");
 
                                 MapBuilding building = ifo_file.Buildings[building_idx];
 
@@ -309,10 +288,13 @@ namespace Rose2Godot.GodotExporters
                                     if (building_part.Collision != CollisionType.None)
                                         gd_script_collision_gen = "res://scenes/generate_collision_mesh.gd";
 
-                                    string part = buildings_mesh_files[building_part.Model];
-                                    string tex = buildings_material_files[building_part.Texture];
-                                    string part_name = Path.GetFileNameWithoutExtension(part);
-                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex, gd_script_collision_gen);
+                                    string part_model = buildings_mesh_files[building_part.Model];
+                                    string part_tex = buildings_material_files[building_part.Texture];
+                                    string part_animation = Translator.FixPath(building_part.AnimationFilePath);
+                                    if (!string.IsNullOrEmpty(part_animation))
+                                        log.Info($"Building [{building_idx}] part [{part_idx}] animation: \"{part_animation}\"");
+                                    string part_name = Path.GetFileNameWithoutExtension(part_model);
+                                    SceneExporter exporter = new SceneExporter($"{part_name}", part_model, part_animation, part_tex, gd_script_collision_gen);
                                     string part_scene_file = Path.Combine(BuildingsPath, $"{part_name}.tscn");
                                     exporter.ExportScene(part_scene_file, transforms);
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
@@ -364,7 +346,7 @@ namespace Rose2Godot.GodotExporters
                                 StringBuilder resource = new StringBuilder();
                                 StringBuilder node = new StringBuilder();
 
-                                resource.AppendLine("[gd_scene load_steps=2 format=2]\n");
+                                resource.AppendLine("[gd_scene format=2]\n");
 
                                 MapObject obj = ifo_file.Objects[object_idx];
                                 var object_parts = zsc_objects.Objects[obj.ObjectID];
@@ -379,15 +361,18 @@ namespace Rose2Godot.GodotExporters
                                 for (int part_idx = 0; part_idx < object_parts.Parts.Count; part_idx++)
                                 {
                                     ModelListPart object_part = object_parts.Parts[part_idx];
-                                    string part = objects_mesh_files[object_part.Model];
-                                    string tex = objects_material_files[object_part.Texture];
-                                    string part_name = Path.GetFileNameWithoutExtension(part);
+                                    string part_model = objects_mesh_files[object_part.Model];
+                                    string part_texture = objects_material_files[object_part.Texture];
+                                    string part_name = Path.GetFileNameWithoutExtension(part_model);
+                                    string part_animation = Translator.FixPath(object_part.AnimationFilePath);
+                                    if (!string.IsNullOrEmpty(part_animation))
+                                        log.Info($"Object [{object_idx}] part [{part_idx}] animation: \"{part_animation}\"");
 
                                     string gd_script_collision_gen = string.Empty;
                                     if (object_part.Collision != CollisionType.None)
                                         gd_script_collision_gen = "res://scenes/generate_collision_mesh.gd";
 
-                                    SceneExporter exporter = new SceneExporter($"{part_name}", part, tex, gd_script_collision_gen);
+                                    SceneExporter exporter = new SceneExporter($"{part_name}", part_model, part_animation, part_texture, gd_script_collision_gen);
                                     string part_scene_file = Path.Combine(ObjectsPath, $"{part_name}.tscn");
                                     exporter.ExportScene(part_scene_file, transforms);
                                     resource.AppendLine($"[ext_resource path=\"{part_name}.tscn\" type=\"PackedScene\" id={resource_idx}]\n");
@@ -575,7 +560,7 @@ namespace Rose2Godot.GodotExporters
             /*
             // res://shaders/tile.gdshader
             shader_type spatial;
-            render_mode unshaded, cull_disabled;
+            render_mode unshaded; //, cull_disabled;
 
             uniform sampler2D layer1;
             uniform sampler2D layer2;
@@ -622,9 +607,9 @@ namespace Rose2Godot.GodotExporters
 		                child.create_trimesh_collision()
             */
 
-            root.AppendLine("[gd_scene format=2]\n");
+            root.AppendLine("[gd_scene format=3]\n");
             root.AppendLine($"[ext_resource path=\"res://shaders/tile.gdshader\" type=\"Shader\" id=1]");
-            root.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture\" id=2]");
+            root.AppendLine($"[ext_resource path=\"{Path.Combine("LIGHTMAPS/", lightmap_path)}\" type=\"Texture2D\" id=2]");
             root.AppendLine("[ext_resource path=\"res://scenes/generate_collision_mesh.gd\" type=\"Script\" id=3]");
             root.AppendLine();
             int ext_resource = 4; // 1 is the tile_shader, 2nd lightmap, 3d script
@@ -642,7 +627,7 @@ namespace Rose2Godot.GodotExporters
                 {
                     used_resources.Add(texture_id1, ext_resource);
                     string texture_path = tiles_paths[texture_id1];
-                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
+                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture2D\" id={ext_resource}]");
                     ext_resource++;
                 }
                 int shader_param_id1 = used_resources[texture_id1];
@@ -652,7 +637,7 @@ namespace Rose2Godot.GodotExporters
                 {
                     used_resources.Add(texture_id2, ext_resource);
                     string texture_path = tiles_paths[texture_id2];
-                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture\" id={ext_resource}]");
+                    external_resources.AppendLine($"[ext_resource path =\"../{texture_path}\" type=\"Texture2D\" id={ext_resource}]");
                     ext_resource++;
                 }
                 int shader_param_id2 = used_resources[texture_id2];
@@ -661,15 +646,14 @@ namespace Rose2Godot.GodotExporters
                 scene.Append(TilePatches[tile_id]);
 
                 // Shader material
-                materials.AppendLine($"[sub_resource type=\"ShaderMaterial\" id={tile_id + 1}]");
-                materials.AppendLine("shader = ExtResource( 1 )");
-                materials.AppendLine($"shader_param/lightmap = ExtResource( 2 )");
-                materials.AppendLine($"shader_param/layer1 = ExtResource( {shader_param_id1} ) ; {tiles_paths[texture_id1]}");
-                materials.AppendLine($"shader_param/layer2 = ExtResource( {shader_param_id2} ) ; {tiles_paths[texture_id2]}");
-                materials.AppendLine($"shader_param/rotation = {(int)TilePatches[tile_id].Rotation} ; {TilePatches[tile_id].Rotation}");
+                materials.AppendLine($"[sub_resource type=\"ShaderMaterial\" id=\"{tile_id + 1}\"]");
+                materials.AppendLine("render_priority = 0");
+                materials.AppendLine("shader = ExtResource( \"1\" )");
+                materials.AppendLine($"shader_parameter/lightmap = ExtResource(\"2\")");
+                materials.AppendLine($"shader_parameter/layer1 = ExtResource(\"{shader_param_id1}\") ; {tiles_paths[texture_id1]}");
+                materials.AppendLine($"shader_parameter/layer2 = ExtResource(\"{shader_param_id2}\") ; {tiles_paths[texture_id2]}");
+                materials.AppendLine($"shader_parameter/rotation = {(int)TilePatches[tile_id].Rotation} ; {TilePatches[tile_id].Rotation}");
                 materials.AppendLine();
-
-                //resource++;
             }
 
             scene.AppendLine("; scene root node");
@@ -679,6 +663,7 @@ namespace Rose2Godot.GodotExporters
             scene.AppendLine();
 
             scene.AppendLine($"[node name=\"TileMesh\" type=\"MeshInstance\" parent=\".\"]");
+            scene.AppendLine("cast_shadow = 0");
             scene.AppendLine($"mesh = SubResource( {TilePatches.Count + 1} )");
 
             root.Append(external_resources);
@@ -700,7 +685,7 @@ namespace Rose2Godot.GodotExporters
             {
                 if (!Directory.Exists(folder))
                 {
-                    log.Info($"Creating folder: \"{absolute_png_path}\"");
+                    log.Info($"Creating folder: \"{folder}\"");
                     Directory.CreateDirectory(folder);
                 }
             }
@@ -847,7 +832,7 @@ namespace Rose2Godot.GodotExporters
             }
 
             // Translate each tile mesh chunk
-            string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1) * 2.5f:0.######}, 0, {col * (him_file.Height - 1) * 2.5f:0.######} )";
+            string chunk_transform = $"transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, { row * (him_file.Width - 1) * 2.499999f:0.######}, 0, {col * (him_file.Height - 1) * 2.499999f:0.######} )";
 
             string scene = GenerateTilesMap(TilePatches, chunk_transform, ref tiles_paths, lightmap_path);
 
